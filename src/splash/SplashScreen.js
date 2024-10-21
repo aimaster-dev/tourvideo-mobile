@@ -17,9 +17,6 @@ const SplashScreen = ({ navigation }) => {
         style={styles.logo}
         resizeMode="contain"
       />
-      {/* Text under the logo */}
-      {/* <Text style={styles.title}>EMMY'S VIDEOS</Text>
-      <Text style={styles.subtitle}>Manage Travel Video</Text> */}
     </View>
   );
 };
@@ -36,16 +33,6 @@ const styles = StyleSheet.create({
     height: 238,  // Adjust size as per your logo
     marginBottom: 20,
   },
-//   title: {
-//     fontSize: 24,
-//     color: '#FFFFFF', // White text
-//     fontWeight: 'bold',
-//     marginBottom: 10,
-//   },
-//   subtitle: {
-//     fontSize: 14,
-//     color: '#FFFFFF', // White text
-//   },
 });
 
 export default SplashScreen;

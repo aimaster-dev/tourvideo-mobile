@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import axios from 'axios';
+import CheckBox from '@react-native-community/checkbox';
 
 const SignUpScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
@@ -9,17 +10,97 @@ const SignUpScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUserNameValid, setIsUserNameValid] = useState(true);
+  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
+  const [isEmailValid, setIsEmailValid] = useState(true);
+  const [isPasswordValid, setIsPasswordValid] = useState(true);
+  const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
+  const [isAccepted, setIsAccepted] = useState(false);
+  const [isAcceptedValid, setIsAcceptedValid] = useState(true);
+
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    if (value) {
+      setIsEmailValid(true); // Clear validation error when user types in email
+    }
+  };
+
+  const handleUserNameChange = (value) => {
+    setFullName(value);
+    if (value) {
+      setIsUserNameValid(true); // Clear validation error when user types in user name
+    }
+  };
+
+  const handlePhoneNumberChange = (value) => {
+    setPhoneNumber(value);
+    if (value) {
+      setIsPhoneNumberValid(true); // Clear validation error when user types in user name
+    }
+  };
+
+  const handlePasswordChange = (value) => {
+    setPassword(value);
+    if (value) {
+      setIsPasswordValid(true); // Clear validation error when user types in password
+    }
+  };
+
+  const handleConfirmPasswordChange = (value) => {
+    setConfirmPassword(value);
+    if (value) {
+      setIsConformPasswordValid(true); // Clear validation error when user types in password
+    }
+  };
 
   // Function to handle the signup request
   const handleSignup = async () => {
-    // Validation: Check if all fields are filled and passwords match
-    if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill all fields.');
+    // if (!fullName || !email || !phoneNumber || !password || !confirmPassword) {
+    //   Alert.alert('Error', 'Please fill all fields.');
+    //   return;
+    // }
+    if(!fullName) {
+      setIsUserNameValid(false);
       return;
+    } else {
+      setIsUserNameValid(true);
     }
+    if(!email) {
+      setIsEmailValid(false);
+      return;
+    } else {
+      setIsEmailValid(true);
+    }
+    if(!phoneNumber) {
+      setIsPhoneNumberValid(false);
+      return;
+    } else {
+      setIsPhoneNumberValid(true);
+    }
+    if(!password) {
+      setIsPasswordValid(false);
+      return;
+    } else {
+      setIsPasswordValid(true);
+    }
+    if(!confirmPassword) {
+      setIsConformPasswordValid(false);
+      return;
+    } else {
+      setIsConformPasswordValid(true);
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match.');
       return;
+    }
+
+    if (!isAccepted) {
+      setIsAcceptedValid(false);
+      return;
+    } else {
+      setIsAcceptedValid(true);
     }
 
     const requestData = {
@@ -77,9 +158,10 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Full Name"
           placeholderTextColor="#CCCCCC"
-          onChangeText={setFullName}
+          onChangeText={handleUserNameChange}
           value={fullName}
         />
+        {!isUserNameValid && <Text style={styles.requiredText}>Required*</Text>}
       </View>
 
       {/* Email Input */}
@@ -88,11 +170,12 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Email"
           placeholderTextColor="#CCCCCC"
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
           value={email}
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
       </View>
 
       {/* Phone Number Input */}
@@ -101,10 +184,11 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Phone Number"
           placeholderTextColor="#CCCCCC"
-          onChangeText={setPhoneNumber}
+          onChangeText={handlePhoneNumberChange}
           value={phoneNumber}
           keyboardType="phone-pad"
         />
+        {!isPhoneNumberValid && <Text style={styles.requiredText}>Required*</Text>}
       </View>
 
       {/* Password Input */}
@@ -113,10 +197,11 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Password"
           placeholderTextColor="#CCCCCC"
-          onChangeText={setPassword}
+          onChangeText={handlePasswordChange}
           value={password}
           secureTextEntry={true}
         />
+        {!isPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
       </View>
 
       {/* Confirm Password Input */}
@@ -125,12 +210,33 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Confirm Password"
           placeholderTextColor="#CCCCCC"
-          onChangeText={setConfirmPassword}
+          onChangeText={handleConfirmPasswordChange}
           value={confirmPassword}
           secureTextEntry={true}
         />
+        {!isConformPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
       </View>
-
+      <View style={styles.checkboxContainer}>
+        <CheckBox
+          value={isAccepted}
+          onValueChange={setIsAccepted}
+          style={styles.checkbox}
+          tintColors={{ true: '#F15927', false: '#FFFFFF' }}
+        />
+        <Text style={styles.checkboxText}>
+          By continuing you accept our{' '}
+          {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
+          <Text style={styles.link}>
+            Privacy Policy
+          </Text>{' '}
+          &{' '}
+          {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
+          <Text style={styles.link}>
+            Term of Use
+          </Text>
+        </Text>
+      </View>
+      {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
       {/* Sign Up Button */}
       <TouchableOpacity
         style={styles.signUpButton}
@@ -208,6 +314,36 @@ const styles = StyleSheet.create({
   loginLink: {
     color: '#287BF3',
     fontWeight: 'bold',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#FFFFFF', // Set the default (unchecked) border color to white
+    marginRight: 10,
+    backgroundColor: 'transparent', // Keep the background transparent when unchecked
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxText: {
+    color: '#FFFFFF',
+    flex: 1,
+    fontSize: 14,
+  },
+  link: {
+    color: '#287BF3',
+    fontWeight: 'bold',
+  },
+  requiredText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 5,
   },
 });
 

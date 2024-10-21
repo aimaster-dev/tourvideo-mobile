@@ -1,16 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
-import { Picker } from "@react-native-picker/picker";
+import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CheckBox from '@react-native-community/checkbox';
 
 const SignInScreen = ({ navigation }) => {
-    const [selectedPlace, setSelectedPlace] = useState(null); // To store the full selected place object
+    const [selectedPlace, setSelectedPlace] = useState(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [tourPlaces, setTourPlaces] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isSubmitting, setIsSubmitting] = useState(false); // To handle the submit loading state
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isTourPlaceValid, setIsTourPlaceValid] = useState(true);
+    const [isEmailValid, setIsEmailValid] = useState(true);
+    const [isPasswordValid, setIsPasswordValid] = useState(true);
+    const [isAccepted, setIsAccepted] = useState(false);
+    const [isAcceptedValid, setIsAcceptedValid] = useState(true);
 
     // Fetch the tour places from the API
     useEffect(() => {
@@ -31,12 +37,47 @@ const SignInScreen = ({ navigation }) => {
     const handlePlaceChange = (itemValue) => {
       const selected = tourPlaces.find((place) => place.id === itemValue);
       setSelectedPlace(selected);
+      setIsTourPlaceValid(true);
+    };
+
+    const handleEmailChange = (value) => {
+      setEmail(value);
+      if (value) {
+        setIsEmailValid(true);
+      }
+    };
+
+    const handlePasswordChange = (value) => {
+      setPassword(value);
+      if (value) {
+        setIsPasswordValid(true);
+      }
     };
 
     const handleSignIn = async () => {
-      if (!selectedPlace || !email || !password) {
-        Alert.alert('Error', 'Please select a tour place, email, and password.');
+      if (!selectedPlace) {
+        setIsTourPlaceValid(false);
         return;
+      } else {
+        setIsTourPlaceValid(true);
+      }
+      if(!email) {
+        setIsEmailValid(false);
+        return;
+      } else {
+        setIsEmailValid(true);
+      }
+      if (!password) {
+        setIsPasswordValid(false);
+        return;
+      } else {
+        setIsPasswordValid(true);
+      }
+      if (!isAccepted) {
+        setIsAcceptedValid(false);
+        return;
+      } else {
+        setIsAcceptedValid(true);
       }
 
       const requestData = {
@@ -44,7 +85,6 @@ const SignInScreen = ({ navigation }) => {
         email: email,
         password: password,
       };
-      console.log(requestData);
       setIsSubmitting(true);
 
       try {
@@ -60,7 +100,7 @@ const SignInScreen = ({ navigation }) => {
         await AsyncStorage.setItem('refresh_token', refreshToken);
         navigation.navigate('Home');
       } catch (error) {
-        console.error('Login error:', error);
+        console.log('Login error:', JSON.stringify(error.data));
         Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
       } finally {
         setIsSubmitting(false);
@@ -91,6 +131,7 @@ const SignInScreen = ({ navigation }) => {
                 <Picker.Item key={place.id} label={place.place_name} value={place.id} />
               ))}
             </Picker>
+            {!isTourPlaceValid && <Text style={styles.requiredText}>Required*</Text>}
           </View>
         )}
 
@@ -100,30 +141,50 @@ const SignInScreen = ({ navigation }) => {
             style={styles.input}
             placeholder="Email"
             placeholderTextColor="#CCCCCC"
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
             value={email}
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
         </View>
 
-        {/* Password Input */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Password"
             placeholderTextColor="#CCCCCC"
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
             value={password}
             secureTextEntry={true}
           />
+          {!isPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
         </View>
-
-        {/* Sign In Button */}
+        <View style={styles.checkboxContainer}>
+          <CheckBox
+            value={isAccepted}
+            onValueChange={setIsAccepted}
+            style={styles.checkbox}
+            tintColors={{ true: '#F15927', false: '#FFFFFF' }}
+          />
+          <Text style={styles.checkboxText}>
+            By continuing you accept our{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
+            <Text style={styles.link}>
+              Privacy Policy
+            </Text>{' '}
+            &{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
+            <Text style={styles.link}>
+              Term of Use
+            </Text>
+          </Text>
+        </View>
+        {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
         <TouchableOpacity
           style={styles.signInButton}
           onPress={handleSignIn}
-          disabled={isSubmitting} // Disable button while submitting
+          disabled={isSubmitting}
         >
           {isSubmitting ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -200,6 +261,36 @@ const SignInScreen = ({ navigation }) => {
       marginTop: 20,
     },
     signupLink: {
+      color: '#287BF3',
+      fontWeight: 'bold',
+    },
+    requiredText: {
+      color: 'red',
+      fontSize: 12,
+      marginTop: 5,
+      marginLeft: 5,
+    },
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 10,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderWidth: 2,
+      borderColor: '#FFFFFF', // Set the default (unchecked) border color to white
+      marginRight: 10,
+      backgroundColor: 'transparent', // Keep the background transparent when unchecked
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxText: {
+      color: '#FFFFFF',
+      flex: 1,
+      fontSize: 14,
+    },
+    link: {
       color: '#287BF3',
       fontWeight: 'bold',
     },
