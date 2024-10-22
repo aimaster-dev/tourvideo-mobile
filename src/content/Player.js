@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Alert, Platform, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import RNFS from 'react-native-fs';
@@ -12,23 +12,52 @@ const Player = ({ route }) => {
 
   const [isRecording, setIsRecording] = useState(false);
   const [outputFilePath, setOutputFilePath] = useState('');
-  const [isLoadingUpload, setIsLoadingUpload] = useState(false);  // Loading status for video upload
-  const streamUrl = `rtsp://${camera_user_name}:${password}@${camera_ip}:${camera_port}`;
+  const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingStarted, setRecordingStarted] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [selectedLimit, setSelectedLimit] = useState(null);
   const [loadingLimits, setLoadingLimits] = useState(true);
+  const streamUrl = `rtsp://${camera_user_name}:${password}@${camera_ip}:${camera_port}`;
+  const [uploadInProgress, setUploadInProgress] = useState(false);
+  const [recordingStopped, setRecordingStopped] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+
+  // To track the session reference
+  const currentSessionRef = useRef(null);
+
+  const path = `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;  // Unique filename
+
   let alertShown = false;
-  const path = `${RNFS.DownloadDirectoryPath}/recording.mp4`;
 
   useEffect(() => {
     if (Platform.OS === 'android') {
       requestPermissions();
     }
     fetchRecordingLimits();
-  }, []);
-  
-  console.log(camera_ip, camera_port, tourplace_id);
+
+    // Setup FFmpeg log callback once
+    FFmpegKitConfig.enableLogCallback(log => {
+      if (log.getMessage().includes('frame=') && !alertShown && !recordingStopped) {
+        alertShown = true;
+        console.log('First frame detected. Recording started.');
+        setRecordingStarted(true);
+        Alert.alert('Recording started!');
+
+        // Automatically stop recording after record_time seconds from first frame
+        console.log(`Will stop recording after ${selectedLimit.record_time * 1000} milliseconds.`);
+        setTimeout(async () => {
+          console.log('Time limit reached. Stopping recording...');
+          await stopRecording();  // Stop the recording
+        }, (selectedLimit.record_time + 4) * 1000);  // Convert record_time to milliseconds
+      }
+    });
+
+    return () => {
+      // Cleanup: Prevent log callback from continuing after unmount
+      alertShown = false;
+      setRecordingStopped(true);
+    };
+  }, [selectedLimit]);
 
   const requestPermissions = async () => {
     try {
@@ -53,7 +82,7 @@ const Player = ({ route }) => {
         console.error('No access token found');
         return;
       }
-      const response = await axios.get('https://api.emmysvideos.com/api/v1/price/getprice', {
+      const response = await axios.get(`https://api.emmysvideos.com/api/v1/invoice/validlist?tourplace=${tourplace_id}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
@@ -69,66 +98,66 @@ const Player = ({ route }) => {
   };
 
   const startRecording = async () => {
-    setOutputFilePath(path);
-    setRecordingStarted(false);
-    alertShown = false;
+    if (isRecording || currentSessionRef.current) {
+      console.log('Another session is running, skipping...');
+      return;
+    }
+
+    setIsRecording(true);
+    setRecordingStopped(false);
 
     console.log(`Starting recording for ${selectedLimit.record_time} seconds.`);
 
-    const command = `-rtsp_transport tcp -i ${streamUrl} -t ${selectedLimit.record_time} -c copy ${path}`;
+    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${selectedLimit.record_time + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
 
-    // Start the FFmpegKit process
-    FFmpegKitConfig.enableLogCallback(log => {
-      if (log.getMessage().includes('frame=') && !alertShown) {
-        alertShown = true;
-        console.log('First frame detected. Recording started.');
-
-        setRecordingStarted(true);
-        Alert.alert('Recording started!');
-
-        // Automatically stop recording after record_time seconds from first frame
-        console.log(`Will stop recording after ${selectedLimit.record_time * 1000} milliseconds.`);
-        setTimeout(async () => {
-          console.log('Time limit reached. Stopping recording...');
-          await stopRecording();  // Stop the recording
-        }, selectedLimit.record_time * 1000);  // Convert record_time to milliseconds
-      }
-    });
-
-    FFmpegKit.executeAsync(command, async (session) => {
+    // eslint-disable-next-line no-shadow
+    const session = await FFmpegKit.executeAsync(command, async (session) => {
       const returnCode = await session.getReturnCode();
-      const output = await session.getOutput();  // Log FFmpeg output
+      const output = await session.getOutput();
       console.log('FFmpeg output: ', output);
       if (returnCode.isValueSuccess()) {
         Alert.alert('Recording saved at:', path);
+        handleVideoUpload();
       } else {
-        console.error('Recording failed:', output);
+        console.log('Recording failed:', output);
       }
+      setIsRecording(false);
+      currentSessionRef.current = null;
     });
-
-    setIsRecording(true);
+    currentSessionRef.current = session;
   };
 
   const stopRecording = async () => {
-    console.log('Calling stopRecording...');
+    if (!isRecording || !currentSessionRef.current) {
+      console.log('No active recording to stop.');
+      return;
+    }
 
-    // Always call FFmpegKit.cancel() to stop the recording, regardless of isRecording
-    console.log('Calling FFmpegKit.cancel() to stop the recording...');
-    FFmpegKit.cancel().then(() => {
+    console.log('Calling stopRecording...');
+    setRecordingStopped(true);
+
+    const session = currentSessionRef.current;
+    FFmpegKit.cancel(session).then(() => {
       console.log('FFmpegKit session successfully canceled.');
 
-      // Set the flags after FFmpegKit.cancel() completes
-      alertShown = false;
+      currentSessionRef.current = null;
       setIsRecording(false);
-      setRecordingStarted(false);
-      Alert.alert('Recording stopped');
 
-      // Delay the video upload by 2 seconds for safety
-      setTimeout(async () => {
-        console.log('Starting video upload after 2 seconds delay...');
-        setIsLoadingUpload(true);  // Set loading state for upload
+      handleVideoUpload();
+    }).catch(error => {
+      console.error('Error canceling FFmpegKit session:', error);
+    });
+  };
 
-        try {
+  const handleVideoUpload = async () => {
+    // Delay the video upload by 2 seconds for safety
+    setTimeout(async () => {
+      console.log('Starting video upload after 2 seconds delay...');
+      setIsLoadingUpload(true);
+
+      try {
+        if (!uploadInProgress) {
+          setUploadInProgress(true);
           await uploadVideoToServer(path);
           console.log('Video upload finished.');
 
@@ -136,19 +165,19 @@ const Player = ({ route }) => {
           try {
             await RNFS.unlink(path);
             console.log('Recording file deleted:', path);
+            Alert.alert('Video uploaded successfully!');
           } catch (error) {
             console.error('Error deleting file:', error);
           }
-
-        } catch (uploadError) {
-          console.error('Video upload error:', uploadError);
+          setUploadInProgress(false);
         }
+      } catch (uploadError) {
+        console.error('Video upload error:', uploadError);
+        setUploadInProgress(false);
+      }
 
-        setIsLoadingUpload(false); // Remove loading state after upload completes
-      }, 2000);  // 2-second delay for safety
-    }).catch(error => {
-      console.error('Error canceling FFmpegKit session:', error);
-    });
+      setIsLoadingUpload(false);
+    }, 2000);
   };
 
   const handleRecordingPress = async () => {
@@ -164,12 +193,12 @@ const Player = ({ route }) => {
   const uploadVideoToServer = async (videoPath) => {
     const formData = new FormData();
     formData.append('video_path', {
-      uri: `file://${videoPath}`,  // Prepend with 'file://' for local file path
-      type: 'video/mp4',  // Adjust MIME type if needed
+      uri: `file://${videoPath}`,
+      type: 'video/mp4',
       name: 'recording.mp4',
     });
-    formData.append('tourplace_id', tourplace_id.toString());  // The ID from route parameters
-    formData.append('pricing_id', selectedLimit ? selectedLimit.id.toString() : '1');  // Pass selected pricing ID
+    formData.append('tourplace_id', tourplace_id.toString());
+    formData.append('pricing_id', selectedLimit ? selectedLimit.id.toString() : '1');
 
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
@@ -183,7 +212,7 @@ const Player = ({ route }) => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      Alert.alert('Video uploaded successfully!');
+      console.log('Video uploaded successfully!');
       console.log('Server Response:', response.data);
     } catch (error) {
       Alert.alert('Video upload failed!', error.message);
@@ -202,35 +231,50 @@ const Player = ({ route }) => {
             selectedValue={selectedLimit ? selectedLimit.id : null}
             style={styles.picker}
             onValueChange={(itemValue) => {
-              const selected = recordingLimits.find(limit => limit.id === itemValue);
+              const selected = recordingLimits.find(limit => limit.price_id === itemValue);
               setSelectedLimit(selected);
             }}
           >
             <Picker.Item label="Select Recording Time Limit" value={null} />
             {recordingLimits.map((limit) => (
               <Picker.Item
-                key={limit.id}
-                label={`${limit.title} / $${limit.price} / ${limit.record_time}s / ${limit.record_limit} videos`}
-                value={limit.id}
+                key={limit.price_id}
+                label={`${limit.comment} / ${limit.remain} videos remain`}
+                value={limit.price_id}
               />
             ))}
           </Picker>
         </View>
       )}
 
-      {/* Video Player */}
-      <VLCPlayer
-        style={styles.videoPlayer}
-        source={{ uri: streamUrl }}
-        resizeMode="cover"
-      />
+      {/* Video Player with loading indicator */}
+      <View style={styles.videoContainer}>
+        {isVideoLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          </View>
+        )}
+        <VLCPlayer
+          style={styles.videoPlayer}
+          source={{ uri: streamUrl }}
+          resizeMode="cover"
+          onPlaying={() => setIsVideoLoading(false)}
+          onBuffering={() => {
+            setIsVideoLoading(true);
+            setTimeout(() => {
+              setIsVideoLoading(false);
+            }, 5000);
+          }}
+          onStopped={() => setIsVideoLoading(true)}
+        />
+      </View>
 
       {/* Recording Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.recordButton, !selectedLimit || selectedLimit.record_limit === 0 ? styles.disabledButton : null]}
+          style={[styles.recordButton, !selectedLimit || selectedLimit.remain === 0 ? styles.disabledButton : null]}
           onPress={handleRecordingPress}
-          disabled={!selectedLimit || selectedLimit.record_limit === 0 || isLoadingUpload}
+          disabled={!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload}
         >
           {isLoadingUpload ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -262,10 +306,26 @@ const styles = StyleSheet.create({
   picker: {
     color: '#FFFFFF',
   },
-  videoPlayer: {
+  videoContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  videoPlayer: {
     width: '100%',
     height: '100%',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1, // Ensure it's on top of the player
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: to dim the background during loading
   },
   buttonContainer: {
     position: 'absolute',
@@ -283,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    opacity: 0.5, // Disabled button style
+    opacity: 0.5,
   },
   innerCircle: {
     width: 60,

@@ -115,13 +115,15 @@ const SignUpScreen = ({ navigation }) => {
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
-      const response = await axios.post('https://api.emmysvideos.com/api/v1/user/register', requestData, {
+      const response = await axios.post('https://api.emmysvideos.com/api/v1/user/phone/register', requestData, {
         headers: { 'Content-Type': 'application/json' },
       });
-
-      Alert.alert('Success', 'Account created successfully!');
-      console.log(response.data);
-      navigation.navigate('Signin');
+      if (response.data.status && response.data.data.user_id) {
+        const userId = response.data.data.user_id;
+        navigation.navigate('OTPCheck', { userId });
+      } else {
+        Alert.alert('Signup Failed', 'Unexpected response from server. Please try again.');
+      }
     } catch (error) {
         if (error.response) {
             const errorData = error.response.data;

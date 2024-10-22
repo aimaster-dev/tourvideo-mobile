@@ -100,8 +100,14 @@ const SignInScreen = ({ navigation }) => {
         await AsyncStorage.setItem('refresh_token', refreshToken);
         navigation.navigate('Home');
       } catch (error) {
-        console.log('Login error:', JSON.stringify(error.data));
-        Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
+        if (error.response && error.response.status === 406){
+          const userId = error.response.data.data.user_id;
+          Alert.alert('Account not activated', 'Please activate your account.');
+          navigation.navigate('OTPCheck', {userId});
+        } else {
+          console.log('Login error:', JSON.stringify(error.data));
+          Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
+        }
       } finally {
         setIsSubmitting(false);
       }
