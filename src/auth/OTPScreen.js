@@ -120,7 +120,7 @@ const OTPScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1D2A5B',  // Dark Blue background
+    backgroundColor: '#0B1541',  // Dark Blue background
     paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
