@@ -22,6 +22,7 @@ const HomeScreen = ({ navigation }) => {
           },
         });
 
+        
         if (response.data && response.data.status) {
           setCameraData(response.data.data); // Save the camera data
         }
