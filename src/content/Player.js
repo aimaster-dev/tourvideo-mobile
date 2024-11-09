@@ -8,7 +8,7 @@
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // const Player = ({ route }) => {
-//   const { tourplace_id, camera_name, camera_ip, camera_port, camera_user_name, password, tourplace } = route.params;
+//   const { tourplace_id, camera_name, camera_ip, camera_port, camera_user_name, password, tourplace, usertype, user_id } = route.params;
 
 //   const [isRecording, setIsRecording] = useState(false);
 //   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
@@ -20,6 +20,7 @@
 //   const [uploadInProgress, setUploadInProgress] = useState(false);
 //   const [recordingStopped, setRecordingStopped] = useState(false);
 //   const [isVideoLoading, setIsVideoLoading] = useState(true);
+//   const [buttonLoading, setButtonLoading] = useState(false);  // Added loading state for the button
 
 //   // To track the session reference
 //   const currentSessionRef = useRef(null);
@@ -85,6 +86,10 @@
 //         console.error('No access token found');
 //         return;
 //       }
+//       if (usertype === 2) {
+//         setLoadingLimits(false);
+//         return;
+//       }
 //       const response = await axios.get(`https://api.emmysvideos.com/api/v1/invoice/validlist?tourplace=${tourplace_id}`, {
 //         headers: {
 //           'Authorization': `Bearer ${accessToken}`,
@@ -111,10 +116,19 @@
 //     setIsRecording(true);
 //     setRecordingStopped(false);
 //     alertShownRef.current = false; // Reset the alertShown flag before starting a new recording
+//     setButtonLoading(true); // Set the button to loading state
+//     const recordTime = usertype === 2 ? 10 : (selectedLimit ? selectedLimit.record_time : 0);
 
-//     console.log(`Starting recording for ${selectedLimit.record_time} seconds.`);
+//     if (recordTime === 0) {
+//       Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+//       setButtonLoading(false);
+//       setIsRecording(false);
+//       return;
+//     }
 
-//     const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${selectedLimit.record_time + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
+//     console.log(`Starting recording for ${recordTime} seconds.`);
+
+//     const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
 
 //     // eslint-disable-next-line no-shadow
 //     const session = await FFmpegKit.executeAsync(command, async (session) => {
@@ -181,6 +195,7 @@
 //       }
 
 //       setIsLoadingUpload(false);
+//       setButtonLoading(false); // Stop the button loading once upload is finished
 //     }, 2000);
 //   };
 
@@ -189,8 +204,10 @@
 //       await stopRecording();
 //     } else if (selectedLimit && selectedLimit.remain > 0) {
 //       await startRecording();
-//     } else {
+//     } else if (usertype === 3) {
 //       Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+//     } else {
+//       await startRecording();
 //     }
 //   };
 
@@ -278,11 +295,11 @@
 //       {/* Recording Button */}
 //       <View style={styles.buttonContainer}>
 //         <TouchableOpacity
-//           style={[styles.recordButton, !selectedLimit || selectedLimit.remain === 0 ? styles.disabledButton : null]}
+//           style={[styles.recordButton, usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || buttonLoading) ? styles.disabledButton : null]}
 //           onPress={handleRecordingPress}
-//           disabled={!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload}
+//           disabled={usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload || buttonLoading)}
 //         >
-//           {isLoadingUpload ? (
+//           {buttonLoading || isLoadingUpload ? (
 //             <ActivityIndicator size="small" color="#FFFFFF" />
 //           ) : (
 //             <View style={[styles.innerCircle, isRecording && styles.innerCircleActive]} />
@@ -370,7 +387,6 @@
 
 // export default Player;
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Alert, Platform, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -381,7 +397,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Player = ({ route }) => {
-  const { tourplace_id, camera_name, camera_ip, camera_port, camera_user_name, password, tourplace } = route.params;
+  const { cam_id, tourplace_id, camera_name, camera_ip, camera_port, camera_user_name, password, tourplace, usertype, user_id } = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
@@ -389,48 +405,40 @@ const Player = ({ route }) => {
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [selectedLimit, setSelectedLimit] = useState(null);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const streamUrl = `rtsp://${camera_user_name}:${password}@${camera_ip}:${camera_port}`;
+  const [cameras, setCameras] = useState([]);
+  const [selectedCamera, setSelectedCamera] = useState(null);
+  const [streamUrl, setStreamUrl] = useState(`rtsp://${camera_user_name}:${password}@${camera_ip}:${camera_port}`);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
-  const [buttonLoading, setButtonLoading] = useState(false);  // Added loading state for the button
+  const [buttonLoading, setButtonLoading] = useState(false);
 
-  // To track the session reference
   const currentSessionRef = useRef(null);
-
-  // Helper to generate a unique file path for each recording
-  const generateFilePath = () => {
-    return `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;  // Unique filename
-  };
-
-  // Define alertShown as useRef to maintain its value across renders
   const alertShownRef = useRef(false);
+
+  const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
 
   useEffect(() => {
     if (Platform.OS === 'android') {
       requestPermissions();
     }
     fetchRecordingLimits();
+    fetchCameras();
 
-    // Setup FFmpeg log callback once
     FFmpegKitConfig.enableLogCallback(log => {
       if (log.getMessage().includes('frame=') && !alertShownRef.current && !recordingStopped) {
         alertShownRef.current = true;
         console.log('First frame detected. Recording started.');
         setRecordingStarted(true);
         Alert.alert('Recording started!');
-
-        // Automatically stop recording after record_time seconds from first frame
-        console.log(`Will stop recording after ${selectedLimit.record_time * 1000} milliseconds.`);
         setTimeout(async () => {
           console.log('Time limit reached. Stopping recording...');
-          await stopRecording();  // Stop the recording
-        }, (selectedLimit.record_time + 4) * 1000);  // Convert record_time to milliseconds
+          await stopRecording();
+        }, (selectedLimit ? selectedLimit.record_time : 10) * 1000);
       }
     });
 
     return () => {
-      // Cleanup: Prevent log callback from continuing after unmount
       alertShownRef.current = false;
       setRecordingStopped(true);
     };
@@ -459,6 +467,10 @@ const Player = ({ route }) => {
         console.error('No access token found');
         return;
       }
+      if (usertype === 2) {
+        setLoadingLimits(false);
+        return;
+      }
       const response = await axios.get(`https://api.emmysvideos.com/api/v1/invoice/validlist?tourplace=${tourplace_id}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -474,31 +486,67 @@ const Player = ({ route }) => {
     }
   };
 
+  const fetchCameras = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const response = await axios.get(`https://api.emmysvideos.com/api/v1/camera/getall`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (response.data.status) {
+        setCameras(response.data.data);
+        const defaultCamera = response.data.data.find(camera => camera.id === cam_id);
+        if (defaultCamera) {
+          setSelectedCamera(defaultCamera.id);
+          updateStreamUrl(defaultCamera);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching cameras:', error);
+    }
+  };
+
+  const updateStreamUrl = (camera) => {
+    setStreamUrl(`rtsp://${camera.camera_user_name}:${camera.password}@${camera.camera_ip}:${camera.camera_port}`);
+  };
+
   const startRecording = async () => {
     if (isRecording || currentSessionRef.current) {
       console.log('Another session is running, skipping...');
       return;
     }
 
-    const path = generateFilePath();  // Generate a new file path for each recording
-
+    const path = generateFilePath();
     setIsRecording(true);
     setRecordingStopped(false);
-    alertShownRef.current = false; // Reset the alertShown flag before starting a new recording
-    setButtonLoading(true); // Set the button to loading state
+    alertShownRef.current = false;
+    setButtonLoading(true);
 
-    console.log(`Starting recording for ${selectedLimit.record_time} seconds.`);
+    const recordTime = usertype === 2 ? 10 : (selectedLimit ? selectedLimit.record_time : 0);
 
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${selectedLimit.record_time + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
+    if (recordTime === 0) {
+      Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+      setButtonLoading(false);
+      setIsRecording(false);
+      return;
+    }
 
-    // eslint-disable-next-line no-shadow
+    console.log(`Starting recording for ${recordTime} seconds.`);
+
+    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
+
     const session = await FFmpegKit.executeAsync(command, async (session) => {
       const returnCode = await session.getReturnCode();
       const output = await session.getOutput();
       console.log('FFmpeg output: ', output);
       if (returnCode.isValueSuccess()) {
         Alert.alert('Recording saved at:', path);
-        handleVideoUpload(path);  // Pass the file path to handle upload
+        handleVideoUpload(path);
       } else {
         console.log('Recording failed:', output);
       }
@@ -520,7 +568,6 @@ const Player = ({ route }) => {
     const session = currentSessionRef.current;
     FFmpegKit.cancel(session).then(() => {
       console.log('FFmpegKit session successfully canceled.');
-
       currentSessionRef.current = null;
       setIsRecording(false);
     }).catch(error => {
@@ -529,7 +576,6 @@ const Player = ({ route }) => {
   };
 
   const handleVideoUpload = async (videoPath) => {
-    // Delay the video upload by 2 seconds for safety
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
       setIsLoadingUpload(true);
@@ -540,7 +586,6 @@ const Player = ({ route }) => {
           await uploadVideoToServer(videoPath);
           console.log('Video upload finished.');
 
-          // Remove the recorded file after upload completes
           try {
             await RNFS.unlink(videoPath);
             console.log('Recording file deleted:', videoPath);
@@ -556,18 +601,8 @@ const Player = ({ route }) => {
       }
 
       setIsLoadingUpload(false);
-      setButtonLoading(false); // Stop the button loading once upload is finished
+      setButtonLoading(false);
     }, 2000);
-  };
-
-  const handleRecordingPress = async () => {
-    if (isRecording) {
-      await stopRecording();
-    } else if (selectedLimit && selectedLimit.remain > 0) {
-      await startRecording();
-    } else {
-      Alert.alert('Invalid Selection', 'Please select a valid recording option.');
-    }
   };
 
   const uploadVideoToServer = async (videoPath) => {
@@ -600,9 +635,20 @@ const Player = ({ route }) => {
     }
   };
 
+  const handleRecordingPress = async () => {
+    if (isRecording) {
+      await stopRecording();
+    } else if (selectedLimit && selectedLimit.remain > 0) {
+      await startRecording();
+    } else if (usertype === 3) {
+      Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+    } else {
+      await startRecording();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Recording Time Limit Picker */}
       {loadingLimits ? (
         <ActivityIndicator size="large" color="#FFFFFF" />
       ) : (
@@ -629,7 +675,22 @@ const Player = ({ route }) => {
         </View>
       )}
 
-      {/* Video Player with loading indicator */}
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={selectedCamera}
+          style={styles.picker}
+          onValueChange={(itemValue) => {
+            const selectedCamera = cameras.find(camera => camera.id === itemValue);
+            setSelectedCamera(itemValue);
+            updateStreamUrl(selectedCamera); // Update the stream URL with the selected camera
+          }}
+        >
+          {cameras.map(camera => (
+            <Picker.Item key={camera.id} label={camera.camera_name} value={camera.id} />
+          ))}
+        </Picker>
+      </View>
+
       <View style={styles.videoContainer}>
         {isVideoLoading && (
           <View style={styles.loadingOverlay}>
@@ -638,7 +699,7 @@ const Player = ({ route }) => {
         )}
         <VLCPlayer
           style={styles.videoPlayer}
-          source={{ uri: streamUrl }}
+          source={{ uri: streamUrl }} // Set VLCPlayer source to dynamic streamUrl
           resizeMode="cover"
           onPlaying={() => setIsVideoLoading(false)}
           onBuffering={() => {
@@ -651,12 +712,11 @@ const Player = ({ route }) => {
         />
       </View>
 
-      {/* Recording Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.recordButton, (!selectedLimit || selectedLimit.remain === 0 || buttonLoading) ? styles.disabledButton : null]}
+          style={[styles.recordButton, usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || buttonLoading) ? styles.disabledButton : null]}
           onPress={handleRecordingPress}
-          disabled={!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload || buttonLoading}
+          disabled={usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload || buttonLoading)}
         >
           {buttonLoading || isLoadingUpload ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -676,14 +736,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   pickerContainer: {
-    position: 'absolute',
-    top: 20,
-    left: 10,
-    right: 10,
-    zIndex: 2,
+    marginTop: 10,
     backgroundColor: '#1C2749',
     borderRadius: 10,
     padding: 5,
+    marginHorizontal: 10,
   },
   picker: {
     color: '#FFFFFF',
@@ -706,8 +763,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1, // Ensure it's on top of the player
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: to dim the background during loading
+    zIndex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   buttonContainer: {
     position: 'absolute',

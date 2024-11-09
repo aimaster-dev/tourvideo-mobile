@@ -2,10 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ route }) => {
+
+  const { user_id, usertype } = route.params;
+
   const [cameraData, setCameraData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchCameraData = async () => {
@@ -22,7 +27,6 @@ const HomeScreen = ({ navigation }) => {
           },
         });
 
-        
         if (response.data && response.data.status) {
           setCameraData(response.data.data); // Save the camera data
         }
@@ -43,6 +47,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleItemPress = (item) => {
     navigation.navigate('Player', {
+      cam_id: item.id,
       tourplace_id: item.tourplace[0]?.id,
       camera_name: item.camera_name,
       camera_ip: item.camera_ip,
@@ -50,6 +55,8 @@ const HomeScreen = ({ navigation }) => {
       camera_user_name: item.camera_user_name,
       password: item.password,
       tourplace: item.tourplace[0]?.place_name || 'Unknown Place',
+      usertype: usertype,
+      user_id: user_id,
     });
   };
 

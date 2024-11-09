@@ -98,7 +98,10 @@ const SignInScreen = ({ navigation }) => {
         const refreshToken = response. data.data.refresh;
         await AsyncStorage.setItem('access_token', accessToken);
         await AsyncStorage.setItem('refresh_token', refreshToken);
-        navigation.navigate('Home');
+        navigation.navigate('Home', {
+          user_id: response.data.data.user_id,
+          usertype: response.data.data.usertype,
+        });
       } catch (error) {
         if (error.response && error.response.status === 406){
           const userId = error.response.data.data.user_id;
