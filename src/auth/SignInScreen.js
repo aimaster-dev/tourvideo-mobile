@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,6 +33,10 @@ const SignInScreen = ({ navigation }) => {
 
       fetchTourPlaces();
     }, []);
+
+    const handleHelpLinkPress = () => {
+      navigation.navigate('VideoPlayback');
+  };
 
     const handlePlaceChange = (itemValue) => {
       const selected = tourPlaces.find((place) => place.id === itemValue);
@@ -209,6 +213,9 @@ const SignInScreen = ({ navigation }) => {
             Signup
           </Text>
         </Text>
+        <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
+          How to use our program?
+        </Text>
       </View>
     );
   };
@@ -302,6 +309,12 @@ const SignInScreen = ({ navigation }) => {
     link: {
       color: '#287BF3',
       fontWeight: 'bold',
+    },
+    helpLink: {
+      color: '#287BF3',
+      fontWeight: 'bold',
+      marginTop: 15,
+      textDecorationLine: 'underline',
     },
   });
 

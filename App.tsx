@@ -8,6 +8,9 @@ import HomeScreen from './src/content/HomeScreen';
 import CameraDetailScreen from './src/content/CameraDetailScreen';
 import Player from './src/content/Player';
 import OTPScreen from './src/auth/OTPScreen';
+import VideoPlaybackScreen from './src/content/VideoPlaybackScreen';
+import PaymentScreen from './src/content/PaymentScreen';
+import CheckoutScreen from './src/content/CheckoutScreen';
 
 const Stack = createStackNavigator();
 
@@ -15,8 +18,8 @@ function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Splash"
-        // initialRouteName="OTPCheck"
+        // initialRouteName="PaymentScreen"
+        initialRouteName="OTPCheck"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name = "Home" component={HomeScreen} />
@@ -26,6 +29,9 @@ function App() {
         <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
         <Stack.Screen name="Player" component={Player} />
         <Stack.Screen name="OTPCheck" component={OTPScreen} />
+        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+        <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
+        <Stack.Screen name="VideoPlayback" component={VideoPlaybackScreen} options={{ title: 'How to Use Our Program' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
