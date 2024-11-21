@@ -1,16 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 
-const HomeScreen = ({ route }) => {
-
-  const { user_id, usertype } = route.params;
+const HomeScreen = ({route}) => {
+  const {user_id, usertype} = route.params;
 
   const [cameraData, setCameraData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem('access_token');
+      await AsyncStorage.removeItem('user_details');
+      navigation.replace('Signin');
+    } catch (e) {
+      console.log(e, 'error in logout');
+    }
+  };
 
   useEffect(() => {
     const fetchCameraData = async () => {
@@ -21,11 +38,14 @@ const HomeScreen = ({ route }) => {
           return;
         }
 
-        const response = await axios.get('https://api.emmysvideos.com/api/v1/camera/getall', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
+        const response = await axios.get(
+          'https://api.emmysvideos.com/api/v1/camera/getall',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           },
-        });
+        );
 
         if (response.data && response.data.status) {
           setCameraData(response.data.data); // Save the camera data
@@ -42,10 +62,16 @@ const HomeScreen = ({ route }) => {
 
   if (loading) {
     // eslint-disable-next-line react-native/no-inline-styles
-    return <ActivityIndicator size="large" color="#287BF3" style={{ flex: 1, justifyContent: 'center' }} />;
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#287BF3"
+        style={{flex: 1, justifyContent: 'center'}}
+      />
+    );
   }
 
-  const handleItemPress = (item) => {
+  const handleItemPress = item => {
     navigation.navigate('Player', {
       cam_id: item.id,
       tourplace_id: item.tourplace[0]?.id,
@@ -59,14 +85,20 @@ const HomeScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Choose Camera</Text>
-
+      <View style={styles.row}>
+        <Text style={styles.headerText}>Choose Camera</Text>
+        <TouchableOpacity onPress={() => logout()}>
+          <Text style={styles.headerText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
       {/* Display camera data in a list */}
       <FlatList
         data={cameraData}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.cameraItem} onPress={() => handleItemPress(item)}>
+        keyExtractor={item => item.id.toString()}
+        renderItem={({item}) => (
+          <TouchableOpacity
+            style={styles.cameraItem}
+            onPress={() => handleItemPress(item)}>
             <View style={styles.cameraItem}>
               <Image
                 source={require('../../asset/img/camera_icon.png')} // Ensure the path is correct for your image file
@@ -87,6 +119,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerText: {
     color: '#fff',
@@ -109,7 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   icon: {
-    width: 30,  // Set the width of your icon image
+    width: 30, // Set the width of your icon image
     height: 30, // Set the height of your icon image
     resizeMode: 'contain', // Ensure the image scales properly
   },

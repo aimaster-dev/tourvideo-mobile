@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
 import SplashScreen from './src/splash/SplashScreen';
 import SignInScreen from './src/auth/SignInScreen';
 import SignUpScreen from './src/auth/SIgnUpScreen';
@@ -16,24 +16,27 @@ const Stack = createStackNavigator();
 
 function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        // initialRouteName="PaymentScreen"
-        initialRouteName="OTPCheck"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name = "Home" component={HomeScreen} />
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Signin" component={SignInScreen} />
-        <Stack.Screen name="Signup" component={SignUpScreen} />
-        <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
-        <Stack.Screen name="Player" component={Player} />
-        <Stack.Screen name="OTPCheck" component={OTPScreen} />
-        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
-        <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
-        <Stack.Screen name="VideoPlayback" component={VideoPlaybackScreen} options={{ title: 'How to Use Our Program' }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Splash"
+          screenOptions={{headerShown: false}}>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Signin" component={SignInScreen} />
+          <Stack.Screen name="Signup" component={SignUpScreen} />
+          <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
+          <Stack.Screen name="Player" component={Player} />
+          <Stack.Screen name="OTPCheck" component={OTPScreen} />
+          <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+          <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
+          <Stack.Screen
+            name="VideoPlayback"
+            component={VideoPlaybackScreen}
+            options={{title: 'How to Use Our Program'}}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+
   );
 }
 
