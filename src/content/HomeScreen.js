@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Feather';
 
 const HomeScreen = ({route}) => {
   const {user_id, usertype} = route.params;
@@ -85,11 +86,19 @@ const HomeScreen = ({route}) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
+      <View style={[styles.row, styles.spaceBetween]}>
         <Text style={styles.headerText}>Choose Camera</Text>
-        <TouchableOpacity onPress={() => logout()}>
-          <Text style={styles.headerText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={[styles.row]}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.circle}
+            onPress={() => navigation.navigate('Profile')}>
+            <Icon name="user" size={20} color="red" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => logout()}>
+            <Text style={styles.headerText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       {/* Display camera data in a list */}
       <FlatList
@@ -120,15 +129,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
+  circle: {
+    width: 30,
+    height: 30,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: 20,
   },
+  spaceBetween: {justifyContent: 'space-between'},
   headerText: {
     color: '#fff',
     fontSize: 20,
-    marginBottom: 20,
   },
   cameraItem: {
     flex: 1,

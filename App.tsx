@@ -11,6 +11,7 @@ import OTPScreen from './src/auth/OTPScreen';
 import VideoPlaybackScreen from './src/content/VideoPlaybackScreen';
 import PaymentScreen from './src/content/PaymentScreen';
 import CheckoutScreen from './src/content/CheckoutScreen';
+import ProfileScreen from './src/content/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,7 @@ function App() {
           initialRouteName="Splash"
           screenOptions={{headerShown: false}}>
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Splash" component={SplashScreen} />
           <Stack.Screen name="Signin" component={SignInScreen} />
           <Stack.Screen name="Signup" component={SignUpScreen} />
