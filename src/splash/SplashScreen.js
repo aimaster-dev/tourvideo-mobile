@@ -3,14 +3,6 @@ import React, {useEffect} from 'react';
 import {View, Image, Text, StyleSheet} from 'react-native';
 
 const SplashScreen = ({navigation}) => {
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     // navigation.replace('Signin');
-
-  //   }, 2000);
-
-  //   return () => clearTimeout(timer);
-  // }, [navigation]);
 
   const checkIsAuthenticated = async () => {
     try {
