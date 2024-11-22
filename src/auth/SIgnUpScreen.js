@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+} from 'react-native';
 import axios from 'axios';
 import CheckBox from '@react-native-community/checkbox';
+import api from '../constants/api';
 
-const SignUpScreen = ({ navigation }) => {
+const SignUpScreen = ({navigation}) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,36 +27,35 @@ const SignUpScreen = ({ navigation }) => {
   const [isAccepted, setIsAccepted] = useState(false);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
 
-
-  const handleEmailChange = (value) => {
+  const handleEmailChange = value => {
     setEmail(value);
     if (value) {
       setIsEmailValid(true); // Clear validation error when user types in email
     }
   };
 
-  const handleUserNameChange = (value) => {
+  const handleUserNameChange = value => {
     setFullName(value);
     if (value) {
       setIsUserNameValid(true); // Clear validation error when user types in user name
     }
   };
 
-  const handlePhoneNumberChange = (value) => {
+  const handlePhoneNumberChange = value => {
     setPhoneNumber(value);
     if (value) {
       setIsPhoneNumberValid(true); // Clear validation error when user types in user name
     }
   };
 
-  const handlePasswordChange = (value) => {
+  const handlePasswordChange = value => {
     setPassword(value);
     if (value) {
       setIsPasswordValid(true); // Clear validation error when user types in password
     }
   };
 
-  const handleConfirmPasswordChange = (value) => {
+  const handleConfirmPasswordChange = value => {
     setConfirmPassword(value);
     if (value) {
       setIsConformPasswordValid(true); // Clear validation error when user types in password
@@ -60,31 +68,31 @@ const SignUpScreen = ({ navigation }) => {
     //   Alert.alert('Error', 'Please fill all fields.');
     //   return;
     // }
-    if(!fullName) {
+    if (!fullName) {
       setIsUserNameValid(false);
       return;
     } else {
       setIsUserNameValid(true);
     }
-    if(!email) {
+    if (!email) {
       setIsEmailValid(false);
       return;
     } else {
       setIsEmailValid(true);
     }
-    if(!phoneNumber) {
+    if (!phoneNumber) {
       setIsPhoneNumberValid(false);
       return;
     } else {
       setIsPhoneNumberValid(true);
     }
-    if(!password) {
+    if (!password) {
       setIsPasswordValid(false);
       return;
     } else {
       setIsPasswordValid(true);
     }
-    if(!confirmPassword) {
+    if (!confirmPassword) {
       setIsConformPasswordValid(false);
       return;
     } else {
@@ -115,31 +123,34 @@ const SignUpScreen = ({ navigation }) => {
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
-      const response = await axios.post('https://api.emmysvideos.com/api/v1/user/phone/register', requestData, {
-        headers: { 'Content-Type': 'application/json' },
+      const response = await api.post('user/phone/register', requestData, {
+        headers: {'Content-Type': 'application/json'},
       });
       if (response.data.status && response.data.data.user_id) {
         const userId = response.data.data.user_id;
-        navigation.navigate('OTPCheck', { userId });
+        navigation.navigate('OTPCheck', {userId});
       } else {
-        Alert.alert('Signup Failed', 'Unexpected response from server. Please try again.');
+        Alert.alert(
+          'Signup Failed',
+          'Unexpected response from server. Please try again.',
+        );
       }
     } catch (error) {
-        if (error.response) {
-            const errorData = error.response.data;
-            // Extract the error message from the response
-            let errorMessage = '';
-            if (errorData.data && errorData.data.email) {
-              errorMessage = errorData.data.email.join(' '); // Join the array of error messages (if there are multiple)
-            } else {
-              errorMessage = 'Error creating account. Please check your input.';
-            }
-            console.log('Signup error response:', errorData);
-            Alert.alert('Signup Failed', errorMessage);
-          } else {
-            console.log('Signup error:', error.message);
-            Alert.alert('Signup Failed', 'An unknown error occurred.');
-          }
+      if (error.response) {
+        const errorData = error.response.data;
+        // Extract the error message from the response
+        let errorMessage = '';
+        if (errorData.data && errorData.data.email) {
+          errorMessage = errorData.data.email.join(' '); // Join the array of error messages (if there are multiple)
+        } else {
+          errorMessage = 'Error creating account. Please check your input.';
+        }
+        console.log('Signup error response:', errorData);
+        Alert.alert('Signup Failed', errorMessage);
+      } else {
+        console.log('Signup error:', error.message);
+        Alert.alert('Signup Failed', 'An unknown error occurred.');
+      }
     } finally {
       setIsSubmitting(false); // Set submitting state to false after request is complete
     }
@@ -148,7 +159,11 @@ const SignUpScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Logo */}
-      <Image source={require('../../asset/img/logo.png')} style={styles.logo} resizeMode="contain" />
+      <Image
+        source={require('../../asset/img/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
 
       {/* Welcome Text */}
       <Text style={styles.welcomeText}>Hey there,</Text>
@@ -190,7 +205,9 @@ const SignUpScreen = ({ navigation }) => {
           value={phoneNumber}
           keyboardType="phone-pad"
         />
-        {!isPhoneNumberValid && <Text style={styles.requiredText}>Required*</Text>}
+        {!isPhoneNumberValid && (
+          <Text style={styles.requiredText}>Required*</Text>
+        )}
       </View>
 
       {/* Password Input */}
@@ -216,26 +233,23 @@ const SignUpScreen = ({ navigation }) => {
           value={confirmPassword}
           secureTextEntry={true}
         />
-        {!isConformPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
+        {!isConformPasswordValid && (
+          <Text style={styles.requiredText}>Required*</Text>
+        )}
       </View>
       <View style={styles.checkboxContainer}>
         <CheckBox
           value={isAccepted}
           onValueChange={setIsAccepted}
           style={styles.checkbox}
-          tintColors={{ true: '#F15927', false: '#FFFFFF' }}
+          tintColors={{true: '#F15927', false: '#FFFFFF'}}
         />
         <Text style={styles.checkboxText}>
           By continuing you accept our{' '}
           {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
-          <Text style={styles.link}>
-            Privacy Policy
-          </Text>{' '}
-          &{' '}
+          <Text style={styles.link}>Privacy Policy</Text> &{' '}
           {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
-          <Text style={styles.link}>
-            Term of Use
-          </Text>
+          <Text style={styles.link}>Term of Use</Text>
         </Text>
       </View>
       {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
@@ -251,7 +265,9 @@ const SignUpScreen = ({ navigation }) => {
       {/* Login Link */}
       <Text style={styles.loginText}>
         Already have an account?{' '}
-        <Text onPress={() => navigation.navigate('Signin')} style={styles.loginLink}>
+        <Text
+          onPress={() => navigation.navigate('Signin')}
+          style={styles.loginLink}>
           Login
         </Text>
       </Text>

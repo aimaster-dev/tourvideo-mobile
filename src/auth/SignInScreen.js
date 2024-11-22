@@ -14,6 +14,7 @@ import {Picker} from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckBox from '@react-native-community/checkbox';
+import api from '../constants/api';
 
 const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -32,9 +33,7 @@ const SignInScreen = ({navigation}) => {
   useEffect(() => {
     const fetchTourPlaces = async () => {
       try {
-        const response = await axios.get(
-          'https://api.emmysvideos.com/api/v1/tourplace/getall',
-        );
+        const response = await api.get('tourplace/getall');
         setTourPlaces(response.data.data || []);
         setLoading(false);
       } catch (error) {
@@ -104,25 +103,21 @@ const SignInScreen = ({navigation}) => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post(
-        'https://api.emmysvideos.com/api/v1/user/login',
-        requestData,
-        {
-          headers: {'Content-Type': 'application/json'},
-        },
-      );
+      const response = await api.post('user/login', requestData, {
+        headers: {'Content-Type': 'application/json'},
+      });
+
+      const {access, refresh, user_id, usertype, username} = response.data.data;
+      const user_data = {user_id, usertype, username};
+
+      await Promise.all([
+        access && AsyncStorage.setItem('access_token', access),
+        refresh && AsyncStorage.setItem('refresh_token', refresh),
+        AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
+      ]);
 
       Alert.alert('Success', 'Login successful!');
-      const accessToken = response.data.data.access;
-      const refreshToken = response.data.data.refresh;
-      const user_data = {
-        user_id: response.data.data.user_id,
-        usertype: response.data.data.usertype,
-      };
-      await AsyncStorage.setItem('access_token', accessToken);
-      await AsyncStorage.setItem('refresh_token', refreshToken);
-      await AsyncStorage.setItem('user_details', JSON.stringify(user_data));
-      navigation.navigate('Home', user_data);
+      navigation.replace('Dashboard');
     } catch (error) {
       if (error.response && error.response.status === 406) {
         const userId = error.response.data.data.user_id;

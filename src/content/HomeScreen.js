@@ -11,45 +11,36 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Feather';
+import api from '../constants/api';
 
-const HomeScreen = ({route}) => {
-  const {user_id, usertype} = route.params;
+const HomeScreen = ({}) => {
+  const [userData, setUserData] = useState({});
 
   const [cameraData, setCameraData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('access_token');
-      await AsyncStorage.removeItem('user_details');
-      navigation.replace('Signin');
-    } catch (e) {
-      console.log(e, 'error in logout');
-    }
-  };
-
   useEffect(() => {
     const fetchCameraData = async () => {
       try {
         const accessToken = await AsyncStorage.getItem('access_token');
+        const user_data = await AsyncStorage.getItem('user_details');
+        const parsed_data = JSON.parse(user_data);
+        if (parsed_data) {
+          setUserData(parsed_data);
+        }
         if (!accessToken) {
           console.error('No access token found');
           return;
         }
 
-        const response = await axios.get(
-          'https://api.emmysvideos.com/api/v1/camera/getall',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        const response = await api.get('camera/getall', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
-        );
-
+        });
         if (response.data && response.data.status) {
-          setCameraData(response.data.data); // Save the camera data
+          setCameraData(response.data.data);
         }
       } catch (error) {
         console.error('Error fetching camera data:', error);
@@ -64,11 +55,13 @@ const HomeScreen = ({route}) => {
   if (loading) {
     // eslint-disable-next-line react-native/no-inline-styles
     return (
-      <ActivityIndicator
-        size="large"
-        color="#287BF3"
-        style={{flex: 1, justifyContent: 'center'}}
-      />
+      <View style={styles.loader}>
+        <ActivityIndicator
+          size="large"
+          color="#287BF3"
+          style={{flex: 1, justifyContent: 'center'}}
+        />
+      </View>
     );
   }
 
@@ -79,8 +72,8 @@ const HomeScreen = ({route}) => {
       camera_name: item.camera_name,
       rtsp_url: item.rtsp_url,
       tourplace: item.tourplace[0]?.place_name || 'Unknown Place',
-      usertype: usertype,
-      user_id: user_id,
+      usertype: userData?.usertype,
+      user_id: userData?.user_id,
     });
   };
 
@@ -88,17 +81,6 @@ const HomeScreen = ({route}) => {
     <View style={styles.container}>
       <View style={[styles.row, styles.spaceBetween]}>
         <Text style={styles.headerText}>Choose Camera</Text>
-        <View style={[styles.row]}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.circle}
-            onPress={() => navigation.navigate('Profile')}>
-            <Icon name="user" size={20} color="red" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => logout()}>
-            <Text style={styles.headerText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
       </View>
       {/* Display camera data in a list */}
       <FlatList
@@ -129,15 +111,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
-  circle: {
-    width: 30,
-    height: 30,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
   row: {
     flexDirection: 'row',
     marginBottom: 20,
@@ -146,6 +119,12 @@ const styles = StyleSheet.create({
   headerText: {
     color: '#fff',
     fontSize: 20,
+  },
+  loader: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#0B1541'
   },
   cameraItem: {
     flex: 1,

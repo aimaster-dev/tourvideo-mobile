@@ -6,6 +6,7 @@ import { FFmpegKit, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
 import { VLCPlayer } from 'react-native-vlc-media-player';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../constants/api';
 
 const Player = ({ route }) => {
   const { cam_id, tourplace_id, camera_name, rtsp_url, tourplace, usertype, user_id } = route.params;
@@ -82,7 +83,7 @@ const Player = ({ route }) => {
         setLoadingLimits(false);
         return;
       }
-      const response = await axios.get(`https://api.emmysvideos.com/api/v1/invoice/validlist?tourplace=${tourplace_id}`, {
+      const response = await api.get(`invoice/validlist?tourplace=${tourplace_id}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
@@ -104,7 +105,7 @@ const Player = ({ route }) => {
         console.error('No access token found');
         return;
       }
-      const response = await axios.get(`https://api.emmysvideos.com/api/v1/camera/getall`, {
+      const response = await api.get(`camera/getall`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
@@ -232,7 +233,7 @@ const Player = ({ route }) => {
         console.error('No access token found');
         return;
       }
-      const response = await axios.post('https://api.emmysvideos.com/api/v1/video/video/add', formData, {
+      const response = await api.post('video/video/add', formData, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data',

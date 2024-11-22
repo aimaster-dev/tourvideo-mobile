@@ -10,10 +10,7 @@ const SplashScreen = ({navigation}) => {
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
       if (data && parsed_data) {
-        navigation.replace('Home', {
-          user_id: parsed_data.user_id,
-          usertype: parsed_data.usertype,
-        });
+        navigation.replace("Dashboard")
       } else {
         navigation.replace('Signin');
       }
