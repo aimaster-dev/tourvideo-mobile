@@ -7,25 +7,28 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import api from '../constants/api';
 import {Medium, Regular, Semibold} from '../constants/font';
-import {useLogout} from '../hooks/useLogout';
+import {useAPI} from '../hooks/useAPI';
+import {AuthContext} from '../context/AuthContext';
 
 const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const logout = useLogout();
+  const api = useAPI();
+
+  const {logout} = useContext(AuthContext);
 
   const getProfile = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
+        setLoading(false);
         console.error('No access token found');
         return;
       }
@@ -46,6 +49,26 @@ const ProfileScreen = () => {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.post('user/deleteaccount', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (data && data.status) {
+        await logout();
+      }
+    } catch (e) {
+      console.log(e, 'error in deleting the account');
+    }
+  };
+
   const handleDelete = async () => {
     try {
       setIsSubmitting(true);
@@ -56,7 +79,7 @@ const ProfileScreen = () => {
           {
             text: 'Yes',
             onPress: async () => {
-              await logout();
+              await deleteAccount();
               setIsSubmitting(false);
             },
           },
@@ -135,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
-    backgroundColor: '#0B1541'
+    backgroundColor: '#0B1541',
   },
   headerText: {
     color: '#fff',

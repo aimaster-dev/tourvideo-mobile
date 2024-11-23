@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,12 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Linking,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckBox from '@react-native-community/checkbox';
-import api from '../constants/api';
+import { useAPI } from '../hooks/useAPI';
+import { AuthContext } from '../context/AuthContext';
 
 const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -28,6 +27,10 @@ const SignInScreen = ({navigation}) => {
   const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [isAccepted, setIsAccepted] = useState(false);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
+
+  const api = useAPI()
+
+  const {setUser} = useContext(AuthContext)
 
   // Fetch the tour places from the API
   useEffect(() => {
@@ -117,7 +120,7 @@ const SignInScreen = ({navigation}) => {
       ]);
 
       Alert.alert('Success', 'Login successful!');
-      navigation.replace('Dashboard');
+      setUser(JSON.stringify(user_data))
     } catch (error) {
       if (error.response && error.response.status === 406) {
         const userId = error.response.data.data.user_id;

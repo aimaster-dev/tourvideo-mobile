@@ -9,9 +9,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
-import api from '../constants/api';
+import {useAPI} from '../hooks/useAPI';
 
 const HomeScreen = ({}) => {
   const [userData, setUserData] = useState({});
@@ -19,6 +18,8 @@ const HomeScreen = ({}) => {
   const [cameraData, setCameraData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+
+  const api = useAPI();
 
   useEffect(() => {
     const fetchCameraData = async () => {
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
-    backgroundColor: '#0B1541'
+    backgroundColor: '#0B1541',
   },
   cameraItem: {
     flex: 1,

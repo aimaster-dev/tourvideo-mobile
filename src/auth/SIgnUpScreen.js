@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import CheckBox from '@react-native-community/checkbox';
-import api from '../constants/api';
+import { useAPI } from '../hooks/useAPI';
 
 const SignUpScreen = ({navigation}) => {
   const [fullName, setFullName] = useState('');
@@ -26,6 +26,8 @@ const SignUpScreen = ({navigation}) => {
   const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
   const [isAccepted, setIsAccepted] = useState(false);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
+
+  const api = useAPI()
 
   const handleEmailChange = value => {
     setEmail(value);

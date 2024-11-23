@@ -1,15 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, PermissionsAndroid, Alert, Platform, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import React, {useState, useEffect, useRef} from 'react';
+import {
+  View,
+  StyleSheet,
+  PermissionsAndroid,
+  Alert,
+  Platform,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
+import {Picker} from '@react-native-picker/picker';
 import RNFS from 'react-native-fs';
-import { FFmpegKit, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
-import { VLCPlayer } from 'react-native-vlc-media-player';
-import axios from 'axios';
+import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
+import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../constants/api';
+import { useAPI } from '../hooks/useAPI';
 
-const Player = ({ route }) => {
-  const { cam_id, tourplace_id, camera_name, rtsp_url, tourplace, usertype, user_id } = route.params;
+const Player = ({route}) => {
+  const {
+    cam_id,
+    tourplace_id,
+    camera_name,
+    rtsp_url,
+    tourplace,
+    usertype,
+    user_id,
+  } = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
@@ -28,7 +44,10 @@ const Player = ({ route }) => {
   const currentSessionRef = useRef(null);
   const alertShownRef = useRef(false);
 
-  const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
+  const api = useAPI()
+
+  const generateFilePath = () =>
+    `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -38,7 +57,11 @@ const Player = ({ route }) => {
     fetchCameras();
 
     FFmpegKitConfig.enableLogCallback(log => {
-      if (log.getMessage().includes('frame=') && !alertShownRef.current && !recordingStopped) {
+      if (
+        log.getMessage().includes('frame=') &&
+        !alertShownRef.current &&
+        !recordingStopped
+      ) {
         alertShownRef.current = true;
         console.log('First frame detected. Recording started.');
         setRecordingStarted(true);
@@ -59,7 +82,7 @@ const Player = ({ route }) => {
   const requestPermissions = async () => {
     try {
       const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
       );
 
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
@@ -83,11 +106,14 @@ const Player = ({ route }) => {
         setLoadingLimits(false);
         return;
       }
-      const response = await api.get(`invoice/validlist?tourplace=${tourplace_id}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
+      const response = await api.get(
+        `invoice/validlist?tourplace=${tourplace_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
       if (response.data.status) {
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
@@ -107,12 +133,14 @@ const Player = ({ route }) => {
       }
       const response = await api.get(`camera/getall`, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       if (response.data.status) {
         setCameras(response.data.data);
-        const defaultCamera = response.data.data.find(camera => camera.id === cam_id);
+        const defaultCamera = response.data.data.find(
+          camera => camera.id === cam_id,
+        );
         if (defaultCamera) {
           setSelectedCamera(defaultCamera.id);
           updateStreamUrl(defaultCamera);
@@ -123,8 +151,8 @@ const Player = ({ route }) => {
     }
   };
 
-  const updateStreamUrl = (camera) => {
-    setStreamUrl(`${camera.rtsp_url}`);
+  const updateStreamUrl = camera => {
+    setStreamUrl(`${camera?.rtsp_url}`);
   };
 
   const startRecording = async () => {
@@ -139,10 +167,14 @@ const Player = ({ route }) => {
     alertShownRef.current = false;
     setButtonLoading(true);
 
-    const recordTime = usertype === 2 ? 10 : (selectedLimit ? selectedLimit.record_time : 0);
+    const recordTime =
+      usertype === 2 ? 10 : selectedLimit ? selectedLimit.record_time : 0;
 
     if (recordTime === 0) {
-      Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+      Alert.alert(
+        'Invalid Selection',
+        'Please select a valid recording option.',
+      );
       setButtonLoading(false);
       setIsRecording(false);
       return;
@@ -150,9 +182,11 @@ const Player = ({ route }) => {
 
     console.log(`Starting recording for ${recordTime} seconds.`);
 
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy ${path}`;
+    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
+      recordTime + 4
+    } -fflags nobuffer -flags low_delay -c copy ${path}`;
 
-    const session = await FFmpegKit.executeAsync(command, async (session) => {
+    const session = await FFmpegKit.executeAsync(command, async session => {
       const returnCode = await session.getReturnCode();
       const output = await session.getOutput();
       console.log('FFmpeg output: ', output);
@@ -178,16 +212,18 @@ const Player = ({ route }) => {
     setRecordingStopped(true);
 
     const session = currentSessionRef.current;
-    FFmpegKit.cancel(session).then(() => {
-      console.log('FFmpegKit session successfully canceled.');
-      currentSessionRef.current = null;
-      setIsRecording(false);
-    }).catch(error => {
-      console.error('Error canceling FFmpegKit session:', error);
-    });
+    FFmpegKit.cancel(session)
+      .then(() => {
+        console.log('FFmpegKit session successfully canceled.');
+        currentSessionRef.current = null;
+        setIsRecording(false);
+      })
+      .catch(error => {
+        console.error('Error canceling FFmpegKit session:', error);
+      });
   };
 
-  const handleVideoUpload = async (videoPath) => {
+  const handleVideoUpload = async videoPath => {
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
       setIsLoadingUpload(true);
@@ -217,7 +253,7 @@ const Player = ({ route }) => {
     }, 2000);
   };
 
-  const uploadVideoToServer = async (videoPath) => {
+  const uploadVideoToServer = async videoPath => {
     const formData = new FormData();
     formData.append('video_path', {
       uri: `file://${videoPath}`,
@@ -225,7 +261,10 @@ const Player = ({ route }) => {
       name: 'recording.mp4',
     });
     formData.append('tourplace_id', tourplace_id.toString());
-    formData.append('pricing_id', selectedLimit ? selectedLimit.price_id.toString() : '1');
+    formData.append(
+      'pricing_id',
+      selectedLimit ? selectedLimit.price_id.toString() : '1',
+    );
 
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
@@ -235,7 +274,7 @@ const Player = ({ route }) => {
       }
       const response = await api.post('video/video/add', formData, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data',
         },
       });
@@ -253,7 +292,10 @@ const Player = ({ route }) => {
     } else if (selectedLimit && selectedLimit.remain > 0) {
       await startRecording();
     } else if (usertype === 3) {
-      Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+      Alert.alert(
+        'Invalid Selection',
+        'Please select a valid recording option.',
+      );
     } else {
       await startRecording();
     }
@@ -266,17 +308,21 @@ const Player = ({ route }) => {
       ) : (
         <View style={styles.pickerContainer}>
           <Picker
+            itemStyle={styles.picker}
             selectedValue={selectedLimit ? selectedLimit.price_id : null}
             style={styles.picker}
-            onValueChange={(itemValue) => {
-              let selected = recordingLimits.find(limit => limit.price_id === itemValue);
-              selected.record_time = 10;
-              console.log(selected);
-              setSelectedLimit(selected);
-            }}
-          >
+            onValueChange={itemValue => {
+              let selected = recordingLimits.find(
+                limit => limit.price_id === itemValue,
+              );
+              if (selected) {
+                selected.record_time = 10;
+                console.log(selected);
+                setSelectedLimit(selected);
+              }
+            }}>
             <Picker.Item label="Select Recording Time Limit" value={null} />
-            {recordingLimits.map((limit) => (
+            {recordingLimits.map(limit => (
               <Picker.Item
                 key={limit.price_id}
                 label={`${limit.comment} / ${limit.remain} videos remain`}
@@ -289,16 +335,22 @@ const Player = ({ route }) => {
 
       <View style={styles.pickerContainer}>
         <Picker
+        itemStyle={styles.picker}
           selectedValue={selectedCamera}
           style={styles.picker}
-          onValueChange={(itemValue) => {
-            const selectedCamera = cameras.find(camera => camera.id === itemValue);
+          onValueChange={itemValue => {
+            const selectedCamera = cameras.find(
+              camera => camera.id === itemValue,
+            );
             setSelectedCamera(itemValue);
             updateStreamUrl(selectedCamera); // Update the stream URL with the selected camera
-          }}
-        >
+          }}>
           {cameras.map(camera => (
-            <Picker.Item key={camera.id} label={camera.camera_name} value={camera.id} />
+            <Picker.Item
+              key={camera.id}
+              label={camera.camera_name}
+              value={camera.id}
+            />
           ))}
         </Picker>
       </View>
@@ -311,7 +363,7 @@ const Player = ({ route }) => {
         )}
         <VLCPlayer
           style={styles.videoPlayer}
-          source={{ uri: streamUrl }} // Set VLCPlayer source to dynamic streamUrl
+          source={{uri: streamUrl}} // Set VLCPlayer source to dynamic streamUrl
           resizeMode="cover"
           onPlaying={() => setIsVideoLoading(false)}
           onBuffering={() => {
@@ -326,17 +378,35 @@ const Player = ({ route }) => {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.recordButton, usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || buttonLoading) ? styles.disabledButton : null]}
+          style={[
+            styles.recordButton,
+            usertype !== 2 &&
+            (!selectedLimit || selectedLimit.remain === 0 || buttonLoading)
+              ? styles.disabledButton
+              : null,
+          ]}
           onPress={handleRecordingPress}
-          disabled={usertype !== 2 && (!selectedLimit || selectedLimit.remain === 0 || isLoadingUpload || buttonLoading)}
-        >
+          disabled={
+            usertype !== 2 &&
+            (!selectedLimit ||
+              selectedLimit.remain === 0 ||
+              isLoadingUpload ||
+              buttonLoading)
+          }>
           {buttonLoading || isLoadingUpload ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <View style={[styles.innerCircle, isRecording && styles.innerCircleActive]} />
+            <View
+              style={[
+                styles.innerCircle,
+                isRecording && styles.innerCircleActive,
+              ]}
+            />
           )}
         </TouchableOpacity>
-        <Text style={styles.recordingText}>{isRecording ? 'Recording' : 'Start'}</Text>
+        <Text style={styles.recordingText}>
+          {isRecording ? 'Recording' : 'Start'}
+        </Text>
       </View>
     </View>
   );
@@ -382,7 +452,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
     left: '50%',
-    transform: [{ translateX: -40 }],
+    transform: [{translateX: -40}],
     alignItems: 'center',
   },
   recordButton: {

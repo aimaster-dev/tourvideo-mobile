@@ -9,9 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import OtpInputs from 'react-native-otp-inputs'; // For handling OTP inputs
-import axios from 'axios'; // To handle API requests
 import {useNavigation} from '@react-navigation/native';
-import api from '../constants/api';
+import { useAPI } from '../hooks/useAPI';
 
 const OTPScreen = ({route}) => {
   const {userId = 0} = route.params || {};
@@ -23,6 +22,8 @@ const OTPScreen = ({route}) => {
   const [resendSuccess, setResendSuccess] = useState(false); // To track if resend succeeded
   const [resendError, setResendError] = useState(false); // To track if resend failed
   const navigation = useNavigation();
+
+  const api = useAPI()
 
   const handleOTPChange = code => {
     setOtp(code);

@@ -1,13 +1,13 @@
 import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import Icon from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useLogout} from '../hooks/useLogout';
+import {AuthContext} from '../context/AuthContext';
 
 const Header = ({navigation}) => {
   const [username, setUsername] = useState('');
 
-  const handleLogout = useLogout();
+  const {logout} = useContext(AuthContext);
 
   const fetchUserData = async () => {
     try {
@@ -48,7 +48,9 @@ const Header = ({navigation}) => {
             [
               {
                 text: 'Yes',
-                onPress: () => handleLogout(),
+                onPress: async () => {
+                  await logout();
+                },
               },
               {
                 text: 'No',

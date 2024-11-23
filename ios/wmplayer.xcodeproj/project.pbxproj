@@ -15,10 +15,10 @@
 		39A2EB979273CA2E3A6EC36E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 28ED3560480CBCEB1EC2D8E1 /* PrivacyInfo.xcprivacy */; };
 		7699B88040F8A987B510C191 /* libPods-wmplayer-wmplayerTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-wmplayer-wmplayerTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		9FDFBF552CF0EE79006D9BEB /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9FDFBF542CF0EE79006D9BEB /* fonts */; };
 		81C6533628D241028D1158DB /* SFProText-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 12AACEA2B7AE4369A4BAF437 /* SFProText-Medium.otf */; };
-		D6B41E6E96DD4A1C99C54819 /* SFProText-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */; };
 		83B306DB259548BB8C440D5E /* SFProText-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 949686266AAB4FC2A6EBCE45 /* SFProText-Semibold.otf */; };
+		9FDFBF552CF0EE79006D9BEB /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = 9FDFBF542CF0EE79006D9BEB /* fonts */; };
+		D6B41E6E96DD4A1C99C54819 /* SFProText-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +35,7 @@
 		00E356EE1AD99517003FC87E /* wmplayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = wmplayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* wmplayerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = wmplayerTests.m; sourceTree = "<group>"; };
+		12AACEA2B7AE4369A4BAF437 /* SFProText-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SFProText-Medium.otf"; path = "../asset/fonts/SFProText-Medium.otf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* wmplayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = wmplayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = wmplayer/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = wmplayer/AppDelegate.mm; sourceTree = "<group>"; };
@@ -43,6 +44,7 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = wmplayer/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = wmplayer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-wmplayer-wmplayerTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-wmplayer-wmplayerTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SFProText-Regular.otf"; path = "../asset/fonts/SFProText-Regular.otf"; sourceTree = "<group>"; };
 		28ED3560480CBCEB1EC2D8E1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = wmplayer/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-wmplayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-wmplayer.debug.xcconfig"; path = "Target Support Files/Pods-wmplayer/Pods-wmplayer.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-wmplayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-wmplayer.release.xcconfig"; path = "Target Support Files/Pods-wmplayer/Pods-wmplayer.release.xcconfig"; sourceTree = "<group>"; };
@@ -50,11 +52,9 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-wmplayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-wmplayer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = wmplayer/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-wmplayer-wmplayerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-wmplayer-wmplayerTests.release.xcconfig"; path = "Target Support Files/Pods-wmplayer-wmplayerTests/Pods-wmplayer-wmplayerTests.release.xcconfig"; sourceTree = "<group>"; };
+		949686266AAB4FC2A6EBCE45 /* SFProText-Semibold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SFProText-Semibold.otf"; path = "../asset/fonts/SFProText-Semibold.otf"; sourceTree = "<group>"; };
 		9FDFBF542CF0EE79006D9BEB /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		12AACEA2B7AE4369A4BAF437 /* SFProText-Medium.otf */ = {isa = PBXFileReference; name = "SFProText-Medium.otf"; path = "../asset/fonts/SFProText-Medium.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */ = {isa = PBXFileReference; name = "SFProText-Regular.otf"; path = "../asset/fonts/SFProText-Regular.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		949686266AAB4FC2A6EBCE45 /* SFProText-Semibold.otf */ = {isa = PBXFileReference; name = "SFProText-Semibold.otf"; path = "../asset/fonts/SFProText-Semibold.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +119,17 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		6129132CA08A49D4A0AF684C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				12AACEA2B7AE4369A4BAF437 /* SFProText-Medium.otf */,
+				1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */,
+				949686266AAB4FC2A6EBCE45 /* SFProText-Semibold.otf */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -162,17 +173,6 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
-		};
-		6129132CA08A49D4A0AF684C /* Resources */ = {
-			isa = "PBXGroup";
-			children = (
-				12AACEA2B7AE4369A4BAF437 /* SFProText-Medium.otf */,
-				1DB937EBDE3A4298B9EFC33C /* SFProText-Regular.otf */,
-				949686266AAB4FC2A6EBCE45 /* SFProText-Semibold.otf */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 
@@ -615,7 +615,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -688,7 +691,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

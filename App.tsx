@@ -12,37 +12,69 @@ import VideoPlaybackScreen from './src/content/VideoPlaybackScreen';
 import PaymentScreen from './src/content/PaymentScreen';
 import CheckoutScreen from './src/content/CheckoutScreen';
 import ProfileScreen from './src/content/ProfileScreen';
-import {LogBox} from 'react-native';
+import {LogBox, StyleSheet} from 'react-native';
 import Dashboard from './src/content/Dashboard';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {AuthContext, AuthProvider} from './src/context/AuthContext';
 
 const Stack = createStackNavigator();
 
 LogBox.ignoreAllLogs();
+
+const AuthStack = () => (
+  <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Screen name="SignIn" component={SignInScreen} />
+    <Stack.Screen name="SignUp" component={SignUpScreen} />
+    <Stack.Screen name="OTPCheck" component={OTPScreen} />
+  </Stack.Navigator>
+);
+
+const AppStack = () => (
+  <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Screen name="Dashboard" component={Dashboard} />
+    <Stack.Screen name="Home" component={HomeScreen} />
+    <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
+    <Stack.Screen name="Player" component={Player} />
+    <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+    <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
+    <Stack.Screen
+      name="VideoPlayback"
+      component={VideoPlaybackScreen}
+      options={{title: 'How to Use Our Program'}}
+    />
+  </Stack.Navigator>
+);
+
+const AppNavigator = () => {
+  const {user, isLoading} = React.useContext(AuthContext);
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <SafeAreaView edges={['top']} style={styles.container}>
+          {user ? <AppStack /> : <AuthStack />}
+        </SafeAreaView>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
+};
+
 function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Splash"
-        screenOptions={{headerShown: false}}>
-        <Stack.Screen name="Dashboard" component={Dashboard} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Signin" component={SignInScreen} />
-        <Stack.Screen name="Signup" component={SignUpScreen} />
-        <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
-        <Stack.Screen name="Player" component={Player} />
-        <Stack.Screen name="OTPCheck" component={OTPScreen} />
-        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
-        <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
-        <Stack.Screen
-          name="VideoPlayback"
-          component={VideoPlaybackScreen}
-          options={{title: 'How to Use Our Program'}}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0B1541',
+  },
+});
 
 export default App;
