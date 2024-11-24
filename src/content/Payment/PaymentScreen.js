@@ -1,13 +1,14 @@
 import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useState} from 'react';
 import {PaymentOptions, PaymentPlans} from '../../constants/data';
-import { styles } from './styles';
+import {styles} from './styles';
 import PaymentPlan from './Plan';
 import Transaction from './Transaction';
 
-const PaymentScreen = ({navigation}) => {
+const PaymentScreen = ({navigation, route}) => {
+  const {params} = route?.params ?? {};
   const [selectedPaymentOption, setSelectedPaymentOption] = useState(
-    PaymentOptions[0].name,
+    params ?? PaymentOptions[0].name,
   );
   return (
     <View style={styles.container}>

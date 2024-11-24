@@ -50,7 +50,15 @@ const AppStack = () => (
     <Stack.Screen name="Choose Camera" component={HomeScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="CameraDetail" component={CameraDetailScreen} />
-    <Stack.Screen name="Player" component={Player} />
+    <Stack.Screen
+      name="Player"
+      component={Player}
+      options={{
+        headerStyle: {
+          backgroundColor: '#000000',
+        },
+      }}
+    />
     <Stack.Screen name="Payment" component={PaymentScreen} />
     <Stack.Screen name="Checkout" component={CheckoutScreen} />
     <Stack.Screen

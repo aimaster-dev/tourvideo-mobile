@@ -26,7 +26,11 @@ const Dashboard = ({navigation}) => {
             <TouchableOpacity
               style={styles.box}
               onPress={() => {
-                if (item.screen) {
+                if (item?.screen && item?.params) {
+                  navigation.navigate(item.screen, {
+                    params: item?.params,
+                  });
+                } else if (item.screen) {
                   navigation.navigate(item.screen);
                 } else {
                   Alert.alert(

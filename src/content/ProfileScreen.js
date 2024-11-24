@@ -40,7 +40,6 @@ const ProfileScreen = () => {
       });
       setLoading(false);
       if (data && data.status) {
-        console.log(data?.data?.tourplace[0]?.place_name, 'data');
         setData(data?.data);
       }
     } catch (e) {

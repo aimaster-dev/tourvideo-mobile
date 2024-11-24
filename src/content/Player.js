@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import RNFS from 'react-native-fs';
@@ -15,6 +16,7 @@ import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAPI } from '../hooks/useAPI';
+import { Regular } from '../constants/font';
 
 const Player = ({route}) => {
   const {
@@ -114,6 +116,7 @@ const Player = ({route}) => {
           },
         },
       );
+      console.log(data.data, "data")
       if (response.data.status) {
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
@@ -364,7 +367,7 @@ const Player = ({route}) => {
         <VLCPlayer
           style={styles.videoPlayer}
           source={{uri: streamUrl}} // Set VLCPlayer source to dynamic streamUrl
-          resizeMode="cover"
+         
           onPlaying={() => setIsVideoLoading(false)}
           onBuffering={() => {
             setIsVideoLoading(true);
@@ -415,7 +418,7 @@ const Player = ({route}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#000000',
   },
   pickerContainer: {
     marginTop: 10,
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
   },
   videoPlayer: {
     width: '100%',
-    height: '100%',
+    height: "100%",
   },
   loadingOverlay: {
     position: 'absolute',
@@ -479,6 +482,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     marginTop: 10,
+    fontFamily: Regular,
     textAlign: 'center',
   },
 });

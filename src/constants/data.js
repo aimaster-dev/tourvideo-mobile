@@ -7,7 +7,13 @@ export const Products = [
   {id: '1', name: 'Camera', icon: Camera, screen: 'Choose Camera'},
   {id: '2', name: 'Videos', icon: Video},
   {id: '3', name: 'Payment', icon: Payment, screen: 'Payment'},
-  {id: '4', name: 'Transaction History', icon: Receipt},
+  {
+    id: '4',
+    name: 'Transaction History',
+    icon: Receipt,
+    screen: 'Payment',
+    params: 'Transaction History',
+  },
 ];
 
 export const PaymentOptions = [

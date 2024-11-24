@@ -118,8 +118,6 @@ const SignInScreen = ({navigation}) => {
         refresh && AsyncStorage.setItem('refresh_token', refresh),
         AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
       ]);
-
-      Alert.alert('Success', 'Login successful!');
       setUser(JSON.stringify(user_data))
     } catch (error) {
       if (error.response && error.response.status === 406) {
