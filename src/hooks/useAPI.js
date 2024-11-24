@@ -13,7 +13,7 @@ export const useAPI = () => {
       return response;
     },
     async error => {
-      if (error.response && error.response.status === 403) {
+      if (error.response && error.response.status === 401) {
         console.error('Token expired or unauthorized access');
         await logout();
       }

@@ -11,6 +11,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import {useAPI} from '../hooks/useAPI';
+import {Semibold} from '../constants/font';
+import Camera from '../../asset/svg/Camera.svg'
 
 const HomeScreen = ({}) => {
   const [userData, setUserData] = useState({});
@@ -80,27 +82,22 @@ const HomeScreen = ({}) => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.row, styles.spaceBetween]}>
-        <Text style={styles.headerText}>Choose Camera</Text>
-      </View>
-      {/* Display camera data in a list */}
       <FlatList
         data={cameraData}
         keyExtractor={item => item.id.toString()}
         renderItem={({item}) => (
           <TouchableOpacity
-            style={styles.cameraItem}
-            onPress={() => handleItemPress(item)}>
-            <View style={styles.cameraItem}>
-              <Image
-                source={require('../../asset/img/camera_icon.png')} // Ensure the path is correct for your image file
-                style={styles.icon}
-              />
-              <Text style={styles.cameraText}>{item.camera_name}</Text>
+            style={styles.box}
+            onPress={() => {
+              handleItemPress(item);
+            }}>
+            <View style={styles.iconContainer}>
+              <Camera width={32} height={32} />
             </View>
+            <Text style={styles.name}>{item.camera_name}</Text>
           </TouchableOpacity>
         )}
-        numColumns={2} // Display items in two columns
+        numColumns={2}
       />
     </View>
   );
@@ -112,6 +109,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
+  box: {
+    flex: 1,
+    margin: 8,
+    padding: 16,
+    backgroundColor: '#575B721A',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   row: {
     flexDirection: 'row',
     marginBottom: 20,
@@ -120,12 +126,21 @@ const styles = StyleSheet.create({
   headerText: {
     color: '#fff',
     fontSize: 20,
+    fontFamily: Semibold,
   },
   loader: {
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
     backgroundColor: '#0B1541',
+  },
+  name: {
+    color: '#9E9E9E',
+    width: '100%',
+    fontFamily: Semibold,
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
   },
   cameraItem: {
     flex: 1,

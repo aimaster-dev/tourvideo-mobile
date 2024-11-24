@@ -103,7 +103,6 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Profile Details</Text>
       <View style={{flex: 1}}>
         {!loading ? (
           <View style={{flex: 1}}>
