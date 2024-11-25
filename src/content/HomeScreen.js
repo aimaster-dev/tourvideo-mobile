@@ -1,34 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
+import {useAPI} from '../hooks/useAPI';
+import {Semibold} from '../constants/font';
+import Camera from '../../asset/svg/Camera.svg'
 
-const HomeScreen = ({ route }) => {
-
-  const { user_id, usertype } = route.params;
+const HomeScreen = ({}) => {
+  const [userData, setUserData] = useState({});
 
   const [cameraData, setCameraData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
+  const api = useAPI();
+
   useEffect(() => {
     const fetchCameraData = async () => {
       try {
         const accessToken = await AsyncStorage.getItem('access_token');
+        const user_data = await AsyncStorage.getItem('user_details');
+        const parsed_data = JSON.parse(user_data);
+        if (parsed_data) {
+          setUserData(parsed_data);
+        }
         if (!accessToken) {
           console.error('No access token found');
           return;
         }
 
-        const response = await axios.get('https://api.emmysvideos.com/api/v1/camera/getall', {
+        const response = await api.get('camera/getall', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-
         if (response.data && response.data.status) {
-          setCameraData(response.data.data); // Save the camera data
+          setCameraData(response.data.data);
         }
       } catch (error) {
         console.error('Error fetching camera data:', error);
@@ -42,41 +57,47 @@ const HomeScreen = ({ route }) => {
 
   if (loading) {
     // eslint-disable-next-line react-native/no-inline-styles
-    return <ActivityIndicator size="large" color="#287BF3" style={{ flex: 1, justifyContent: 'center' }} />;
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator
+          size="large"
+          color="#287BF3"
+          style={{flex: 1, justifyContent: 'center'}}
+        />
+      </View>
+    );
   }
 
-  const handleItemPress = (item) => {
+  const handleItemPress = item => {
     navigation.navigate('Player', {
       cam_id: item.id,
       tourplace_id: item.tourplace[0]?.id,
       camera_name: item.camera_name,
       rtsp_url: item.rtsp_url,
       tourplace: item.tourplace[0]?.place_name || 'Unknown Place',
-      usertype: usertype,
-      user_id: user_id,
+      usertype: userData?.usertype,
+      user_id: userData?.user_id,
     });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Choose Camera</Text>
-
-      {/* Display camera data in a list */}
       <FlatList
         data={cameraData}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.cameraItem} onPress={() => handleItemPress(item)}>
-            <View style={styles.cameraItem}>
-              <Image
-                source={require('../../asset/img/camera_icon.png')} // Ensure the path is correct for your image file
-                style={styles.icon}
-              />
-              <Text style={styles.cameraText}>{item.camera_name}</Text>
+        keyExtractor={item => item.id.toString()}
+        renderItem={({item}) => (
+          <TouchableOpacity
+            style={styles.box}
+            onPress={() => {
+              handleItemPress(item);
+            }}>
+            <View style={styles.iconContainer}>
+              <Camera width={32} height={32} />
             </View>
+            <Text style={styles.name}>{item.camera_name}</Text>
           </TouchableOpacity>
         )}
-        numColumns={2} // Display items in two columns
+        numColumns={2}
       />
     </View>
   );
@@ -88,10 +109,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
+  box: {
+    flex: 1,
+    margin: 8,
+    padding: 16,
+    backgroundColor: '#575B721A',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  spaceBetween: {justifyContent: 'space-between'},
   headerText: {
     color: '#fff',
     fontSize: 20,
-    marginBottom: 20,
+    fontFamily: Semibold,
+  },
+  loader: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#0B1541',
+  },
+  name: {
+    color: '#9E9E9E',
+    width: '100%',
+    fontFamily: Semibold,
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
   },
   cameraItem: {
     flex: 1,
@@ -103,13 +152,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center items vertically
   },
   iconContainer: {
-    backgroundColor: '#333C57', // Background color for the icon
-    borderRadius: 50, // Makes the icon container circular
-    padding: 10,
-    marginBottom: 10,
+    width: 72,
+    height: 72,
+    backgroundColor: '#575B72',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 72,
   },
   icon: {
-    width: 30,  // Set the width of your icon image
+    width: 30, // Set the width of your icon image
     height: 30, // Set the height of your icon image
     resizeMode: 'contain', // Ensure the image scales properly
   },

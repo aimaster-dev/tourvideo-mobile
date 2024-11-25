@@ -1,42 +1,44 @@
+import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-// import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Medium, Regular, Semibold} from '../constants/font';
+import Check from '../../asset/svg/Check.svg';
 
-const CheckoutScreen = ({ route }) => {
-  const { plan } = route.params;
-
+const CheckoutScreen = ({route}) => {
+  const {plan} = route.params ?? {};
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Summary</Text>
-      <View style={styles.planSummary}>
-        <Text style={styles.planName}>{plan.name}</Text>
-        <Text style={styles.planPrice}>{plan.price}</Text>
-        <Text style={styles.addOnLabel}>Add on services</Text>
-        {plan.features.map((feature, index) => (
-          <View key={index} style={styles.featureItem}>
-            {/* <Icon name="check" size={18} color="#00C853" /> */}
-            <Text style={styles.featureText}>{feature}</Text>
+      <FlatList
+        ListHeaderComponent={() => (
+          <View>
+            <View style={styles.card}>
+              <Text style={styles.summaryText}>Summary</Text>
+              <View style={styles.planDetails}>
+                <Text style={styles.planName}>{plan.name}</Text>
+                <Text style={styles.planPrice}>{plan.price}</Text>
+              </View>
+              <View style={styles.services}>
+                <Text style={styles.servicesText}>Add on services</Text>
+                <FlatList
+                  style={styles.featureListContainer}
+                  data={plan.features}
+                  renderItem={({item}) => (
+                    <View style={styles.featureList}>
+                      <Check width={28} height={28} />
+                      <Text style={styles.featureName}>{item.name}</Text>
+                    </View>
+                  )}
+                />
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.button}
+              onPress={() => {}}>
+              <Text style={styles.buttonText}>Confirm Payment</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </View>
-
-      <Text style={styles.inputLabel}>Card Number</Text>
-      <TextInput style={styles.input} placeholder="1234 5678 9012 1234" placeholderTextColor="#6C757D" />
-
-      <View style={styles.cardDetails}>
-        <View>
-          <Text style={styles.inputLabel}>Exp. Date</Text>
-          <TextInput style={styles.input} placeholder="MM/YY" placeholderTextColor="#6C757D" />
-        </View>
-        <View>
-          <Text style={styles.inputLabel}>CVV</Text>
-          <TextInput style={styles.input} placeholder="123" placeholderTextColor="#6C757D" secureTextEntry />
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.confirmButton}>
-        <Text style={styles.confirmButtonText}>Confirm Payment</Text>
-      </TouchableOpacity>
+        )}
+      />
     </View>
   );
 };
@@ -44,75 +46,62 @@ const CheckoutScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0E1320',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    backgroundColor: '#0B1541',
+    padding: 20,
   },
-  header: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
+  featureList: {
+    flexDirection: 'row',
+    marginBottom: 6,
   },
-  planSummary: {
-    backgroundColor: '#1C2331',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  planName: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+  services: {marginTop: 15},
+  buttonText: {
+    fontFamily: Medium,
+    fontSize: 20,
+    textAlign: 'center',
+    color: 'white',
+    lineHeight: 30,
   },
   planPrice: {
-    color: '#1A73E8',
-    fontSize: 24,
-    fontWeight: '700',
-    marginVertical: 8,
+    fontFamily: Semibold,
+    fontSize: 18,
+    color: '#B7B9C2',
   },
-  addOnLabel: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  featureText: {
-    color: '#FFFFFF',
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  inputLabel: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginVertical: 8,
-  },
-  input: {
-    backgroundColor: '#1C2331',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  cardDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  confirmButton: {
-    backgroundColor: '#1A73E8',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  confirmButtonText: {
-    color: '#FFFFFF',
+  featureName: {
+    fontFamily: Regular,
     fontSize: 16,
-    fontWeight: '600',
+    color: '#B7B9C2',
+    marginLeft: 10,
+  },
+  featureListContainer: {marginVertical: 12},
+  servicesText: {fontSize: 16, fontFamily: Medium, color: '#0075FF'},
+  button: {
+    padding: 10,
+    backgroundColor: '#0075FFE5',
+    marginTop: 20,
+    borderRadius: 100,
+  },
+  card: {
+    marginTop: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#575B721A',
+    borderRadius: 16,
+  },
+  summaryText: {
+    fontFamily: Semibold,
+    marginTop: 20,
+    fontSize: 20,
+    color: '#B7B9C2',
+  },
+  planName: {
+    fontFamily: Semibold,
+    fontSize: 18,
+    color: '#B7B9C2',
+  },
+  planDetails: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
 });
 

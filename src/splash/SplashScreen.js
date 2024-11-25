@@ -1,15 +1,7 @@
-import React, { useEffect } from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import {View, Image, StyleSheet} from 'react-native';
 
-const SplashScreen = ({ navigation }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Signin');
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [navigation]);
-
+const SplashScreen = ({}) => {
   return (
     <View style={styles.container}>
       <Image
@@ -30,7 +22,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 362,
-    height: 238,  // Adjust size as per your logo
+    height: 238, // Adjust size as per your logo
     marginBottom: 20,
   },
 });
