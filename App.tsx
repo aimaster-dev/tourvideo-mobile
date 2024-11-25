@@ -24,8 +24,8 @@ LogBox.ignoreAllLogs();
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="SignIn" component={SignInScreen} />
-    <Stack.Screen name="SignUp" component={SignUpScreen} />
+    <Stack.Screen name="Signin" component={SignInScreen} />
+    <Stack.Screen name="Signup" component={SignUpScreen} />
     <Stack.Screen name="OTPCheck" component={OTPScreen} />
   </Stack.Navigator>
 );
@@ -33,6 +33,7 @@ const AuthStack = () => (
 const AppStack = () => (
   <Stack.Navigator
     screenOptions={{
+      headerStatusBarHeight: 0,
       headerStyle: {
         backgroundColor: '#0B1541',
       },

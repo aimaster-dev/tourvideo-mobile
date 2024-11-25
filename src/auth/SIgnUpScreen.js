@@ -280,10 +280,10 @@ const SignUpScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    // justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0B1541', // Background color from the design
-    paddingHorizontal: 20,
+    padding: 20,
   },
   logo: {
     width: 180,

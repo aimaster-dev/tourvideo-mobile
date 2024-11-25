@@ -8,15 +8,16 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
+import Feather from 'react-native-vector-icons/Feather';
 import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAPI } from '../hooks/useAPI';
-import { Regular } from '../constants/font';
+import {useAPI} from '../hooks/useAPI';
+import {Regular} from '../constants/font';
+import ViewShot, {captureRef} from 'react-native-view-shot';
 
 const Player = ({route}) => {
   const {
@@ -46,10 +47,23 @@ const Player = ({route}) => {
   const currentSessionRef = useRef(null);
   const alertShownRef = useRef(false);
 
-  const api = useAPI()
+  const api = useAPI();
+
+  const snapShotRef = useRef();
 
   const generateFilePath = () =>
     `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
+
+  const takeSnapShot = async () => {
+    try {
+      if (isRecording) {
+      }
+      const uri = await captureRef(snapShotRef);
+      console.log('do something with ', uri);
+    } catch (e) {
+      console.log(e, 'error while capturing');
+    }
+  };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -90,7 +104,7 @@ const Player = ({route}) => {
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
         Alert.alert('Record Audio permission not granted');
       } else {
-        console.log('Permissions granted for Android 10+');
+        // console.log('Permissions granted for Android 10+');
       }
     } catch (err) {
       console.warn(err);
@@ -116,7 +130,7 @@ const Player = ({route}) => {
           },
         },
       );
-      console.log(data.data, "data")
+      console.log(data.data, 'data');
       if (response.data.status) {
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
@@ -155,6 +169,7 @@ const Player = ({route}) => {
   };
 
   const updateStreamUrl = camera => {
+    console.log(camera?.rtsp_url);
     setStreamUrl(`${camera?.rtsp_url}`);
   };
 
@@ -338,7 +353,7 @@ const Player = ({route}) => {
 
       <View style={styles.pickerContainer}>
         <Picker
-        itemStyle={styles.picker}
+          itemStyle={styles.picker}
           selectedValue={selectedCamera}
           style={styles.picker}
           onValueChange={itemValue => {
@@ -357,59 +372,85 @@ const Player = ({route}) => {
           ))}
         </Picker>
       </View>
-
-      <View style={styles.videoContainer}>
-        {isVideoLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-          </View>
-        )}
-        <VLCPlayer
-          style={styles.videoPlayer}
-          source={{uri: streamUrl}} // Set VLCPlayer source to dynamic streamUrl
-         
-          onPlaying={() => setIsVideoLoading(false)}
-          onBuffering={() => {
-            setIsVideoLoading(true);
-            setTimeout(() => {
-              setIsVideoLoading(false);
-            }, 5000);
-          }}
-          onStopped={() => setIsVideoLoading(true)}
-        />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.recordButton,
-            usertype !== 2 &&
-            (!selectedLimit || selectedLimit.remain === 0 || buttonLoading)
-              ? styles.disabledButton
-              : null,
-          ]}
-          onPress={handleRecordingPress}
-          disabled={
-            usertype !== 2 &&
-            (!selectedLimit ||
-              selectedLimit.remain === 0 ||
-              isLoadingUpload ||
-              buttonLoading)
-          }>
-          {buttonLoading || isLoadingUpload ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <View
-              style={[
-                styles.innerCircle,
-                isRecording && styles.innerCircleActive,
-              ]}
-            />
+      <ViewShot ref={snapShotRef} style={{flex: 1}}>
+        <View style={styles.videoContainer}>
+          {isVideoLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#FFFFFF" />
+            </View>
           )}
+          <VLCPlayer
+            style={styles.videoPlayer}
+            source={{
+              uri: streamUrl,
+            }}
+            onLoad={() => {
+              setIsVideoLoading(true);
+            }}
+            autoplay={true}
+            onProgress={e => {
+              if (e.currentTime > 0) {
+                setIsVideoLoading(false);
+              }
+            }}
+            onError={e => console.log('Error:', e)}
+            onBuffering={e => {
+              setIsVideoLoading(true);
+            }}
+            onStopped={() => {
+              setIsVideoLoading(false);
+            }}
+          />
+        </View>
+      </ViewShot>
+
+      <View style={styles.actionContainer}>
+        <View style={{width: 48}} />
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.recordButton,
+              usertype !== 2 &&
+              (!selectedLimit || selectedLimit.remain === 0 || buttonLoading)
+                ? styles.disabledButton
+                : null,
+            ]}
+            onPress={handleRecordingPress}
+            disabled={
+              usertype !== 2 &&
+              (!selectedLimit ||
+                selectedLimit.remain === 0 ||
+                isLoadingUpload ||
+                buttonLoading)
+            }>
+            {buttonLoading || isLoadingUpload ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <View
+                style={[
+                  styles.innerCircle,
+                  isRecording && styles.innerCircleActive,
+                ]}
+              />
+            )}
+          </TouchableOpacity>
+          <Text style={styles.recordingText}>
+            {isRecording ? 'Recording' : 'Record'}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => takeSnapShot()}
+          disabled={isRecording}
+          activeOpacity={0.8}
+          style={{alignItems: 'center'}}>
+          <Feather
+            name="camera"
+            color={isRecording ? 'grey' : 'white'}
+            size={32}
+          />
+          <Text style={styles.recordingText}>Snapshot</Text>
         </TouchableOpacity>
-        <Text style={styles.recordingText}>
-          {isRecording ? 'Recording' : 'Start'}
-        </Text>
       </View>
     </View>
   );
@@ -438,7 +479,7 @@ const styles = StyleSheet.create({
   },
   videoPlayer: {
     width: '100%',
-    height: "100%",
+    height: '100%',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -452,10 +493,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   buttonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: '50%',
-    transform: [{translateX: -40}],
     alignItems: 'center',
   },
   recordButton: {
@@ -468,6 +505,13 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 48,
+    marginBottom: 16,
   },
   innerCircle: {
     width: 60,

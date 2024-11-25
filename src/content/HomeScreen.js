@@ -152,10 +152,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center items vertically
   },
   iconContainer: {
-    backgroundColor: '#333C57', // Background color for the icon
-    borderRadius: 50, // Makes the icon container circular
-    padding: 10,
-    marginBottom: 10,
+    width: 72,
+    height: 72,
+    backgroundColor: '#575B72',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 72,
   },
   icon: {
     width: 30, // Set the width of your icon image
