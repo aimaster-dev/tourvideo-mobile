@@ -56,9 +56,10 @@ const ProfileScreen = () => {
         console.error('No access token found');
         return;
       }
-      const {data} = await api.post('user/deleteaccount', {
+      const { data } = await api.post('user/deleteaccount', {}, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
       if (data && data.status) {
