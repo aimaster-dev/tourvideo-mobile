@@ -128,7 +128,10 @@ const SignUpScreen = ({navigation}) => {
       const response = await api.post('user/phone/register', requestData, {
         headers: {'Content-Type': 'application/json'},
       });
-      if (response.data.status && response.data.data.user_id) {
+      if(response.data.status && response.data.past_registered){
+        navigation.navigate("Signin")
+      }
+      else if (response.data.status && response.data.data.user_id) {
         const userId = response.data.data.user_id;
         navigation.navigate('OTPCheck', {userId});
       } else {

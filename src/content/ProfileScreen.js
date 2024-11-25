@@ -51,6 +51,7 @@ const ProfileScreen = () => {
   const deleteAccount = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
+      console.log(accessToken, "access token")
       if (!accessToken) {
         console.error('No access token found');
         return;
