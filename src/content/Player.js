@@ -18,6 +18,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useAPI} from '../hooks/useAPI';
 import {Regular} from '../constants/font';
 import ViewShot, {captureRef} from 'react-native-view-shot';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import {hasAndroidPermission} from '../helper/permission';
+import {useToast} from '../context/ToastContext';
 
 const Player = ({route}) => {
   const {
@@ -51,19 +54,10 @@ const Player = ({route}) => {
 
   const snapShotRef = useRef();
 
+  const {showToast} = useToast();
+
   const generateFilePath = () =>
     `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
-
-  const takeSnapShot = async () => {
-    try {
-      if (isRecording) {
-      }
-      const uri = await captureRef(snapShotRef);
-      console.log('do something with ', uri);
-    } catch (e) {
-      console.log(e, 'error while capturing');
-    }
-  };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -104,7 +98,7 @@ const Player = ({route}) => {
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
         Alert.alert('Record Audio permission not granted');
       } else {
-        // console.log('Permissions granted for Android 10+');
+        console.log('Permissions granted for Android 10+');
       }
     } catch (err) {
       console.warn(err);
@@ -130,7 +124,7 @@ const Player = ({route}) => {
           },
         },
       );
-      console.log(data.data, 'data');
+      console.log(response.data, 'data');
       if (response.data.status) {
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
@@ -241,6 +235,20 @@ const Player = ({route}) => {
       });
   };
 
+  const takeSnapShot = async () => {
+    try {
+      if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
+        return;
+      }
+      const uri = await captureRef(snapShotRef);
+      CameraRoll.saveAsset(uri, {type: 'photo'});
+      showToast('Snapshot saved successfully !', 'success');
+    } catch (e) {
+      console.log(e, 'error while taking snapshots ...');
+      showToast('Some error occurred', 'error');
+    }
+  };
+
   const handleVideoUpload = async videoPath => {
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
@@ -318,6 +326,8 @@ const Player = ({route}) => {
       await startRecording();
     }
   };
+
+  console.log(isVideoLoading, 'is video loading');
 
   return (
     <View style={styles.container}>
@@ -441,12 +451,12 @@ const Player = ({route}) => {
         </View>
         <TouchableOpacity
           onPress={() => takeSnapShot()}
-          disabled={isRecording}
+          disabled={isRecording || isVideoLoading}
           activeOpacity={0.8}
           style={{alignItems: 'center'}}>
           <Feather
             name="camera"
-            color={isRecording ? 'grey' : 'white'}
+            color={isRecording || isVideoLoading ? 'grey' : 'white'}
             size={32}
           />
           <Text style={styles.recordingText}>Snapshot</Text>
