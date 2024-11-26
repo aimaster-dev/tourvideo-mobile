@@ -17,6 +17,8 @@ import Dashboard from './src/content/Dashboard';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {AuthContext, AuthProvider} from './src/context/AuthContext';
 import {Semibold} from './src/constants/font';
+import Toast from './src/components/Toast';
+import {ToastProvider} from './src/context/ToastContext';
 
 const Stack = createStackNavigator();
 
@@ -77,11 +79,14 @@ const AppNavigator = () => {
   }
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <SafeAreaView edges={['top']} style={styles.container}>
-          {user ? <AppStack /> : <AuthStack />}
-        </SafeAreaView>
-      </NavigationContainer>
+      <ToastProvider>
+        <Toast />
+        <NavigationContainer>
+          <SafeAreaView edges={['top']} style={styles.container}>
+            {user ? <AppStack /> : <AuthStack />}
+          </SafeAreaView>
+        </NavigationContainer>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 };

@@ -7,10 +7,13 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import axios from 'axios';
 import CheckBox from '@react-native-community/checkbox';
-import { useAPI } from '../hooks/useAPI';
+import {useAPI} from '../hooks/useAPI';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import Toast from '../components/Toast';
+import {useToast} from '../context/ToastContext';
 
 const SignUpScreen = ({navigation}) => {
   const [fullName, setFullName] = useState('');
@@ -26,8 +29,14 @@ const SignUpScreen = ({navigation}) => {
   const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
   const [isAccepted, setIsAccepted] = useState(false);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
+  const [toast, setToast] = useState({
+    show: false,
+    message: '',
+  });
 
-  const api = useAPI()
+  const {showToast} = useToast();
+
+  const api = useAPI();
 
   const handleEmailChange = value => {
     setEmail(value);
@@ -121,23 +130,23 @@ const SignUpScreen = ({navigation}) => {
       usertype: 3,
       level: 0,
     };
-
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
       const response = await api.post('user/phone/register', requestData, {
         headers: {'Content-Type': 'application/json'},
       });
-      if(response.data.status && response.data.past_registered){
-        navigation.navigate("Signin")
-      }
-      else if (response.data.status && response.data.data.user_id) {
+
+      if (response.data.status && response.data.past_registered) {
+        navigation.navigate('Signin');
+        showToast(response.data.data, 'success');
+      } else if (response.data.status && response.data.data.user_id) {
         const userId = response.data.data.user_id;
         navigation.navigate('OTPCheck', {userId});
       } else {
-        Alert.alert(
-          'Signup Failed',
+        showToast(
           'Unexpected response from server. Please try again.',
+          'error',
         );
       }
     } catch (error) {
@@ -150,11 +159,11 @@ const SignUpScreen = ({navigation}) => {
         } else {
           errorMessage = 'Error creating account. Please check your input.';
         }
+        showToast(errorMessage, 'error');
         console.log('Signup error response:', errorData);
-        Alert.alert('Signup Failed', errorMessage);
       } else {
         console.log('Signup error:', error.message);
-        Alert.alert('Signup Failed', 'An unknown error occurred.');
+        showToast(error.message, 'error');
       }
     } finally {
       setIsSubmitting(false); // Set submitting state to false after request is complete
@@ -163,119 +172,126 @@ const SignUpScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Image
-        source={require('../../asset/img/logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-
-      {/* Welcome Text */}
-      <Text style={styles.welcomeText}>Hey there,</Text>
-      <Text style={styles.createAccountText}>Create an Account</Text>
-
-      {/* Full Name Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handleUserNameChange}
-          value={fullName}
+      <KeyboardAwareScrollView>
+        {/* Logo */}
+        <Image
+          source={require('../../asset/img/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
         />
-        {!isUserNameValid && <Text style={styles.requiredText}>Required*</Text>}
-      </View>
 
-      {/* Email Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handleEmailChange}
-          value={email}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
-      </View>
+        {/* Welcome Text */}
+        <Text style={styles.welcomeText}>Hey there,</Text>
+        <Text style={styles.createAccountText}>Create an Account</Text>
 
-      {/* Phone Number Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Phone Number"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handlePhoneNumberChange}
-          value={phoneNumber}
-          keyboardType="phone-pad"
-        />
-        {!isPhoneNumberValid && (
-          <Text style={styles.requiredText}>Required*</Text>
-        )}
-      </View>
+        {/* Full Name Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handleUserNameChange}
+            value={fullName}
+          />
+          {!isUserNameValid && (
+            <Text style={styles.requiredText}>Required*</Text>
+          )}
+        </View>
 
-      {/* Password Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handlePasswordChange}
-          value={password}
-          secureTextEntry={true}
-        />
-        {!isPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
-      </View>
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handleEmailChange}
+            value={email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
+        </View>
 
-      {/* Confirm Password Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handleConfirmPasswordChange}
-          value={confirmPassword}
-          secureTextEntry={true}
-        />
-        {!isConformPasswordValid && (
-          <Text style={styles.requiredText}>Required*</Text>
-        )}
-      </View>
-      <View style={styles.checkboxContainer}>
-        <CheckBox
-          value={isAccepted}
-          onValueChange={setIsAccepted}
-          style={styles.checkbox}
-          tintColors={{true: '#F15927', false: '#FFFFFF'}}
-        />
-        <Text style={styles.checkboxText}>
-          By continuing you accept our{' '}
-          {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
-          <Text style={styles.link}>Privacy Policy</Text> &{' '}
-          {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
-          <Text style={styles.link}>Term of Use</Text>
+        {/* Phone Number Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Phone Number"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handlePhoneNumberChange}
+            value={phoneNumber}
+            keyboardType="phone-pad"
+          />
+          {!isPhoneNumberValid && (
+            <Text style={styles.requiredText}>Required*</Text>
+          )}
+        </View>
+
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handlePasswordChange}
+            value={password}
+            secureTextEntry={true}
+          />
+          {!isPasswordValid && (
+            <Text style={styles.requiredText}>Required*</Text>
+          )}
+        </View>
+
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handleConfirmPasswordChange}
+            value={confirmPassword}
+            secureTextEntry={true}
+          />
+          {!isConformPasswordValid && (
+            <Text style={styles.requiredText}>Required*</Text>
+          )}
+        </View>
+        <View style={styles.checkboxContainer}>
+          <CheckBox
+            value={isAccepted}
+            onValueChange={setIsAccepted}
+            style={styles.checkbox}
+            tintColors={{true: '#F15927', false: '#FFFFFF'}}
+          />
+          <Text style={styles.checkboxText}>
+            By continuing you accept our{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
+            <Text style={styles.link}>Privacy Policy</Text> &{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
+            <Text style={styles.link}>Term of Use</Text>
+          </Text>
+        </View>
+        {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
+        {/* Sign Up Button */}
+        <TouchableOpacity
+          style={styles.signUpButton}
+          onPress={handleSignup}
+          disabled={isSubmitting}>
+          {isSubmitting && <ActivityIndicator size="small" />}
+          <Text style={styles.signUpButtonText}>Sign Up</Text>
+        </TouchableOpacity>
+
+        {/* Login Link */}
+        <Text style={styles.loginText}>
+          Already have an account?{' '}
+          <Text
+            onPress={() => navigation.navigate('Signin')}
+            style={styles.loginLink}>
+            Login
+          </Text>
         </Text>
-      </View>
-      {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
-      {/* Sign Up Button */}
-      <TouchableOpacity
-        style={styles.signUpButton}
-        onPress={handleSignup}
-        disabled={isSubmitting} // Disable button while submitting
-      >
-        <Text style={styles.signUpButtonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-      {/* Login Link */}
-      <Text style={styles.loginText}>
-        Already have an account?{' '}
-        <Text
-          onPress={() => navigation.navigate('Signin')}
-          style={styles.loginLink}>
-          Login
-        </Text>
-      </Text>
+      </KeyboardAwareScrollView>
+      {toast?.show && <Toast toast={toast} setToast={setToast} />}
     </View>
   );
 };
@@ -284,25 +300,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#0B1541', // Background color from the design
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 60,
   },
   logo: {
     width: 180,
     height: 118,
     marginBottom: 30,
+    alignSelf: 'center',
   },
   welcomeText: {
     color: '#FFFFFF',
     fontSize: 18,
     marginBottom: 10,
+    textAlign: 'center',
   },
   createAccountText: {
     color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
   inputContainer: {
     width: '100%',
@@ -321,6 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#287BF3', // Blue button from the design
     paddingVertical: 15,
     borderRadius: 10,
+    flexDirection: "row",
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
@@ -332,7 +352,8 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: '#FFFFFF',
-    marginTop: 20,
+    marginVertical: 20,
+    textAlign: 'center',
   },
   loginLink: {
     color: '#287BF3',

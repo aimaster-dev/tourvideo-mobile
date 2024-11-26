@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import OtpInputs from 'react-native-otp-inputs'; // For handling OTP inputs
 import {useNavigation} from '@react-navigation/native';
-import { useAPI } from '../hooks/useAPI';
+import {useAPI} from '../hooks/useAPI';
 
 const OTPScreen = ({route}) => {
   const {userId = 0} = route.params || {};
@@ -23,7 +23,7 @@ const OTPScreen = ({route}) => {
   const [resendError, setResendError] = useState(false); // To track if resend failed
   const navigation = useNavigation();
 
-  const api = useAPI()
+  const api = useAPI();
 
   const handleOTPChange = code => {
     setOtp(code);
@@ -93,7 +93,7 @@ const OTPScreen = ({route}) => {
       <View style={styles.header}>
         <Text style={styles.title}>Verify Code</Text>
         <Text style={styles.subtitle}>
-          Verification code sent to your contact number
+          Verification code sent to your registered email
         </Text>
       </View>
 
