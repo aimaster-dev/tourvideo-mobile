@@ -1269,7 +1269,7 @@ PODS:
     - Yoga
   - react-native-safe-area-context (4.14.0):
     - React-Core
-  - react-native-video (6.8.0):
+  - react-native-video (6.8.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1282,7 +1282,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.8.0)
+    - react-native-video/Video (= 6.8.2)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1291,7 +1291,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.8.0):
+  - react-native-video/Video (6.8.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1998,7 +1998,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 2b73e68f0462f3175f98782db08896f8501afd20
   react-native-cameraroll: 92e4e6709341a886decf1489a380344736fd09ab
   react-native-safe-area-context: 4532f1a0c5d34a46b9324ccaaedcb5582a302b7d
-  react-native-video: b687b8d0a8576535185adf78f0eeb27c7dc46b86
+  react-native-video: 83e6de4c53ea2d3674fd85c2079451e99e7e9110
   react-native-view-shot: 9713a18f982ba4fed0a9d69db462aca4707e7d9c
   react-native-vlc-media-player: 0f9860bded57cd6764ac55b5c0e97347069cb40a
   React-nativeconfig: 8c83d992b9cc7d75b5abe262069eaeea4349f794

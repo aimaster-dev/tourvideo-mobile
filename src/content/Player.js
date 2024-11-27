@@ -59,46 +59,13 @@ const Player = ({route}) => {
   const generateFilePath = () =>
     `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestPermissions();
-    }
-    fetchRecordingLimits();
-    fetchCameras();
-
-    FFmpegKitConfig.enableLogCallback(log => {
-      if (
-        log.getMessage().includes('frame=') &&
-        !alertShownRef.current &&
-        !recordingStopped
-      ) {
-        alertShownRef.current = true;
-        console.log('First frame detected. Recording started.');
-        setRecordingStarted(true);
-        Alert.alert('Recording started!');
-        setTimeout(async () => {
-          console.log('Time limit reached. Stopping recording...');
-          await stopRecording();
-        }, (selectedLimit ? selectedLimit.record_time : 10) * 1000);
-      }
-    });
-
-    return () => {
-      alertShownRef.current = false;
-      setRecordingStopped(true);
-    };
-  }, [selectedLimit]);
-
   const requestPermissions = async () => {
     try {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
       );
-
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        Alert.alert('Record Audio permission not granted');
       } else {
-        console.log('Permissions granted for Android 10+');
       }
     } catch (err) {
       console.warn(err);
@@ -124,7 +91,6 @@ const Player = ({route}) => {
           },
         },
       );
-      console.log(response.data, 'data');
       if (response.data.status) {
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
@@ -327,7 +293,35 @@ const Player = ({route}) => {
     }
   };
 
-  console.log(isVideoLoading, 'is video loading');
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      requestPermissions();
+    }
+    fetchRecordingLimits();
+    fetchCameras();
+
+    FFmpegKitConfig.enableLogCallback(log => {
+      if (
+        log.getMessage().includes('frame=') &&
+        !alertShownRef.current &&
+        !recordingStopped
+      ) {
+        alertShownRef.current = true;
+        console.log('First frame detected. Recording started.');
+        setRecordingStarted(true);
+        Alert.alert('Recording started!');
+        setTimeout(async () => {
+          console.log('Time limit reached. Stopping recording...');
+          await stopRecording();
+        }, (selectedLimit ? selectedLimit.record_time : 10) * 1000);
+      }
+    });
+
+    return () => {
+      alertShownRef.current = false;
+      setRecordingStopped(true);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -389,28 +383,30 @@ const Player = ({route}) => {
               <ActivityIndicator size="large" color="#FFFFFF" />
             </View>
           )}
-          <VLCPlayer
-            style={styles.videoPlayer}
-            source={{
-              uri: streamUrl,
-            }}
-            onLoad={() => {
-              setIsVideoLoading(true);
-            }}
-            autoplay={true}
-            onProgress={e => {
-              if (e.currentTime > 0) {
+          {streamUrl && (
+            <VLCPlayer
+              style={styles.videoPlayer}
+              source={{
+                uri: streamUrl,
+              }}
+              onLoad={() => {
+                setIsVideoLoading(true);
+              }}
+              autoplay={true}
+              onProgress={e => {
+                if (e.currentTime > 0) {
+                  setIsVideoLoading(false);
+                }
+              }}
+              onError={e => console.log('Error:', e)}
+              onBuffering={e => {
+                setIsVideoLoading(true);
+              }}
+              onStopped={() => {
                 setIsVideoLoading(false);
-              }
-            }}
-            onError={e => console.log('Error:', e)}
-            onBuffering={e => {
-              setIsVideoLoading(true);
-            }}
-            onStopped={() => {
-              setIsVideoLoading(false);
-            }}
-          />
+              }}
+            />
+          )}
         </View>
       </ViewShot>
 
