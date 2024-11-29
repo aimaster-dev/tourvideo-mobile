@@ -25,11 +25,13 @@ const Media = ({route}) => {
       if (parsed_data) {
         const formData = new FormData();
         formData.append('tourplace_id', parsed_data.tourplace.toString());
-        const {data} = await api.get(`video/getall`, formData, {
+        console.log(accessToken);
+        const {data} = await api.get('video/getall', {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${accessToken}`,
           },
+          params: formData,
         });
         console.log(data, 'data');
       }
