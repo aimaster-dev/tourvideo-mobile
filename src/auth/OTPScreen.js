@@ -93,7 +93,7 @@ const OTPScreen = ({route}) => {
       <View style={styles.header}>
         <Text style={styles.title}>Verify Code</Text>
         <Text style={styles.subtitle}>
-          Verification code sent to your registered email
+          Verification code sent on your registered email
         </Text>
       </View>
 

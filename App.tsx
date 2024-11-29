@@ -19,6 +19,7 @@ import {AuthContext, AuthProvider} from './src/context/AuthContext';
 import {Semibold} from './src/constants/font';
 import Toast from './src/components/Toast';
 import {ToastProvider} from './src/context/ToastContext';
+import Media from './src/content/Recordings/Media';
 
 const Stack = createStackNavigator();
 
@@ -62,6 +63,7 @@ const AppStack = () => (
         },
       }}
     />
+    <Stack.Screen name="Recordings" component={Media} />
     <Stack.Screen name="Payment" component={PaymentScreen} />
     <Stack.Screen name="Checkout" component={CheckoutScreen} />
     <Stack.Screen

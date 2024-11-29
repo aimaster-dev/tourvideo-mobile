@@ -114,8 +114,8 @@ const SignInScreen = ({navigation}) => {
         headers: {'Content-Type': 'application/json'},
       });
 
-      const {access, refresh, user_id, usertype, username} = response.data.data;
-      const user_data = {user_id, usertype, username};
+      const {access, refresh, user_id, tourplace, usertype, username} = response.data.data;
+      const user_data = {user_id, usertype, username, tourplace};
 
       await Promise.all([
         access && AsyncStorage.setItem('access_token', access),

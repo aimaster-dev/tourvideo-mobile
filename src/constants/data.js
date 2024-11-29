@@ -5,7 +5,7 @@ import Payment from '../../asset/svg/Payment.svg';
 
 export const Products = [
   {id: '1', name: 'Camera', icon: Camera, screen: 'Choose Camera'},
-  {id: '2', name: 'Videos', icon: Video},
+  {id: '2', name: 'Recordings', icon: Video, screen: 'Recordings'},
   {id: '3', name: 'Payment', icon: Payment, screen: 'Payment'},
   {
     id: '4',
@@ -24,6 +24,17 @@ export const PaymentOptions = [
   {
     id: 2,
     name: 'Transaction History',
+  },
+];
+
+export const RecordingOptions = [
+  {
+    id: 1,
+    name: 'Videos',
+  },
+  {
+    id: 2,
+    name: 'Snapshots',
   },
 ];
 

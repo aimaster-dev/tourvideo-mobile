@@ -21,6 +21,7 @@ import ViewShot, {captureRef} from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
+import Marker, {Position} from 'react-native-image-marker';
 
 const Player = ({route}) => {
   const {
@@ -46,6 +47,7 @@ const Player = ({route}) => {
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [buttonLoading, setButtonLoading] = useState(false);
+  const [buttonStatus, setButtonStatus] = useState('Record');
 
   const currentSessionRef = useRef(null);
   const alertShownRef = useRef(false);
@@ -56,8 +58,9 @@ const Player = ({route}) => {
 
   const {showToast} = useToast();
 
-  const generateFilePath = () =>
-    `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
+  const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording.mp4`;
+
+  const headerPath = `${RNFS.DownloadDirectoryPath}/header.mp4`;
 
   const requestPermissions = async () => {
     try {
@@ -69,6 +72,61 @@ const Player = ({route}) => {
       }
     } catch (err) {
       console.warn(err);
+    }
+  };
+
+  const restrictRecordingButton =
+    usertype !== 2 &&
+    (!selectedLimit ||
+      selectedLimit.remain === 0 ||
+      isLoadingUpload ||
+      buttonLoading);
+
+  const fetchIntro = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        return false;
+      }
+      setButtonStatus('Processing');
+      setButtonLoading(true);
+      const {data} = await api.post(
+        'video/getheaderfooter',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (data.data) {
+        const downloadResult = await RNFS.downloadFile({
+          fromUrl: data.data.header,
+          toFile: headerPath,
+          progress: res => {
+            let progressPercent = (res.bytesWritten / res.contentLength) * 100;
+            console.log(progressPercent, 'progress');
+          },
+        }).promise;
+        if (downloadResult.statusCode === 200) {
+          console.log('Header video saved at:', headerPath);
+          await startRecording();
+        } else {
+          setButtonStatus('Record');
+          setButtonLoading(false);
+          console.error(
+            'Failed to download header video. Status:',
+            downloadResult.statusCode,
+          );
+          showToast('Unknown error occurred while processing', 'error');
+        }
+      }
+    } catch (e) {
+      setButtonStatus('Record');
+      setButtonLoading(false);
+      console.log(e, 'error while fetching intro');
+      return false;
     }
   };
 
@@ -129,55 +187,7 @@ const Player = ({route}) => {
   };
 
   const updateStreamUrl = camera => {
-    console.log(camera?.rtsp_url);
     setStreamUrl(`${camera?.rtsp_url}`);
-  };
-
-  const startRecording = async () => {
-    if (isRecording || currentSessionRef.current) {
-      console.log('Another session is running, skipping...');
-      return;
-    }
-
-    const path = generateFilePath();
-    setIsRecording(true);
-    setRecordingStopped(false);
-    alertShownRef.current = false;
-    setButtonLoading(true);
-
-    const recordTime =
-      usertype === 2 ? 10 : selectedLimit ? selectedLimit.record_time : 0;
-
-    if (recordTime === 0) {
-      Alert.alert(
-        'Invalid Selection',
-        'Please select a valid recording option.',
-      );
-      setButtonLoading(false);
-      setIsRecording(false);
-      return;
-    }
-
-    console.log(`Starting recording for ${recordTime} seconds.`);
-
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
-      recordTime + 4
-    } -fflags nobuffer -flags low_delay -c copy ${path}`;
-
-    const session = await FFmpegKit.executeAsync(command, async session => {
-      const returnCode = await session.getReturnCode();
-      const output = await session.getOutput();
-      console.log('FFmpeg output: ', output);
-      if (returnCode.isValueSuccess()) {
-        Alert.alert('Recording saved at:', path);
-        handleVideoUpload(path);
-      } else {
-        console.log('Recording failed:', output);
-      }
-      setIsRecording(false);
-      currentSessionRef.current = null;
-    });
-    currentSessionRef.current = session;
   };
 
   const stopRecording = async () => {
@@ -207,15 +217,33 @@ const Player = ({route}) => {
         return;
       }
       const uri = await captureRef(snapShotRef);
-      CameraRoll.saveAsset(uri, {type: 'photo'});
-      showToast('Snapshot saved successfully !', 'success');
+      const markedImageUri = await Marker.markImage({
+        backgroundImage: {
+          src: uri,
+          scale: 1,
+        },
+        watermarkImages: [
+          {
+            src: require('../../asset/img/logo.png'),
+            position: {
+              position: Position.center,
+            },
+            scale: 0.5
+          },
+        ],
+      });
+      console.log(markedImageUri, 'markedImageUri');
+      const savedUri = await CameraRoll.saveAsset(markedImageUri, {
+        type: 'photo',
+      });
+      showToast('Snapshot saved successfully !', 'success', savedUri);
     } catch (e) {
       console.log(e, 'error while taking snapshots ...');
       showToast('Some error occurred', 'error');
     }
   };
 
-  const handleVideoUpload = async videoPath => {
+  const unlinkRecordedFiles = async (header, recorded, merged) => {
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
       setIsLoadingUpload(true);
@@ -223,13 +251,15 @@ const Player = ({route}) => {
       try {
         if (!uploadInProgress) {
           setUploadInProgress(true);
-          await uploadVideoToServer(videoPath);
+
           console.log('Video upload finished.');
 
           try {
-            await RNFS.unlink(videoPath);
-            console.log('Recording file deleted:', videoPath);
-            Alert.alert('Video uploaded successfully!');
+            await RNFS.unlink(header);
+            await RNFS.unlink(recorded);
+            // await RNFS.unlink(merged);
+            console.log('Recording file deleted:', merged);
+            showToast('Video recorded successfully', 'success');
           } catch (error) {
             console.error('Error deleting file:', error);
           }
@@ -237,28 +267,36 @@ const Player = ({route}) => {
         }
       } catch (uploadError) {
         console.error('Video upload error:', JSON.stringify(uploadError));
+        showToast('Video recorded failed', 'error');
         setUploadInProgress(false);
+        setButtonStatus('Record');
       }
-
+      setButtonStatus('Record');
       setIsLoadingUpload(false);
       setButtonLoading(false);
     }, 2000);
   };
 
-  const uploadVideoToServer = async videoPath => {
-    const formData = new FormData();
-    formData.append('video_path', {
-      uri: `file://${videoPath}`,
-      type: 'video/mp4',
-      name: 'recording.mp4',
-    });
-    formData.append('tourplace_id', tourplace_id.toString());
-    formData.append(
-      'pricing_id',
-      selectedLimit ? selectedLimit.price_id.toString() : '1',
+  const uploadVideoToServer = async (headerPath, recordedPath, videoPath) => {
+    console.log(
+      'should call uploading ....',
+      headerPath,
+      recordedPath,
+      videoPath,
     );
-
+    setButtonStatus('Uploading');
     try {
+      const formData = new FormData();
+      formData.append('video_path', {
+        uri: `file://${videoPath}`,
+        type: 'video/mp4',
+        name: 'recording.mp4',
+      });
+      formData.append('tourplace_id', tourplace_id.toString());
+      formData.append(
+        'pricing_id',
+        selectedLimit ? selectedLimit.price_id.toString() : '1',
+      );
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
@@ -272,25 +310,107 @@ const Player = ({route}) => {
       });
       console.log('Video uploaded successfully!');
       console.log('Server Response:', response.data);
+      if (response.data) {
+        await unlinkRecordedFiles(headerPath, recordedPath, videoPath);
+      }
     } catch (error) {
-      Alert.alert('Video upload failed!', error.message);
+      showToast('Uploading Failed', 'error');
       console.error('Upload Error:', error);
+      setButtonStatus('Record');
+      setButtonLoading(false);
     }
   };
 
   const handleRecordingPress = async () => {
+    console.log(selectedLimit, 'selected limit', isRecording);
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit && selectedLimit.remain > 0) {
-      await startRecording();
+      await fetchIntro();
     } else if (usertype === 3) {
       Alert.alert(
         'Invalid Selection',
         'Please select a valid recording option.',
       );
     } else {
-      await startRecording();
+      await fetchIntro();
     }
+  };
+
+  const concatenateVideos = async (headerPath, recordedPath, outputPath) => {
+    try {
+      setButtonStatus('Almost Ready');
+
+      FFmpegKit.execute(command)
+        .then(async session => {
+          const returnCode = await session.getReturnCode();
+          console.log(session);
+          console.log(returnCode, 'return code concat');
+          return outputPath;
+        })
+        .catch(e => console.log(e, 'error'));
+    } catch (error) {
+      setButtonStatus('Record');
+      setButtonLoading(false);
+      console.error('Error in concatenating videos:', error);
+    }
+  };
+
+  const startRecording = async () => {
+    if (isRecording || currentSessionRef.current) {
+      console.log('Another session is running, skipping...');
+      return;
+    }
+
+    const path = generateFilePath();
+    setIsRecording(true);
+    setButtonStatus('Recording');
+    setRecordingStopped(false);
+    alertShownRef.current = false;
+
+    const recordTime =
+      usertype === 2 ? 10 : selectedLimit ? selectedLimit.record_time : 0;
+
+    if (recordTime === 0) {
+      Alert.alert(
+        'Invalid Selection',
+        'Please select a valid recording option.',
+      );
+      setButtonLoading(false);
+      setIsRecording(false);
+      setButtonStatus('Record');
+      return;
+    }
+
+    console.log(`Starting recording for ${recordTime} seconds.`);
+
+    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
+      recordTime + 4
+    } -fflags nobuffer -flags low_delay -c copy ${path}`;
+
+    const session = await FFmpegKit.executeAsync(command, async session => {
+      const returnCode = await session.getReturnCode();
+      const output = await session.getOutput();
+      console.log(returnCode, 'return code');
+      if (returnCode.isValueSuccess) {
+        const outputPath = `${RNFS.DownloadDirectoryPath}/output.mp4`;
+        const concat_command = `-y -i ${headerPath} -itsoffset 4 -i  ${path} -filter_complex "[0:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v0];[1:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v1];[v0][0:a][v1][0:a]concat=n=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v mpeg4 -c:a aac -movflags +faststart ${outputPath}`;
+        const concatSession = await FFmpegKit.executeAsync(
+          concat_command,
+          async concat => {
+            const returnConcatCode = await concat.getReturnCode();
+            const concatOutput = await concat.getOutput();
+            console.log(returnConcatCode, 'returnConcatCode');
+            await uploadVideoToServer(headerPath, path, outputPath);
+          },
+        );
+      } else {
+        console.log('Recording failed:', output);
+      }
+      setIsRecording(false);
+      currentSessionRef.current = null;
+    });
+    currentSessionRef.current = session;
   };
 
   useEffect(() => {
@@ -309,7 +429,6 @@ const Player = ({route}) => {
         alertShownRef.current = true;
         console.log('First frame detected. Recording started.');
         setRecordingStarted(true);
-        Alert.alert('Recording started!');
         setTimeout(async () => {
           console.log('Time limit reached. Stopping recording...');
           await stopRecording();
@@ -390,6 +509,7 @@ const Player = ({route}) => {
                 uri: streamUrl,
               }}
               onLoad={() => {
+                console.log('loading ...');
                 setIsVideoLoading(true);
               }}
               autoplay={true}
@@ -400,6 +520,7 @@ const Player = ({route}) => {
               }}
               onError={e => console.log('Error:', e)}
               onBuffering={e => {
+                console.log('buffering ...');
                 setIsVideoLoading(true);
               }}
               onStopped={() => {
@@ -417,19 +538,10 @@ const Player = ({route}) => {
           <TouchableOpacity
             style={[
               styles.recordButton,
-              usertype !== 2 &&
-              (!selectedLimit || selectedLimit.remain === 0 || buttonLoading)
-                ? styles.disabledButton
-                : null,
+              restrictRecordingButton ? styles.disabledButton : null,
             ]}
             onPress={handleRecordingPress}
-            disabled={
-              usertype !== 2 &&
-              (!selectedLimit ||
-                selectedLimit.remain === 0 ||
-                isLoadingUpload ||
-                buttonLoading)
-            }>
+            disabled={restrictRecordingButton}>
             {buttonLoading || isLoadingUpload ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
@@ -441,18 +553,16 @@ const Player = ({route}) => {
               />
             )}
           </TouchableOpacity>
-          <Text style={styles.recordingText}>
-            {isRecording ? 'Recording' : 'Record'}
-          </Text>
+          <Text style={styles.recordingText}>{buttonStatus}</Text>
         </View>
         <TouchableOpacity
           onPress={() => takeSnapShot()}
-          disabled={isRecording || isVideoLoading}
+          disabled={isRecording || restrictRecordingButton}
           activeOpacity={0.8}
           style={{alignItems: 'center'}}>
           <Feather
             name="camera"
-            color={isRecording || isVideoLoading ? 'grey' : 'white'}
+            color={isRecording || restrictRecordingButton ? 'grey' : 'white'}
             size={32}
           />
           <Text style={styles.recordingText}>Snapshot</Text>

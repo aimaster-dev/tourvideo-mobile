@@ -51,17 +51,21 @@ const ProfileScreen = () => {
   const deleteAccount = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
-      console.log(accessToken, "access token")
+      console.log(accessToken, 'access token');
       if (!accessToken) {
         console.error('No access token found');
         return;
       }
-      const { data } = await api.post('user/deleteaccount', {}, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+      const {data} = await api.post(
+        'user/deleteaccount',
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
       if (data && data.status) {
         await logout();
       }
