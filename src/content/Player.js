@@ -99,7 +99,6 @@ const Player = ({route}) => {
           },
         },
       );
-
       if (data.data) {
         const downloadResult = await RNFS.downloadFile({
           fromUrl: data.data.header,
@@ -228,15 +227,20 @@ const Player = ({route}) => {
             position: {
               position: Position.center,
             },
-            scale: 0.5
+            scale: 0.5,
           },
         ],
       });
       console.log(markedImageUri, 'markedImageUri');
-      const savedUri = await CameraRoll.saveAsset(markedImageUri, {
+      const savedSnapshot = await CameraRoll.saveAsset(markedImageUri, {
         type: 'photo',
       });
-      showToast('Snapshot saved successfully !', 'success', savedUri);
+      showToast('Snapshot saved successfully !', 'success');
+      await uploadSnapshots(
+        markedImageUri,
+        savedSnapshot.node.type,
+        savedSnapshot.node.image.filename,
+      );
     } catch (e) {
       console.log(e, 'error while taking snapshots ...');
       showToast('Some error occurred', 'error');
@@ -257,7 +261,7 @@ const Player = ({route}) => {
           try {
             await RNFS.unlink(header);
             await RNFS.unlink(recorded);
-            // await RNFS.unlink(merged);
+            await RNFS.unlink(merged);
             console.log('Recording file deleted:', merged);
             showToast('Video recorded successfully', 'success');
           } catch (error) {
@@ -322,16 +326,17 @@ const Player = ({route}) => {
   };
 
   const handleRecordingPress = async () => {
-    console.log(selectedLimit, 'selected limit', isRecording);
+    console.log(usertype, 'selected limit');
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit && selectedLimit.remain > 0) {
       await fetchIntro();
     } else if (usertype === 3) {
-      Alert.alert(
-        'Invalid Selection',
-        'Please select a valid recording option.',
-      );
+      // Alert.alert(
+      //   'Invalid Selection',
+      //   'Please select a valid recording option.',
+      // ); TODO: Check this commented for now
+      await fetchIntro();
     } else {
       await fetchIntro();
     }
@@ -353,6 +358,31 @@ const Player = ({route}) => {
       setButtonStatus('Record');
       setButtonLoading(false);
       console.error('Error in concatenating videos:', error);
+    }
+  };
+
+  const uploadSnapshots = async (imagepath, type, name) => {
+    try {
+      const formData = new FormData();
+      formData.append('image_path', {
+        uri: `file://${imagepath}`,
+        type,
+        name,
+      });
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      await api.post('video/snapshot/add', formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (e) {
+      console.log(e, 'error in uploading snapshots');
+      showToast('Some error occurred in snapshots', 'error');
     }
   };
 

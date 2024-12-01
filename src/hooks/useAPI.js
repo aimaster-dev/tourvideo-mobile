@@ -2,8 +2,9 @@ import {useContext} from 'react';
 import {AuthContext} from '../context/AuthContext';
 import axios from 'axios';
 
+export const domain = `https://api.emmysvideos.com`;
 const api = axios.create({
-  baseURL: 'https://api.emmysvideos.com/api/v1/',
+  baseURL: `${domain}/api/v1`,
 });
 
 export const useAPI = () => {
@@ -13,7 +14,7 @@ export const useAPI = () => {
       return response;
     },
     async error => {
-      if (error.response && error.response.status === 403) {
+      if (error.response && error.response.status === 401) {
         console.error('Token expired or unauthorized access');
         await logout();
       }

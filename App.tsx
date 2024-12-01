@@ -20,6 +20,7 @@ import {Semibold} from './src/constants/font';
 import Toast from './src/components/Toast';
 import {ToastProvider} from './src/context/ToastContext';
 import Media from './src/content/Recordings/Media';
+import ScreenGuardModule from 'react-native-screenguard';
 
 const Stack = createStackNavigator();
 
@@ -76,9 +77,17 @@ const AppStack = () => (
 
 const AppNavigator = () => {
   const {user, isLoading} = React.useContext(AuthContext);
+
+  const data = {
+    radius: 35,
+    timeAfterResume: 2000,
+   };
+
   if (isLoading) {
     return <SplashScreen />;
   }
+  
+  // ScreenGuardModule.registerWithBlurView(data);
   return (
     <SafeAreaProvider>
       <ToastProvider>
