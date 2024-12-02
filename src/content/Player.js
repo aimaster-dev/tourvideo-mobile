@@ -78,7 +78,7 @@ const Player = ({route}) => {
   const restrictRecordingButton =
     usertype !== 2 &&
     (!selectedLimit ||
-      selectedLimit.remain === 0 ||
+      selectedLimit.videoremain === 0 ||
       isLoadingUpload ||
       buttonLoading);
 
@@ -326,10 +326,11 @@ const Player = ({route}) => {
   };
 
   const handleRecordingPress = async () => {
+    console.log(selectedLimit, 'selected limit');
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit) {
-      if (selectedLimit.remain > 0) {
+      if (selectedLimit.videoremain > 0) {
         await fetchIntro();
       } else {
         showToast('You have reached your recording limit.', 'error');
@@ -582,7 +583,11 @@ const Player = ({route}) => {
         </View>
         <TouchableOpacity
           onPress={() => takeSnapShot()}
-          disabled={isRecording || restrictRecordingButton}
+          disabled={
+            isRecording ||
+            restrictRecordingButton ||
+            selectedLimit?.snapshotremain <= 0
+          }
           activeOpacity={0.8}
           style={styles.snapshotButton}>
           <Feather
@@ -603,7 +608,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   snapshotButton: {alignItems: 'center'},
-  flex: {flex:1},
+  flex: {flex: 1},
   pickerContainer: {
     marginTop: 10,
     backgroundColor: '#1C2749',
