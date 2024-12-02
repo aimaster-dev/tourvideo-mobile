@@ -3,7 +3,6 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
-  Image,
   Share,
   Platform,
   ActivityIndicator,
@@ -14,7 +13,6 @@ import {RecordingMenuOptions, RecordingOptions} from '../../constants/data';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {domain, useAPI} from '../../hooks/useAPI';
 import RNFS from 'react-native-fs';
-import {Regular, Semibold} from '../../constants/font';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Modal from 'react-native-modal';
 import {useToast} from '../../context/ToastContext';
@@ -152,9 +150,40 @@ const Media = ({}) => {
       if (data.data) {
         setIsVisible(false);
         await fetchSnapshots();
+        showToast('Snapshot deleted successfully', 'success');
       }
     } catch (e) {
       console.log(e, 'error in deleting snapshots');
+      showToast('Error while deleting snapshot', 'error');
+    }
+  };
+
+  const deleteRecording = async id => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.post(
+        'video/recordings/delete',
+        {
+          video_ids: [id],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      if (data.data) {
+        setIsVisible(false);
+        await fetchRecordedVideos();
+        showToast('Recording deleted successfully', 'success');
+      }
+    } catch (e) {
+      console.log(e, 'error in deleting snapshots');
+      showToast('Error while deleting recording', 'error');
     }
   };
 
@@ -191,6 +220,9 @@ const Media = ({}) => {
     } else if (item?.title === 'Delete') {
       if (selectedRecordingOption === 'Snapshots') {
         await deleteSnapshots(selectedRecording?.id);
+      } else if (selectedRecordingOption === 'Videos') {
+        // await deleteRecording(selectedRecording?.id);
+        setIsVisible(false);
       }
     }
   };
@@ -224,7 +256,7 @@ const Media = ({}) => {
           <FlatList
             data={recording}
             numColumns={2}
-            style={{marginTop: 30}}
+            style={styles.list}
             ListEmptyComponent={() => <Empty />}
             renderItem={({item, index}) => {
               return (
@@ -245,7 +277,7 @@ const Media = ({}) => {
             <FlatList
               data={snapshot}
               numColumns={2}
-              style={{marginTop: 30}}
+              style={styles.list}
               ListEmptyComponent={() => <Empty />}
               renderItem={({item, index}) => {
                 return (
@@ -264,7 +296,7 @@ const Media = ({}) => {
           )
         )
       ) : loading ? (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View style={styles.center}>
           <ActivityIndicator size="large" />
         </View>
       ) : (
@@ -273,7 +305,7 @@ const Media = ({}) => {
 
       <Modal isVisible={isVisible} onBackdropPress={() => setIsVisible(false)}>
         <View style={styles.modalContainer}>
-          <View style={{paddingHorizontal: 16, paddingBottom: 10}}>
+          <View style={styles.innerContainer}>
             <FlatList
               data={RecordingMenuOptions}
               ItemSeparatorComponent={() => <View style={styles.borderLine} />}
@@ -282,7 +314,7 @@ const Media = ({}) => {
                   onPress={() => handleAction(item)}
                   style={styles.row}>
                   <Entypo name={item.icon} size={24} />
-                  <View style={{marginHorizontal: 16}}>
+                  <View style={styles.modalContent}>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}</Text>
                   </View>

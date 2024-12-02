@@ -326,19 +326,14 @@ const Player = ({route}) => {
   };
 
   const handleRecordingPress = async () => {
-    console.log(usertype, 'selected limit');
     if (isRecording) {
       await stopRecording();
-    } else if (selectedLimit && selectedLimit.remain > 0) {
-      await fetchIntro();
-    } else if (usertype === 3) {
-      // Alert.alert(
-      //   'Invalid Selection',
-      //   'Please select a valid recording option.',
-      // ); TODO: Check this commented for now
-      await fetchIntro();
-    } else {
-      await fetchIntro();
+    } else if (selectedLimit) {
+      if (selectedLimit.remain > 0) {
+        await fetchIntro();
+      } else {
+        showToast('You have reached your recording limit.', 'error');
+      }
     }
   };
 
@@ -525,7 +520,7 @@ const Player = ({route}) => {
           ))}
         </Picker>
       </View>
-      <ViewShot ref={snapShotRef} style={{flex: 1}}>
+      <ViewShot ref={snapShotRef} style={styles.flex}>
         <View style={styles.videoContainer}>
           {isVideoLoading && (
             <View style={styles.loadingOverlay}>
@@ -562,7 +557,7 @@ const Player = ({route}) => {
       </ViewShot>
 
       <View style={styles.actionContainer}>
-        <View style={{width: 48}} />
+        <View style={styles.actionSpacing} />
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -589,7 +584,7 @@ const Player = ({route}) => {
           onPress={() => takeSnapShot()}
           disabled={isRecording || restrictRecordingButton}
           activeOpacity={0.8}
-          style={{alignItems: 'center'}}>
+          style={styles.snapshotButton}>
           <Feather
             name="camera"
             color={isRecording || restrictRecordingButton ? 'grey' : 'white'}
@@ -607,6 +602,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  snapshotButton: {alignItems: 'center'},
+  flex: {flex:1},
   pickerContainer: {
     marginTop: 10,
     backgroundColor: '#1C2749',
@@ -659,6 +656,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 48,
     marginBottom: 16,
   },
+  actionSpacing: {width: 48},
   innerCircle: {
     width: 60,
     height: 60,

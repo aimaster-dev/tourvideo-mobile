@@ -114,7 +114,8 @@ const SignInScreen = ({navigation}) => {
         headers: {'Content-Type': 'application/json'},
       });
 
-      const {access, refresh, user_id, tourplace, usertype, username} = response.data.data;
+      const {access, refresh, user_id, tourplace, usertype, username} =
+        response.data.data;
       const user_data = {user_id, usertype, username, tourplace};
 
       await Promise.all([
@@ -141,7 +142,7 @@ const SignInScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView>
-        <View style={{alignSelf: 'center'}}>
+        <View style={styles.logoContainer}>
           {/* Logo */}
           <Image
             source={require('../../asset/img/logo.png')}
@@ -258,6 +259,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from the design
     paddingHorizontal: 20,
   },
+  logoContainer: {alignSelf: 'center'},
   logo: {
     width: 180,
     height: 118,

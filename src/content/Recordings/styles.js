@@ -7,12 +7,15 @@ export const styles = StyleSheet.create({
     backgroundColor: '#0B1541',
     padding: 20,
   },
+  center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   featureContainer: {marginTop: 20},
   menu: {
     flex: 1,
     padding: 8,
     borderRadius: 100,
   },
+  list: {marginTop: 30},
+  modalContent: {marginHorizontal: 16},
   menuContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -45,6 +48,7 @@ export const styles = StyleSheet.create({
     textTransform: 'capitalize',
     marginVertical: 10,
   },
+  innerContainer: {paddingHorizontal: 16, paddingBottom: 10},
   modalContainer: {
     flex: 1,
     position: 'absolute',

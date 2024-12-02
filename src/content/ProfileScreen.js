@@ -108,9 +108,9 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={{flex: 1}}>
+      <View style={styles.flex}>
         {!loading ? (
-          <View style={{flex: 1}}>
+          <View style={styles.flex}>
             <View style={styles.card}>
               <Icon name="email" size={24} color="white" />
               <Text style={styles.text}>{data?.email}</Text>
@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
+  flex: {flex: 1},
   center: {
     justifyContent: 'center',
     alignItems: 'center',

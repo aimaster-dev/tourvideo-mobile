@@ -32,7 +32,7 @@ const PaymentScreen = ({navigation, route}) => {
 
       {selectedPaymentOption === 'Pricing Plans' && (
         <FlatList
-          style={{marginTop: 24}}
+          style={styles.list}
           data={PaymentPlans}
           renderItem={({item}) => (
             <PaymentPlan item={item} navigation={navigation} />
@@ -42,7 +42,7 @@ const PaymentScreen = ({navigation, route}) => {
 
       {selectedPaymentOption === 'Transaction History' && (
         <FlatList
-          style={{marginTop: 24}}
+          style={styles.list}
           data={PaymentPlans}
           ListHeaderComponent={() => <Text style={styles.recent}>Recent</Text>}
           renderItem={({}) => <Transaction />}

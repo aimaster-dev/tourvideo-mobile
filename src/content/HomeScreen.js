@@ -56,13 +56,12 @@ const HomeScreen = ({}) => {
   }, []);
 
   if (loading) {
-    // eslint-disable-next-line react-native/no-inline-styles
     return (
       <View style={styles.loader}>
         <ActivityIndicator
           size="large"
           color="#287BF3"
-          style={{flex: 1, justifyContent: 'center'}}
+          style={styles.center}
         />
       </View>
     );
@@ -159,6 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 72,
   },
+  center:{flex: 1, justifyContent: 'center'},
   icon: {
     width: 30, // Set the width of your icon image
     height: 30, // Set the height of your icon image
