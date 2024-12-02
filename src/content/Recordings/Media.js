@@ -6,6 +6,7 @@ import {
   Image,
   Share,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {styles} from './styles';
@@ -19,6 +20,7 @@ import Modal from 'react-native-modal';
 import {useToast} from '../../context/ToastContext';
 import Card from './Card';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import Empty from '../../components/Empty';
 
 const Media = ({}) => {
   const [selectedRecordingOption, setSelectedRecordingOption] = useState(
@@ -28,6 +30,7 @@ const Media = ({}) => {
   const [selectedRecording, setSelectedRecording] = useState({});
   const [recording, setRecording] = useState([]);
   const [snapshot, setSnapshot] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const api = useAPI();
   const {showToast} = useToast();
@@ -36,18 +39,23 @@ const Media = ({}) => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
+        setLoading(false);
         console.error('No access token found');
         return;
       }
-      const {data} = await api.get(`video/snapshot/get`, {
+      const {data} = await api.get(`/video/snapshot/get`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
       if (data.data) {
         setSnapshot(data.data);
+        setLoading(false);
+      } else {
+        setLoading(false);
       }
     } catch (e) {
+      setLoading(false);
       console.log(e.response.data, 'error in fetching snapshots');
     }
   };
@@ -58,6 +66,7 @@ const Media = ({}) => {
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
       if (!accessToken) {
+        setLoading(false);
         console.error('No access token found');
         return;
       }
@@ -73,9 +82,13 @@ const Media = ({}) => {
         });
         if (data.data) {
           setRecording(data.data);
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     } catch (e) {
+      setLoading(false);
       console.log(e, 'error in fetch recorded videos');
     }
   };
@@ -118,6 +131,33 @@ const Media = ({}) => {
     }
   };
 
+  const deleteSnapshots = async id => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.post(
+        'video/snapshot/delete',
+        {
+          image_ids: [id],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      if (data.data) {
+        setIsVisible(false);
+        await fetchSnapshots();
+      }
+    } catch (e) {
+      console.log(e, 'error in deleting snapshots');
+    }
+  };
+
   const handleAction = async item => {
     const path =
       selectedRecordingOption === 'Videos'
@@ -148,6 +188,10 @@ const Media = ({}) => {
         await CameraRoll.saveAsset(filePath, {type: 'photo'});
         showToast('Snapshot saved successfully !', 'success');
       }
+    } else if (item?.title === 'Delete') {
+      if (selectedRecordingOption === 'Snapshots') {
+        await deleteSnapshots(selectedRecording?.id);
+      }
     }
   };
 
@@ -175,80 +219,72 @@ const Media = ({}) => {
           </TouchableOpacity>
         ))}
       </View>
-      {selectedRecordingOption === 'Videos' && (
-        <FlatList
-          data={recording}
-          numColumns={2}
-          style={{marginTop: 30}}
-          renderItem={({item, index}) => {
-            return (
-              <Card
-                item={item}
-                index={index}
-                handlePress={() => {
-                  setSelectedRecording({...selectedRecording, ...item});
-                  setIsVisible(true);
-                }}
-              />
-            );
-          }}
-          keyExtractor={(_, index) => index.toString()}
-        />
-      )}
-
-      {selectedRecordingOption === 'Snapshots' && (
-        <FlatList
-          data={snapshot}
-          numColumns={2}
-          style={{marginTop: 30}}
-          renderItem={({item, index}) => {
-            return (
-              <Card
-                item={item}
-                index={index}
-                handlePress={() => {
-                  setSelectedRecording({...selectedRecording, ...item});
-                  setIsVisible(true);
-                }}
-              />
-            );
-          }}
-          keyExtractor={(_, index) => index.toString()}
-        />
+      {!loading ? (
+        selectedRecordingOption === 'Videos' ? (
+          <FlatList
+            data={recording}
+            numColumns={2}
+            style={{marginTop: 30}}
+            ListEmptyComponent={() => <Empty />}
+            renderItem={({item, index}) => {
+              return (
+                <Card
+                  item={item}
+                  index={index}
+                  handlePress={() => {
+                    setSelectedRecording({...selectedRecording, ...item});
+                    setIsVisible(true);
+                  }}
+                />
+              );
+            }}
+            keyExtractor={(_, index) => index.toString()}
+          />
+        ) : (
+          selectedRecordingOption === 'Snapshots' && (
+            <FlatList
+              data={snapshot}
+              numColumns={2}
+              style={{marginTop: 30}}
+              ListEmptyComponent={() => <Empty />}
+              renderItem={({item, index}) => {
+                return (
+                  <Card
+                    item={item}
+                    index={index}
+                    handlePress={() => {
+                      setSelectedRecording({...selectedRecording, ...item});
+                      setIsVisible(true);
+                    }}
+                  />
+                );
+              }}
+              keyExtractor={(_, index) => index.toString()}
+            />
+          )
+        )
+      ) : loading ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <></>
       )}
 
       <Modal isVisible={isVisible} onBackdropPress={() => setIsVisible(false)}>
-        <View
-          style={{
-            flex: 1,
-            position: 'absolute',
-            bottom: 0,
-            backgroundColor: 'white',
-            width: '100%',
-            borderRadius: 16,
-          }}>
+        <View style={styles.modalContainer}>
           <View style={{paddingHorizontal: 16, paddingBottom: 10}}>
             <FlatList
               data={RecordingMenuOptions}
-              ItemSeparatorComponent={() => (
-                <View style={{borderWidth: 0.2, borderColor: 'lightgrey'}} />
-              )}
+              ItemSeparatorComponent={() => <View style={styles.borderLine} />}
               renderItem={({item}) => (
                 <TouchableOpacity
                   onPress={() => handleAction(item)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginVertical: 10,
-                  }}>
+                  style={styles.row}>
                   <Entypo name={item.icon} size={24} />
                   <View style={{marginHorizontal: 16}}>
-                    <Text style={{fontSize: 18, fontFamily: Semibold}}>
-                      {item.title}
-                    </Text>
-                    <Text style={{fontSize: 14, fontFamily: Regular}}>
-                      {item.description}
-                    </Text>
+                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.description}>{item.description}</Text>
                   </View>
                 </TouchableOpacity>
               )}

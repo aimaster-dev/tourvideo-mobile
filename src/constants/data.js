@@ -113,6 +113,12 @@ export const RecordingMenuOptions = [
     icon: "download",
     title: "Download",
     description: "Quickly download content to enjoy offline anytime, anywhere."
+  },
+  {
+    id:3,
+    icon: "cup",
+    title: "Delete",
+    description: "Permanently remove the media from your library."
   }
 ]
 
