@@ -79,7 +79,7 @@ const Media = ({}) => {
           params: formData,
         });
         if (data.data) {
-          setRecording(data.data);
+          setRecording(data.data.reverse());
           setLoading(false);
         }
       } else {
@@ -165,17 +165,7 @@ const Media = ({}) => {
         console.error('No access token found');
         return;
       }
-      const {data} = await api.post(
-        'video/recordings/delete',
-        {
-          video_ids: [id],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
+      const {data} = await api.post('/v1/admin/video/delete', {video_id: [id]});
       if (data.data) {
         setIsVisible(false);
         await fetchRecordedVideos();
@@ -221,8 +211,8 @@ const Media = ({}) => {
       if (selectedRecordingOption === 'Snapshots') {
         await deleteSnapshots(selectedRecording?.id);
       } else if (selectedRecordingOption === 'Videos') {
-        // await deleteRecording(selectedRecording?.id);
         setIsVisible(false);
+        await deleteRecording(selectedRecording?.id);
       }
     }
   };
@@ -261,7 +251,7 @@ const Media = ({}) => {
             renderItem={({item, index}) => {
               return (
                 <Card
-                  item={item}
+                  thumbnail={`${domain}/${item?.thumbnail}`}
                   index={index}
                   handlePress={() => {
                     setSelectedRecording({...selectedRecording, ...item});
@@ -282,7 +272,7 @@ const Media = ({}) => {
               renderItem={({item, index}) => {
                 return (
                   <Card
-                    item={item}
+                    thumbnail={`${domain}/${item?.image_path}`}
                     index={index}
                     handlePress={() => {
                       setSelectedRecording({...selectedRecording, ...item});

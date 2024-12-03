@@ -29,7 +29,6 @@ export const styles = StyleSheet.create({
     width: (Dimensions.get('screen').width - 50) / 2,
     backgroundColor: 'white',
     marginBottom: 16,
-    padding: 10,
     borderRadius: 10,
   },
   thumbnailContainer: {
@@ -41,6 +40,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical:6
   },
   fileName: {
     fontSize: 16,

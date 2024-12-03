@@ -2,15 +2,15 @@ import {View, Text, Image, TouchableOpacity, Dimensions} from 'react-native';
 import React from 'react';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {styles} from './styles';
+import { domain } from '../../hooks/useAPI';
 
-const Card = ({index, item, handlePress = () => {}}) => {
+const Card = ({index, thumbnail, handlePress = () => {}}) => {
   return (
     <View
       style={[styles.cardContainer, {marginLeft: index % 2 !== 0 ? 10 : 0}]}>
       <View style={styles.thumbnailContainer}>
         <Image
-          resizeMode="contain"
-          source={{uri: item?.thumbnail}}
+          source={{uri: thumbnail}}
           style={styles.image}
         />
       </View>
