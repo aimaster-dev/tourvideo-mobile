@@ -247,7 +247,7 @@ const Player = ({route}) => {
     }
   };
 
-  const unlinkRecordedFiles = async (header, recorded, merged) => {
+  const unlinkRecordedFiles = async (header, recorded) => {
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
       setIsLoadingUpload(true);
@@ -261,8 +261,6 @@ const Player = ({route}) => {
           try {
             await RNFS.unlink(header);
             await RNFS.unlink(recorded);
-            await RNFS.unlink(merged);
-            console.log('Recording file deleted:', merged);
             showToast('Video recorded successfully', 'success');
           } catch (error) {
             console.error('Error deleting file:', error);
@@ -315,7 +313,7 @@ const Player = ({route}) => {
       console.log('Video uploaded successfully!');
       console.log('Server Response:', response.data);
       if (response.data) {
-        await unlinkRecordedFiles(headerPath, recordedPath, videoPath);
+        await unlinkRecordedFiles(headerPath, recordedPath);
       }
     } catch (error) {
       showToast('Uploading Failed', 'error');
@@ -326,7 +324,6 @@ const Player = ({route}) => {
   };
 
   const handleRecordingPress = async () => {
-    console.log(selectedLimit, 'selected limit');
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit) {
