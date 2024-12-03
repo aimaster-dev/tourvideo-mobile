@@ -21,7 +21,7 @@ import ViewShot, {captureRef} from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
-import Marker, {Position} from 'react-native-image-marker';
+import Marker, {ImageFormat, Position} from 'react-native-image-marker';
 
 const Player = ({route}) => {
   const {
@@ -60,7 +60,7 @@ const Player = ({route}) => {
 
   const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording.mp4`;
 
-  const headerPath = `${RNFS.DownloadDirectoryPath}/header.mp4`;
+  const headerPath = `${RNFS.CachesDirectoryPath}/header.mp4`;
 
   const requestPermissions = async () => {
     try {
@@ -88,8 +88,6 @@ const Player = ({route}) => {
       if (!accessToken) {
         return false;
       }
-      setButtonStatus('Processing');
-      setButtonLoading(true);
       const {data} = await api.post(
         'video/getheaderfooter',
         {},
@@ -216,22 +214,37 @@ const Player = ({route}) => {
         return;
       }
       const uri = await captureRef(snapShotRef);
-      const markedImageUri = await Marker.markImage({
+      const options = {
+        // background image
         backgroundImage: {
           src: uri,
           scale: 1,
         },
-        watermarkImages: [
+        watermarkTexts: [
           {
-            src: require('../../asset/img/logo.png'),
+            text: tourplace,
             position: {
               position: Position.center,
             },
-            scale: 0.5,
+            style: {
+              color: '#FFFFFF',
+              fontSize: 56,
+              fontFamily: Regular,
+              shadowStyle: {
+                dx: 10,
+                dy: 10,
+                radius: 10,
+                color: '#6450B0',
+              },
+            },
           },
         ],
-      });
-      console.log(markedImageUri, 'markedImageUri');
+        scale: 1,
+        quality: 100,
+        filename: 'test',
+        saveFormat: ImageFormat.png,
+      };
+      const markedImageUri = await Marker.markText(options);
       const savedSnapshot = await CameraRoll.saveAsset(markedImageUri, {
         type: 'photo',
       });
@@ -255,11 +268,8 @@ const Player = ({route}) => {
       try {
         if (!uploadInProgress) {
           setUploadInProgress(true);
-
           console.log('Video upload finished.');
-
           try {
-            await RNFS.unlink(header);
             await RNFS.unlink(recorded);
             showToast('Video recorded successfully', 'success');
           } catch (error) {
@@ -279,12 +289,18 @@ const Player = ({route}) => {
     }, 2000);
   };
 
-  const uploadVideoToServer = async (headerPath, recordedPath, videoPath) => {
+  const uploadVideoToServer = async (
+    headerPath,
+    recordedPath,
+    videoPath,
+    thumbnailPath,
+  ) => {
     console.log(
       'should call uploading ....',
       headerPath,
       recordedPath,
       videoPath,
+      thumbnailPath,
     );
     setButtonStatus('Uploading');
     try {
@@ -294,11 +310,11 @@ const Player = ({route}) => {
         type: 'video/mp4',
         name: 'recording.mp4',
       });
-      formData.append('tourplace_id', tourplace_id.toString());
-      formData.append(
-        'pricing_id',
-        selectedLimit ? selectedLimit.price_id.toString() : '1',
-      );
+      formData.append('thumbnail', {
+        uri: `file://${thumbnailPath}`,
+        type: 'image/jpg',
+        name: 'output_thumbnail.jpg',
+      });
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
@@ -328,29 +344,18 @@ const Player = ({route}) => {
       await stopRecording();
     } else if (selectedLimit) {
       if (selectedLimit.videoremain > 0) {
-        await fetchIntro();
+        setButtonStatus('Processing');
+        setButtonLoading(true);
+        if (await RNFS.exists(headerPath)) {
+          console.log('BLAH EXISTS');
+          await startRecording();
+        } else {
+          console.log('BLAH DOES NOT EXIST');
+          await fetchIntro();
+        }
       } else {
         showToast('You have reached your recording limit.', 'error');
       }
-    }
-  };
-
-  const concatenateVideos = async (headerPath, recordedPath, outputPath) => {
-    try {
-      setButtonStatus('Almost Ready');
-
-      FFmpegKit.execute(command)
-        .then(async session => {
-          const returnCode = await session.getReturnCode();
-          console.log(session);
-          console.log(returnCode, 'return code concat');
-          return outputPath;
-        })
-        .catch(e => console.log(e, 'error'));
-    } catch (error) {
-      setButtonStatus('Record');
-      setButtonLoading(false);
-      console.error('Error in concatenating videos:', error);
     }
   };
 
@@ -377,6 +382,47 @@ const Player = ({route}) => {
       console.log(e, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
     }
+  };
+
+  const generateThumbnail = async (headerPath, path, inputVideoUrl) => {
+    const start_time = 7; // Ensure start time is within video duration
+    const width = 320;
+    const height = 500;
+
+    // Path for the output thumbnail
+    const thumbnailPath = `${RNFS.DownloadDirectoryPath}/output_thumbnail.jpg`;
+
+    const thumbnailCommand = `-i ${inputVideoUrl} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
+
+    await FFmpegKit.executeAsync(thumbnailCommand, async session => {
+      const returnCode = await session.getReturnCode();
+      const logs = await session.getAllLogs();
+      const logMessages = logs.map(log => log.getMessage());
+
+      console.log(logMessages, 'Logs while generating the thumbnail');
+
+      if (returnCode.isValueSuccess()) {
+        console.log('Thumbnail generated successfully at:', thumbnailPath);
+
+        try {
+          console.log('Thumbnail saved to camera roll successfully');
+          await CameraRoll.saveAsset(thumbnailPath, {
+            type: 'photo',
+          });
+          await uploadVideoToServer(
+            headerPath,
+            path,
+            inputVideoUrl,
+            thumbnailPath,
+          );
+        } catch (error) {
+          console.error('Failed to save thumbnail:', error);
+          return error;
+        }
+      } else {
+        console.error('Thumbnail generation failed. Check logs for details.');
+      }
+    });
   };
 
   const startRecording = async () => {
@@ -423,8 +469,7 @@ const Player = ({route}) => {
           async concat => {
             const returnConcatCode = await concat.getReturnCode();
             const concatOutput = await concat.getOutput();
-            console.log(returnConcatCode, 'returnConcatCode');
-            await uploadVideoToServer(headerPath, path, outputPath);
+            await generateThumbnail(headerPath, path, outputPath);
           },
         );
       } else {
@@ -481,7 +526,6 @@ const Player = ({route}) => {
               );
               if (selected) {
                 selected.record_time = 10;
-                console.log(selected);
                 setSelectedLimit(selected);
               }
             }}>
