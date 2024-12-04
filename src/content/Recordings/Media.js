@@ -19,6 +19,7 @@ import {useToast} from '../../context/ToastContext';
 import Card from './Card';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import Empty from '../../components/Empty';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const Media = ({}) => {
   const [selectedRecordingOption, setSelectedRecordingOption] = useState(
@@ -107,23 +108,44 @@ const Media = ({}) => {
   const handleDownload = async video_path => {
     try {
       const filename = video_path.split('/').pop();
-      const downloadResult = await RNFS.downloadFile({
-        fromUrl: `${domain}${video_path}`,
-        toFile: `${RNFS.DownloadDirectoryPath}/${filename}`,
-        progress: res => {
-          let progressPercent = (res.bytesWritten / res.contentLength) * 100;
-          console.log(progressPercent, 'progress');
+      const {dirs} = RNFetchBlob.fs;
+      const dirToSave =
+        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+      const configfb = {
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          mediaScannable: true,
+          title: filename,
+          path: `${dirs.DownloadDir}/${filename}`,
         },
-      }).promise;
-      if (downloadResult.statusCode === 200) {
-        console.log(
-          'Recording saved at:',
-          `${RNFS.DownloadDirectoryPath}${video_path}`,
-        );
-        showToast(`${filename} video saved successfully`, 'success');
-      } else {
-        showToast(`Error while downloading ${filename} video`, 'error');
-      }
+        useDownloadManager: true,
+        notification: true,
+        mediaScannable: true,
+        title: filename,
+        path: `${dirToSave}/${filename}`,
+      };
+      const configOptions = Platform.select({
+        ios: configfb,
+        android: configfb,
+      });
+
+      RNFetchBlob.config(configOptions || {})
+        .fetch('GET', `${domain}${video_path}`, {})
+        .then(res => {
+          if (Platform.OS === 'ios') {
+            RNFetchBlob.fs.writeFile(configfb.path, res.data, 'base64');
+            RNFetchBlob.ios.previewDocument(configfb.path);
+          }
+          if (Platform.OS === 'android') {
+            console.log('file downloaded');
+            showToast(`${filename} video saved successfully`, 'success');
+          }
+        })
+        .catch(e => {
+          showToast(`${filename} failed to save`, 'error');
+        });
     } catch (e) {
       console.log(e, 'error while downloading');
     }
@@ -165,7 +187,14 @@ const Media = ({}) => {
         console.error('No access token found');
         return;
       }
-      const {data} = await api.post('/v1/admin/video/delete', {video_id: [id]});
+      const formData = new FormData();
+      formData.append('video_id', id);
+      const {data} = await api.post('/video/video/delete', formData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       if (data.data) {
         setIsVisible(false);
         await fetchRecordedVideos();
@@ -245,7 +274,7 @@ const Media = ({}) => {
         selectedRecordingOption === 'Videos' ? (
           <FlatList
             data={recording}
-            numColumns={2}
+            // numColumns={2}
             style={styles.list}
             ListEmptyComponent={() => <Empty />}
             renderItem={({item, index}) => {
@@ -266,7 +295,6 @@ const Media = ({}) => {
           selectedRecordingOption === 'Snapshots' && (
             <FlatList
               data={snapshot}
-              numColumns={2}
               style={styles.list}
               ListEmptyComponent={() => <Empty />}
               renderItem={({item, index}) => {

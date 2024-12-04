@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
   },
   menuOptions: {textAlign: 'center', color: 'white', fontFamily: Medium},
   cardContainer: {
-    width: (Dimensions.get('screen').width - 50) / 2,
+    width: (Dimensions.get('screen').width - 50),
     backgroundColor: 'white',
     marginBottom: 16,
     borderRadius: 10,
@@ -40,12 +40,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical:6
+    paddingVertical:6,
+    marginHorizontal:10
   },
   fileName: {
+    flex:1,
     fontSize: 16,
     fontFamily: Semibold,
-    textTransform: 'capitalize',
     marginVertical: 10,
   },
   innerContainer: {paddingHorizontal: 16, paddingBottom: 10},

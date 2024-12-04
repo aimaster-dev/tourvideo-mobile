@@ -3,11 +3,12 @@ import React from 'react';
 import Entypo from 'react-native-vector-icons/Entypo';
 import {styles} from './styles';
 import { domain } from '../../hooks/useAPI';
+import moment from 'moment';
 
 const Card = ({index, thumbnail, handlePress = () => {}}) => {
   return (
     <View
-      style={[styles.cardContainer, {marginLeft: index % 2 !== 0 ? 10 : 0}]}>
+      style={[styles.cardContainer]}>
       <View style={styles.thumbnailContainer}>
         <Image
           source={{uri: thumbnail}}
@@ -15,7 +16,7 @@ const Card = ({index, thumbnail, handlePress = () => {}}) => {
         />
       </View>
       <View style={styles.contentContainer}>
-        <Text style={styles.fileName}></Text>
+        <Text numberOfLines={1} style={styles.fileName}>1880_Town_{moment().format('MMM_Do_YY_h_mm_a')}.mp4</Text>
         <TouchableOpacity onPress={handlePress}>
           <Entypo name="dots-three-vertical" size={24} />
         </TouchableOpacity>
