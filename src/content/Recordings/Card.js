@@ -13,7 +13,7 @@ const Card = ({index, thumbnail, handlePress = () => {}}) => {
       <View style={styles.contentContainer}>
         <Text numberOfLines={1} style={styles.fileName}></Text>
         <TouchableOpacity onPress={handlePress}>
-          <Entypo name="dots-three-vertical" size={24} />
+          <Entypo name="dots-three-vertical" size={24} /> 
         </TouchableOpacity>
       </View>
     </View>
