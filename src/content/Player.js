@@ -260,7 +260,7 @@ const Player = ({route}) => {
     }
   };
 
-  const unlinkRecordedFiles = async (header, recorded) => {
+  const unlinkRecordedFiles = async (thumbnail, recorded) => {
     setTimeout(async () => {
       console.log('Starting video upload after 2 seconds delay...');
       setIsLoadingUpload(true);
@@ -270,6 +270,7 @@ const Player = ({route}) => {
           setUploadInProgress(true);
           console.log('Video upload finished.');
           try {
+            await RNFS.unlink(thumbnail)
             await RNFS.unlink(recorded);
             showToast('Video recorded successfully', 'success');
           } catch (error) {
@@ -329,7 +330,7 @@ const Player = ({route}) => {
       console.log('Video uploaded successfully!');
       console.log('Server Response:', response.data);
       if (response.data) {
-        await unlinkRecordedFiles(headerPath, recordedPath);
+        await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
     } catch (error) {
       showToast('Uploading Failed', 'error');
@@ -462,7 +463,7 @@ const Player = ({route}) => {
       const output = await session.getOutput();
       console.log(returnCode, 'return code');
       if (returnCode.isValueSuccess) {
-        const outputPath = `${RNFS.DownloadDirectoryPath}/output.mp4`;
+        const outputPath = `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
         const concat_command = `-y -i ${headerPath} -itsoffset 4 -i  ${path} -filter_complex "[0:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v0];[1:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v1];[v0][0:a][v1][0:a]concat=n=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v mpeg4 -c:a aac -movflags +faststart ${outputPath}`;
         const concatSession = await FFmpegKit.executeAsync(
           concat_command,
