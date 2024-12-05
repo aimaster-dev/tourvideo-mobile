@@ -252,7 +252,7 @@ const Media = ({}) => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <View style={styles.menuContainer}>
         {RecordingOptions.map(item => (
           <TouchableOpacity
@@ -274,7 +274,7 @@ const Media = ({}) => {
         selectedRecordingOption === 'Videos' ? (
           <FlatList
             data={recording}
-            // numColumns={2}
+            numColumns={2}
             style={styles.list}
             ListEmptyComponent={() => <Empty />}
             renderItem={({item, index}) => {
@@ -296,6 +296,7 @@ const Media = ({}) => {
             <FlatList
               data={snapshot}
               style={styles.list}
+              numColumns={2}
               ListEmptyComponent={() => <Empty />}
               renderItem={({item, index}) => {
                 return (

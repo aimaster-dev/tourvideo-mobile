@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
   },
   menuOptions: {textAlign: 'center', color: 'white', fontFamily: Medium},
   cardContainer: {
-    width: (Dimensions.get('screen').width - 50),
+    width: (Dimensions.get('screen').width - 50) / 2,
     backgroundColor: 'white',
     marginBottom: 16,
     borderRadius: 10,
