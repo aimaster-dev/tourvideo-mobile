@@ -98,7 +98,7 @@ const Player = () => {
       <View style={isFullScreen ? { width: screenWidth, height: screenHeight } : styles.videoContainer}>
         {/* VLCPlayer to display the video stream */}
         <VLCPlayer
-          style={{ flex: 1 }} // Fill the container
+          style={styles.flex} // Fill the container
           source={{ uri: streamUrl }}
           resizeMode="fill" // Ensure video covers the view
           videoAspectRatio="16:9"
@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  flex: {flex:1},
   videoContainer: {
     width: '100%',
     height: 300,

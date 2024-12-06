@@ -12,8 +12,10 @@ import {
 import {Picker} from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckBox from '@react-native-community/checkbox';
-import { useAPI } from '../hooks/useAPI';
-import { AuthContext } from '../context/AuthContext';
+import {useAPI} from '../hooks/useAPI';
+import {AuthContext} from '../context/AuthContext';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {useToast} from '../context/ToastContext';
 
 const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -28,9 +30,11 @@ const SignInScreen = ({navigation}) => {
   const [isAccepted, setIsAccepted] = useState(false);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
 
-  const api = useAPI()
+  const api = useAPI();
 
-  const {setUser} = useContext(AuthContext)
+  const {setUser} = useContext(AuthContext);
+
+  const {showToast} = useToast();
 
   // Fetch the tour places from the API
   useEffect(() => {
@@ -110,23 +114,25 @@ const SignInScreen = ({navigation}) => {
         headers: {'Content-Type': 'application/json'},
       });
 
-      const {access, refresh, user_id, usertype, username} = response.data.data;
-      const user_data = {user_id, usertype, username};
+      const {access, refresh, user_id, tourplace, usertype, username} =
+        response.data.data;
+      const user_data = {user_id, usertype, username, tourplace};
 
       await Promise.all([
         access && AsyncStorage.setItem('access_token', access),
         refresh && AsyncStorage.setItem('refresh_token', refresh),
         AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
       ]);
-      setUser(JSON.stringify(user_data))
+      showToast('Logged in successfully', 'success');
+      setUser(JSON.stringify(user_data));
     } catch (error) {
       if (error.response && error.response.status === 406) {
         const userId = error.response.data.data.user_id;
-        Alert.alert('Account not activated', 'Please activate your account.');
+        showToast('Account not verified. Please verify your account', 'error');
         navigation.navigate('OTPCheck', {userId});
       } else {
         console.log('Login error:', JSON.stringify(error.data));
-        Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
+        showToast('Invalid credentials. Please try again.', 'error');
       }
     } finally {
       setIsSubmitting(false);
@@ -135,106 +141,113 @@ const SignInScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Image
-        source={require('../../asset/img/logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <KeyboardAwareScrollView>
+        <View style={styles.logoContainer}>
+          {/* Logo */}
+          <Image
+            source={require('../../asset/img/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-      {/* Welcome Text */}
-      <Text style={styles.welcomeText}>Welcome back,</Text>
-      <Text style={styles.signinText}>Signin an Account</Text>
+          {/* Welcome Text */}
+          <Text style={styles.welcomeText}>Welcome back,</Text>
+          <Text style={styles.signinText}>Signin an Account</Text>
+        </View>
 
-      {/* Select Tour Place */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#287BF3" />
-      ) : (
+        {/* Select Tour Place */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#287BF3" />
+        ) : (
+          <View style={styles.inputContainer}>
+            <Picker
+              itemStyle={styles.picker}
+              selectedValue={selectedPlace ? selectedPlace.id : null}
+              style={styles.picker}
+              onValueChange={handlePlaceChange}>
+              <Picker.Item label="Select Tour Place" value={null} />
+              {tourPlaces.map(place => (
+                <Picker.Item
+                  key={place.id}
+                  label={place.place_name}
+                  value={place.id}
+                />
+              ))}
+            </Picker>
+            {!isTourPlaceValid && (
+              <Text style={styles.requiredText}>Required*</Text>
+            )}
+          </View>
+        )}
+
+        {/* Email Input */}
         <View style={styles.inputContainer}>
-          <Picker
-            itemStyle={styles.picker}
-            selectedValue={selectedPlace ? selectedPlace.id : null}
-            style={styles.picker}
-            onValueChange={handlePlaceChange}>
-            <Picker.Item label="Select Tour Place" value={null} />
-            {tourPlaces.map(place => (
-              <Picker.Item
-                key={place.id}
-                label={place.place_name}
-                value={place.id}
-              />
-            ))}
-          </Picker>
-          {!isTourPlaceValid && (
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handleEmailChange}
+            value={email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#CCCCCC"
+            onChangeText={handlePasswordChange}
+            value={password}
+            secureTextEntry={true}
+          />
+          {!isPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
-      )}
 
-      {/* Email Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handleEmailChange}
-          value={email}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {!isEmailValid && <Text style={styles.requiredText}>Required*</Text>}
-      </View>
+        <View style={styles.checkboxContainer}>
+          <CheckBox
+            value={isAccepted}
+            onValueChange={setIsAccepted}
+            style={styles.checkbox}
+            tintColors={{true: '#287BF3', false: '#FFFFFF'}}
+          />
+          <Text style={styles.checkboxText}>
+            By continuing you accept our{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
+            <Text style={styles.link}>Privacy Policy</Text> &{' '}
+            {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
+            <Text style={styles.link}>Term of Use</Text>
+          </Text>
+        </View>
+        {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={handleSignIn}
+          disabled={isSubmitting}>
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          )}
+        </TouchableOpacity>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#CCCCCC"
-          onChangeText={handlePasswordChange}
-          value={password}
-          secureTextEntry={true}
-        />
-        {!isPasswordValid && <Text style={styles.requiredText}>Required*</Text>}
-      </View>
-      <View style={styles.checkboxContainer}>
-        <CheckBox
-          value={isAccepted}
-          onValueChange={setIsAccepted}
-          style={styles.checkbox}
-          tintColors={{true: '#F15927', false: '#FFFFFF'}}
-        />
-        <Text style={styles.checkboxText}>
-          By continuing you accept our{' '}
-          {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
-          <Text style={styles.link}>Privacy Policy</Text> &{' '}
-          {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
-          <Text style={styles.link}>Term of Use</Text>
+        {/* Signup Link */}
+        <Text style={styles.signupText}>
+          Don't have an account?{' '}
+          <Text
+            onPress={() => navigation.navigate('Signup')}
+            style={styles.signupLink}>
+            Signup
+          </Text>
         </Text>
-      </View>
-      {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
-      <TouchableOpacity
-        style={styles.signInButton}
-        onPress={handleSignIn}
-        disabled={isSubmitting}>
-        {isSubmitting ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Text style={styles.signInButtonText}>Sign In</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Signup Link */}
-      <Text style={styles.signupText}>
-        Don't have an account?{' '}
-        <Text
-          onPress={() => navigation.navigate('Signup')}
-          style={styles.signupLink}>
-          Signup
+        <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
+          How to use our program?
         </Text>
-      </Text>
-      <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
-        How to use our program?
-      </Text>
+      </KeyboardAwareScrollView>
     </View>
   );
 };
@@ -242,11 +255,11 @@ const SignInScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingTop: 60,
     backgroundColor: '#0B1541', // Background color from the design
     paddingHorizontal: 20,
   },
+  logoContainer: {alignSelf: 'center'},
   logo: {
     width: 180,
     height: 118,
@@ -255,12 +268,14 @@ const styles = StyleSheet.create({
   welcomeText: {
     color: '#FFFFFF',
     fontSize: 18,
+    textAlign: 'center',
   },
   signinText: {
     color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
   inputContainer: {
     width: '100%',
@@ -294,6 +309,7 @@ const styles = StyleSheet.create({
   signupText: {
     color: '#FFFFFF',
     marginTop: 20,
+    textAlign: 'center',
   },
   signupLink: {
     color: '#287BF3',
@@ -307,7 +323,6 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     marginVertical: 10,
   },
   checkbox: {
@@ -324,6 +339,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     flex: 1,
     fontSize: 14,
+    marginLeft: 6,
   },
   link: {
     color: '#287BF3',
@@ -333,6 +349,7 @@ const styles = StyleSheet.create({
     color: '#287BF3',
     fontWeight: 'bold',
     marginTop: 15,
+    textAlign: 'center',
     textDecorationLine: 'underline',
   },
 });

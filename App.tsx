@@ -17,6 +17,10 @@ import Dashboard from './src/content/Dashboard';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {AuthContext, AuthProvider} from './src/context/AuthContext';
 import {Semibold} from './src/constants/font';
+import Toast from './src/components/Toast';
+import {ToastProvider} from './src/context/ToastContext';
+import Media from './src/content/Recordings/Media';
+import ScreenGuardModule from 'react-native-screenguard';
 
 const Stack = createStackNavigator();
 
@@ -60,6 +64,7 @@ const AppStack = () => (
         },
       }}
     />
+    <Stack.Screen name="Recordings" component={Media} />
     <Stack.Screen name="Payment" component={PaymentScreen} />
     <Stack.Screen name="Checkout" component={CheckoutScreen} />
     <Stack.Screen
@@ -72,16 +77,27 @@ const AppStack = () => (
 
 const AppNavigator = () => {
   const {user, isLoading} = React.useContext(AuthContext);
+
+  const data = {
+    radius: 35,
+    timeAfterResume: 2000,
+   };
+
   if (isLoading) {
     return <SplashScreen />;
   }
+  
+  // ScreenGuardModule.registerWithBlurView(data);
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <SafeAreaView edges={['top']} style={styles.container}>
-          {user ? <AppStack /> : <AuthStack />}
-        </SafeAreaView>
-      </NavigationContainer>
+      <ToastProvider>
+        <Toast />
+        <NavigationContainer>
+          <SafeAreaView edges={['top']} style={styles.container}>
+            {user ? <AppStack /> : <AuthStack />}
+          </SafeAreaView>
+        </NavigationContainer>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 };

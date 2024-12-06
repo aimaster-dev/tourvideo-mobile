@@ -51,17 +51,21 @@ const ProfileScreen = () => {
   const deleteAccount = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
-      console.log(accessToken, "access token")
+      console.log(accessToken, 'access token');
       if (!accessToken) {
         console.error('No access token found');
         return;
       }
-      const { data } = await api.post('user/deleteaccount', {}, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+      const {data} = await api.post(
+        'user/deleteaccount',
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      });
+      );
       if (data && data.status) {
         await logout();
       }
@@ -104,9 +108,9 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={{flex: 1}}>
+      <View style={styles.flex}>
         {!loading ? (
-          <View style={{flex: 1}}>
+          <View style={styles.flex}>
             <View style={styles.card}>
               <Icon name="email" size={24} color="white" />
               <Text style={styles.text}>{data?.email}</Text>
@@ -154,6 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from your design
     padding: 20,
   },
+  flex: {flex: 1},
   center: {
     justifyContent: 'center',
     alignItems: 'center',

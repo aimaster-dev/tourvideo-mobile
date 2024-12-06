@@ -13,6 +13,7 @@ export const styles = StyleSheet.create({
       padding: 8,
       borderRadius: 100,
     },
+    list: {marginTop: 24},
     planDetails: {
       borderBottomWidth: 1,
       borderColor: '#B7B9C2',
