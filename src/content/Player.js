@@ -15,13 +15,14 @@ import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useAPI} from '../hooks/useAPI';
+import {domain, useAPI} from '../hooks/useAPI';
 import {Regular} from '../constants/font';
 import ViewShot, {captureRef} from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const Player = ({route}) => {
   const {
@@ -60,8 +61,6 @@ const Player = ({route}) => {
 
   const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording.mp4`;
 
-  const headerPath = `${RNFS.CachesDirectoryPath}/header.mp4`;
-
   const requestPermissions = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -78,54 +77,9 @@ const Player = ({route}) => {
   const restrictRecordingButton =
     usertype !== 2 &&
     (!selectedLimit ||
-      selectedLimit.videoremain === 0 ||
+      selectedLimit.videoremain === 0 || 
       isLoadingUpload ||
       buttonLoading);
-
-  const fetchIntro = async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem('access_token');
-      if (!accessToken) {
-        return false;
-      }
-      const {data} = await api.post(
-        'video/getheaderfooter',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-      if (data.data) {
-        const downloadResult = await RNFS.downloadFile({
-          fromUrl: data.data.header,
-          toFile: headerPath,
-          progress: res => {
-            let progressPercent = (res.bytesWritten / res.contentLength) * 100;
-            console.log(progressPercent, 'progress');
-          },
-        }).promise;
-        if (downloadResult.statusCode === 200) {
-          console.log('Header video saved at:', headerPath);
-          await startRecording();
-        } else {
-          setButtonStatus('Record');
-          setButtonLoading(false);
-          console.error(
-            'Failed to download header video. Status:',
-            downloadResult.statusCode,
-          );
-          showToast('Unknown error occurred while processing', 'error');
-        }
-      }
-    } catch (e) {
-      setButtonStatus('Record');
-      setButtonLoading(false);
-      console.log(e, 'error while fetching intro');
-      return false;
-    }
-  };
 
   const fetchRecordingLimits = async () => {
     try {
@@ -270,7 +224,7 @@ const Player = ({route}) => {
           setUploadInProgress(true);
           console.log('Video upload finished.');
           try {
-            await RNFS.unlink(thumbnail)
+            await RNFS.unlink(thumbnail);
             await RNFS.unlink(recorded);
             showToast('Video recorded successfully', 'success');
           } catch (error) {
@@ -290,27 +244,72 @@ const Player = ({route}) => {
     }, 2000);
   };
 
+  const handleDownload = async video_path => {
+    try {
+      const filename = video_path.split('/').pop();
+      const {dirs} = RNFetchBlob.fs;
+      const dirToSave =
+        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
+      const configfb = {
+        fileCache: true,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          mediaScannable: true,
+          title: filename,
+          path: `${dirs.DownloadDir}/${filename}`,
+        },
+        useDownloadManager: true,
+        notification: true,
+        mediaScannable: true,
+        title: filename,
+        path: `${dirToSave}/${filename}`,
+      };
+      const configOptions = Platform.select({
+        ios: configfb,
+        android: configfb,
+      });
+      console.log(`${domain}${video_path}`, "video path")
+      RNFetchBlob.config(configOptions || {})
+        .fetch('GET', `${domain}${video_path}`, {})
+        .then(res => {
+          if (Platform.OS === 'ios') {
+            RNFetchBlob.fs.writeFile(configfb.path, res.data, 'base64');
+            RNFetchBlob.ios.previewDocument(configfb.path);
+          }
+          if (Platform.OS === 'android') {
+            console.log('file downloaded');
+            showToast(`${filename} video saved successfully`, 'success');
+          }
+        })
+        .catch(e => {
+          showToast(`${filename} failed to save`, 'error');
+        });
+    } catch (e) {
+      setButtonLoading(false)
+      console.log(e, 'error while downloading');
+    }
+  };
+
   const uploadVideoToServer = async (
-    headerPath,
     recordedPath,
-    videoPath,
     thumbnailPath,
   ) => {
     console.log(
       'should call uploading ....',
-      headerPath,
       recordedPath,
-      videoPath,
       thumbnailPath,
     );
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
       formData.append('video_path', {
-        uri: `file://${videoPath}`,
+        uri: `file://${recordedPath}`,
         type: 'video/mp4',
         name: 'recording.mp4',
       });
+      formData.append('pricing_id', selectedLimit.price_id);
+      formData.append('tourplace_id', tourplace_id);
       formData.append('thumbnail', {
         uri: `file://${thumbnailPath}`,
         type: 'image/jpg',
@@ -328,8 +327,9 @@ const Player = ({route}) => {
         },
       });
       console.log('Video uploaded successfully!');
-      console.log('Server Response:', response.data);
+      console.log('Server Response:', response.data.data.video_path);
       if (response.data) {
+        await handleDownload(response.data.data.video_path)
         await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
     } catch (error) {
@@ -344,16 +344,9 @@ const Player = ({route}) => {
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit) {
-      if (selectedLimit.videoremain > 0) {
-        setButtonStatus('Processing');
+      if (selectedLimit.videoremain > 0) { 
         setButtonLoading(true);
-        if (await RNFS.exists(headerPath)) {
-          console.log('BLAH EXISTS');
-          await startRecording();
-        } else {
-          console.log('BLAH DOES NOT EXIST');
-          await fetchIntro();
-        }
+        await startRecording();
       } else {
         showToast('You have reached your recording limit.', 'error');
       }
@@ -380,20 +373,21 @@ const Player = ({route}) => {
         },
       });
     } catch (e) {
+      setButtonLoading(false)
       console.log(e, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
     }
   };
 
-  const generateThumbnail = async (headerPath, path, inputVideoUrl) => {
+  const generateThumbnail = async (path) => {
     const start_time = 3; // Ensure start time is within video duration
     const width = 320;
-    const height = 500;
+    const height = 300;
 
     // Path for the output thumbnail
     const thumbnailPath = `${RNFS.DownloadDirectoryPath}/output_thumbnail.jpg`;
 
-    const thumbnailCommand = `-i ${inputVideoUrl} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
+    const thumbnailCommand = `-i ${path} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
 
     await FFmpegKit.executeAsync(thumbnailCommand, async session => {
       const returnCode = await session.getReturnCode();
@@ -411,9 +405,7 @@ const Player = ({route}) => {
             type: 'photo',
           });
           await uploadVideoToServer(
-            headerPath,
             path,
-            inputVideoUrl,
             thumbnailPath,
           );
         } catch (error) {
@@ -421,6 +413,7 @@ const Player = ({route}) => {
           return error;
         }
       } else {
+        setButtonLoading(false)
         console.error('Thumbnail generation failed. Check logs for details.');
       }
     });
@@ -463,22 +456,13 @@ const Player = ({route}) => {
       const output = await session.getOutput();
       console.log(returnCode, 'return code');
       if (returnCode.isValueSuccess) {
-        const outputPath = `${RNFS.DownloadDirectoryPath}/recording_${Date.now()}.mp4`;
-        const concat_command = `-y -i ${headerPath} -itsoffset 4 -i  ${path} -filter_complex "[0:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v0];[1:v]scale=640:1136:force_original_aspect_ratio=decrease,pad=640:1136:-1:-1,setsar=1,fps=18,format=yuv420p[v1];[v0][0:a][v1][0:a]concat=n=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v mpeg4 -c:a aac -movflags +faststart ${outputPath}`;
-        const concatSession = await FFmpegKit.executeAsync(
-          concat_command,
-          async concat => {
-            const returnConcatCode = await concat.getReturnCode();
-            const concatOutput = await concat.getOutput();
-            const logs = await session.getAllLogs();
-            const logMessages = logs.map(log => log.getMessage());
-      
-            console.log(logMessages, 'Logs while merging the video');
-            await generateThumbnail(headerPath, path, outputPath);
-          },
-        );
+        // const outputPath = `${
+        //   RNFS.DownloadDirectoryPath
+        // }/recording_${Date.now()}.mp4`;
+        await generateThumbnail(path);
       } else {
         console.log('Recording failed:', output);
+        setButtonLoading(false)
       }
       setIsRecording(false);
       currentSessionRef.current = null;
@@ -531,6 +515,7 @@ const Player = ({route}) => {
               );
               if (selected) {
                 selected.record_time = 10;
+                console.log(selected, "selected")
                 setSelectedLimit(selected);
               }
             }}>
