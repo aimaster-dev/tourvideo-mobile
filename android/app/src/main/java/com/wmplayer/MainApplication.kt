@@ -1,4 +1,4 @@
-package com.wmplayer
+package com.emmysvideos
 
 import android.app.Application
 import com.facebook.react.PackageList
