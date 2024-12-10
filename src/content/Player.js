@@ -465,7 +465,7 @@ const Player = ({route}) => {
             {recordingLimits.map(limit => (
               <Picker.Item
                 key={limit.price_id}
-                label={`${limit.comment} / ${limit.remain} videos remain`}
+                label={`${limit.comment} / ${limit.videoremain} videos remain // ${limit.snapshotremain} videos remain`}
                 value={limit.price_id}
               />
             ))}
