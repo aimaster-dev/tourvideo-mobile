@@ -77,7 +77,7 @@ const Player = ({route}) => {
   const restrictRecordingButton =
     usertype !== 2 &&
     (!selectedLimit ||
-      selectedLimit.videoremain === 0 || 
+      selectedLimit.videoremain === 0 ||
       isLoadingUpload ||
       buttonLoading);
 
@@ -244,62 +244,8 @@ const Player = ({route}) => {
     }, 2000);
   };
 
-  const handleDownload = async video_path => {
-    try {
-      const filename = video_path.split('/').pop();
-      const {dirs} = RNFetchBlob.fs;
-      const dirToSave =
-        Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
-      const configfb = {
-        fileCache: true,
-        addAndroidDownloads: {
-          useDownloadManager: true,
-          notification: true,
-          mediaScannable: true,
-          title: filename,
-          path: `${dirs.DownloadDir}/${filename}`,
-        },
-        useDownloadManager: true,
-        notification: true,
-        mediaScannable: true,
-        title: filename,
-        path: `${dirToSave}/${filename}`,
-      };
-      const configOptions = Platform.select({
-        ios: configfb,
-        android: configfb,
-      });
-      console.log(`${domain}${video_path}`, "video path")
-      RNFetchBlob.config(configOptions || {})
-        .fetch('GET', `${domain}${video_path}`, {})
-        .then(res => {
-          if (Platform.OS === 'ios') {
-            RNFetchBlob.fs.writeFile(configfb.path, res.data, 'base64');
-            RNFetchBlob.ios.previewDocument(configfb.path);
-          }
-          if (Platform.OS === 'android') {
-            console.log('file downloaded');
-            showToast(`${filename} video saved successfully`, 'success');
-          }
-        })
-        .catch(e => {
-          showToast(`${filename} failed to save`, 'error');
-        });
-    } catch (e) {
-      setButtonLoading(false)
-      console.log(e, 'error while downloading');
-    }
-  };
-
-  const uploadVideoToServer = async (
-    recordedPath,
-    thumbnailPath,
-  ) => {
-    console.log(
-      'should call uploading ....',
-      recordedPath,
-      thumbnailPath,
-    );
+  const uploadVideoToServer = async (recordedPath, thumbnailPath) => {
+    console.log('should call uploading ....', recordedPath, thumbnailPath);
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
@@ -329,7 +275,6 @@ const Player = ({route}) => {
       console.log('Video uploaded successfully!');
       console.log('Server Response:', response.data.data.video_path);
       if (response.data) {
-        await handleDownload(response.data.data.video_path)
         await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
     } catch (error) {
@@ -344,7 +289,7 @@ const Player = ({route}) => {
     if (isRecording) {
       await stopRecording();
     } else if (selectedLimit) {
-      if (selectedLimit.videoremain > 0) { 
+      if (selectedLimit.videoremain > 0) {
         setButtonLoading(true);
         await startRecording();
       } else {
@@ -373,13 +318,13 @@ const Player = ({route}) => {
         },
       });
     } catch (e) {
-      setButtonLoading(false)
+      setButtonLoading(false);
       console.log(e, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
     }
   };
 
-  const generateThumbnail = async (path) => {
+  const generateThumbnail = async path => {
     const start_time = 3; // Ensure start time is within video duration
     const width = 320;
     const height = 300;
@@ -404,16 +349,13 @@ const Player = ({route}) => {
           await CameraRoll.saveAsset(thumbnailPath, {
             type: 'photo',
           });
-          await uploadVideoToServer(
-            path,
-            thumbnailPath,
-          );
+          await uploadVideoToServer(path, thumbnailPath);
         } catch (error) {
           console.error('Failed to save thumbnail:', error);
           return error;
         }
       } else {
-        setButtonLoading(false)
+        setButtonLoading(false);
         console.error('Thumbnail generation failed. Check logs for details.');
       }
     });
@@ -462,7 +404,7 @@ const Player = ({route}) => {
         await generateThumbnail(path);
       } else {
         console.log('Recording failed:', output);
-        setButtonLoading(false)
+        setButtonLoading(false);
       }
       setIsRecording(false);
       currentSessionRef.current = null;
@@ -515,7 +457,7 @@ const Player = ({route}) => {
               );
               if (selected) {
                 selected.record_time = 10;
-                console.log(selected, "selected")
+                console.log(selected, 'selected');
                 setSelectedLimit(selected);
               }
             }}>
