@@ -23,16 +23,29 @@ import Media from './src/content/Recordings/Media';
 import ScreenGuardModule from 'react-native-screenguard';
 import notifee from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
+import ForgotPassword from './src/auth/ForgotPassword';
 
 const Stack = createStackNavigator();
 
 LogBox.ignoreAllLogs();
 
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Signin" component={SignInScreen} />
-    <Stack.Screen name="Signup" component={SignUpScreen} />
+  <Stack.Navigator
+    screenOptions={{
+      headerStatusBarHeight: 0,
+      headerStyle: {
+        backgroundColor: '#0B1541',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontFamily: Semibold,
+        fontSize: 20,
+      },
+    }}>
+    <Stack.Screen name="Signin" component={SignInScreen} options={{headerShown: false}}/>
+    <Stack.Screen name="Signup" component={SignUpScreen} options={{headerShown: false}} />
     <Stack.Screen name="OTPCheck" component={OTPScreen} />
+    <Stack.Screen name="Forgot Password" component={ForgotPassword} />
   </Stack.Navigator>
 );
 

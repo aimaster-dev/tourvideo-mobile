@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +17,8 @@ import {useAPI} from '../hooks/useAPI';
 import {AuthContext} from '../context/AuthContext';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useToast} from '../context/ToastContext';
+import {Link} from '@react-navigation/native';
+import {Medium, Semibold} from '../constants/font';
 
 const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -207,7 +210,10 @@ const SignInScreen = ({navigation}) => {
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
-
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Forgot Password')}>
+          <Text style={styles.forgotPassword}>Forgot Password ?</Text>
+        </TouchableOpacity>
         <View style={styles.checkboxContainer}>
           <CheckBox
             value={isAccepted}
@@ -217,10 +223,25 @@ const SignInScreen = ({navigation}) => {
           />
           <Text style={styles.checkboxText}>
             By continuing you accept our{' '}
-            {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
-            <Text style={styles.link}>Privacy Policy</Text> &{' '}
-            {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
-            <Text style={styles.link}>Term of Use</Text>
+            <Text
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.termsfeed.com/live/f1b50918-7205-48c6-9ed7-4104af3e9923',
+                )
+              }>
+              Privacy Policy
+            </Text>{' '}
+            &{' '}
+            <Text
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.termsfeed.com/live/37f2647d-1d82-47a2-b15f-10421454ee9d',
+                )
+              }>
+              Term of Use
+            </Text>
           </Text>
         </View>
         {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
@@ -276,6 +297,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  forgotPassword: {
+    textAlign: 'right',
+    color: 'white',
+    fontFamily: Semibold,
   },
   inputContainer: {
     width: '100%',
