@@ -75,11 +75,7 @@ const Player = ({route}) => {
   };
 
   const restrictRecordingButton =
-    usertype !== 2 &&
-    (!selectedLimit ||
-      selectedLimit.videoremain === 0 ||
-      isLoadingUpload ||
-      buttonLoading);
+    isLoadingUpload || buttonLoading || isVideoLoading;
 
   const fetchRecordingLimits = async () => {
     try {
@@ -101,6 +97,11 @@ const Player = ({route}) => {
         },
       );
       if (response.data.status) {
+        const updatedArray = response.data.data.map(item => ({
+          ...item,
+          record_time: 10,
+        }));
+        setSelectedLimit(updatedArray[0]);
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
       }
@@ -227,6 +228,7 @@ const Player = ({route}) => {
             await RNFS.unlink(thumbnail);
             await RNFS.unlink(recorded);
             showToast('Video recorded successfully', 'success');
+            await fetchRecordingLimits();
           } catch (error) {
             console.error('Error deleting file:', error);
           }
@@ -286,15 +288,19 @@ const Player = ({route}) => {
   };
 
   const handleRecordingPress = async () => {
-    if (isRecording) {
+    if (usertype === 2) {
+      showToast('Only clients are allowed to do recordings', 'error');
+    } else if (!selectedLimit) {
+      showToast('Please select the recording limit', 'error');
+    } else if (selectedLimit && selectedLimit.videoremain == 0) {
+      showToast('Insufficient recording limit', 'error');
+    } else if (isRecording) {
       await stopRecording();
-    } else if (selectedLimit) {
-      if (selectedLimit.videoremain > 0) {
-        setButtonLoading(true);
-        await startRecording();
-      } else {
-        showToast('You have reached your recording limit.', 'error');
-      }
+    } else if (selectedLimit && selectedLimit.videoremain > 0) {
+      setButtonLoading(true);
+      await startRecording();
+    } else {
+      console.log('not recording...', selectedLimit.videoremain);
     }
   };
 
@@ -456,16 +462,14 @@ const Player = ({route}) => {
                 limit => limit.price_id === itemValue,
               );
               if (selected) {
-                selected.record_time = 10;
-                console.log(selected, 'selected');
                 setSelectedLimit(selected);
               }
             }}>
-            <Picker.Item label="Select Recording Time Limit" value={null} />
+            {/* <Picker.Item label="Select Recording Time Limit" value={null} /> */}
             {recordingLimits.map(limit => (
               <Picker.Item
                 key={limit.price_id}
-                label={`${limit.comment} / ${limit.videoremain} videos remain // ${limit.snapshotremain} videos remain`}
+                label={`${limit.comment} / ${limit.videoremain} videos remain / ${limit.snapshotremain} videos remain`}
                 value={limit.price_id}
               />
             ))}
@@ -555,17 +559,26 @@ const Player = ({route}) => {
           <Text style={styles.recordingText}>{buttonStatus}</Text>
         </View>
         <TouchableOpacity
-          onPress={() => takeSnapShot()}
-          disabled={
-            isRecording ||
-            restrictRecordingButton ||
-            selectedLimit?.snapshotremain <= 0
-          }
+          onPress={() => {
+            if (isRecording) {
+              showToast(
+                "Can't take snapshots while the video is recording",
+                'error',
+              );
+            } else if (!selectedLimit) {
+              showToast('Please select the recording limit', 'error');
+            } else if (selectedLimit && selectedLimit.snapshotremain == 0) {
+              showToast('Insufficient recording limit', 'error');
+            } else {
+              takeSnapShot();
+            }
+          }}
+          disabled={restrictRecordingButton}
           activeOpacity={0.8}
           style={styles.snapshotButton}>
           <Feather
             name="camera"
-            color={isRecording || restrictRecordingButton ? 'grey' : 'white'}
+            color={restrictRecordingButton ? 'grey' : 'white'}
             size={32}
           />
           <Text style={styles.recordingText}>Snapshot</Text>
@@ -654,3 +667,60 @@ const styles = StyleSheet.create({
 });
 
 export default Player;
+
+// TODO: This code is for watermarking snapshots (Need it for later use)
+
+// const addTextWatermark = async videoPath => {
+//   try {
+//     const watermarkPath = await downloadImage(
+//       'https://i.ibb.co/F0Zq4PB/logo.png',
+//     );
+//     const outputPath = `${RNFS.DownloadDirectoryPath}/output_watermark.mp4`;
+
+//     const command = `-i ${videoPath} -i ${watermarkPath} -filter_complex "[1:v]scale=iw/2:-1[scaled];[0:v][scaled]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2" -c:a copy ${outputPath}`;
+
+//     await FFmpegKit.executeAsync(command, async session => {
+//       const returnCode = await session.getReturnCode();
+//       const logs = await session.getAllLogs();
+//       const logMessages = logs.map(log => log.getMessage());
+
+//       console.log(logMessages, 'Logs while generating the Watermark');
+//       console.log(returnCode);
+//       setButtonLoading(false);
+//       await generateThumbnail(outputPath, videoPath, watermarkPath);
+//     });
+//   } catch (e) {
+//     console.log(e, 'error');
+//     setButtonLoading(false);
+//     showToast('Failed to watermark', 'error');
+//   }
+// };
+
+// const handleRecordingPress = async () => {
+//   if (isRecording) {
+//     await stopRecording();
+//   } else if (selectedLimit) {
+//     if (selectedLimit.videoremain > 0) {
+//       setButtonLoading(true);
+//       await startRecording();
+//     } else {
+//       showToast('You have reached your recording limit.', 'error');
+//     }
+//   } else if (!selectedLimit) {
+//     showToast('Recording Time limit is not selected', 'error');
+//   }
+// };
+
+// const downloadImage = async url => {
+//   const localFilePath = `${RNFS.DownloadDirectoryPath}/watermark.png`;
+
+//   try {
+//     console.log('Downloading watermark image...');
+//     await RNFS.downloadFile({fromUrl: url, toFile: localFilePath}).promise;
+//     console.log('Image downloaded to:', localFilePath);
+//     return localFilePath;
+//   } catch (error) {
+//     console.error('Error downloading watermark image:', error);
+//     throw error;
+//   }
+// };

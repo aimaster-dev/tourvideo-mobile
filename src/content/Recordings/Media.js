@@ -140,7 +140,7 @@ const Media = ({}) => {
           }
           if (Platform.OS === 'android') {
             console.log('file downloaded');
-            showToast(`${filename} video saved successfully`, 'success');
+            showToast(`${filename} saved successfully`, 'success');
           }
         })
         .catch(e => {
@@ -222,19 +222,7 @@ const Media = ({}) => {
         showToast('Downloading in progress', 'success');
         await handleDownload(path);
       } else if (selectedRecordingOption === 'Snapshots') {
-        const filePath = `${
-          RNFS.CachesDirectoryPath
-        }/${new Date().getTime()}.jpg`;
-        const downloadResult = await RNFS.downloadFile({
-          fromUrl: `${domain}${path}`,
-          toFile: filePath,
-          progress: res => {
-            let progressPercent = (res.bytesWritten / res.contentLength) * 100;
-            console.log(progressPercent, 'progress');
-          },
-        }).promise;
-        await CameraRoll.saveAsset(filePath, {type: 'photo'});
-        showToast('Snapshot saved successfully !', 'success');
+        await handleDownload(path);
       }
     } else if (item?.title === 'Delete') {
       if (selectedRecordingOption === 'Snapshots') {

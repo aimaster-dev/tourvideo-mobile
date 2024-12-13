@@ -210,10 +210,10 @@ const SignInScreen = ({navigation}) => {
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation.navigate('Forgot Password')}>
           <Text style={styles.forgotPassword}>Forgot Password ?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <View style={styles.checkboxContainer}>
           <CheckBox
             value={isAccepted}
