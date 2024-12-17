@@ -1,15 +1,44 @@
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
-import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, FlatList, Platform} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {PaymentOptions, PaymentPlans} from '../../constants/data';
 import {styles} from './styles';
 import PaymentPlan from './Plan';
 import Transaction from './Transaction';
+import {
+  endConnection,
+  flushFailedPurchasesCachedAsPendingAndroid,
+  initConnection,
+} from 'react-native-iap';
 
 const PaymentScreen = ({navigation, route}) => {
   const {params} = route?.params ?? {};
   const [selectedPaymentOption, setSelectedPaymentOption] = useState(
     params ?? PaymentOptions[0].name,
   );
+
+  const productSkus = Platform.select({
+    android: ['com.standard.emmy'],
+  });
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await initConnection();
+        if (Platform.OS === 'android') {
+          flushFailedPurchasesCachedAsPendingAndroid();
+        }
+        const result = await getAvailablePurchases();
+        console.log(result, "result")
+      } catch (error) {
+        console.error('Error occurred during initilization', error.message);
+      }
+    };
+    init();
+    return () => {
+      endConnection();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.menuContainer}>

@@ -30,6 +30,7 @@
     "react-native": "0.75.4",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.20.0",
+    "react-native-iap": "^12.15.7",
     "react-native-image-marker": "^1.2.6",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-modal": "^13.0.1",
