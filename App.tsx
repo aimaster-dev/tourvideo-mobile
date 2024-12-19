@@ -91,7 +91,7 @@ const AppStack = () => (
 );
 
 const AppNavigator = () => {
-  const {user, isLoading} = React.useContext(AuthContext);
+  const {user, isLoading, setNotificationToken} = React.useContext(AuthContext);
 
   const data = {
     radius: 35,
@@ -102,7 +102,7 @@ const AppNavigator = () => {
     try {
       await notifee.requestPermission();
       const token = await messaging().getToken();
-      console.log(token, 'token');
+      setNotificationToken(token)
     } catch (e) {
       console.log(e, 'error in checking token');
     }
@@ -123,7 +123,7 @@ const AppNavigator = () => {
         <Toast />
         <NavigationContainer>
           <SafeAreaView edges={['top']} style={styles.container}>
-            {user ? <AppStack /> : <AuthStack />}
+            {user ? <AppStack /> : <AuthStack  />}
           </SafeAreaView>
         </NavigationContainer>
       </ToastProvider>

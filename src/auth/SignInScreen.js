@@ -35,7 +35,7 @@ const SignInScreen = ({navigation}) => {
 
   const api = useAPI();
 
-  const {setUser} = useContext(AuthContext);
+  const {setUser, notificationToken} = useContext(AuthContext);
 
   const {showToast} = useToast();
 
@@ -109,6 +109,7 @@ const SignInScreen = ({navigation}) => {
       tourplace: selectedPlace.id,
       email: email,
       password: password,
+      device_token: notificationToken
     };
     setIsSubmitting(true);
 
