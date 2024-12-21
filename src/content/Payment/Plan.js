@@ -2,12 +2,15 @@ import {FlatList, Text, TouchableOpacity, View} from 'react-native';
 import Check from '../../../asset/svg/Check.svg';
 import { styles } from './styles';
 
-const PaymentPlan = ({item, navigation}) => {
+const PaymentPlan = ({item, navigation, handlePurchase}) => {
   return (
     <TouchableOpacity
       disabled={item.is_free}
       style={styles.card}
-      onPress={() => navigation.navigate('Checkout', {plan: item})}>
+      onPress={() => {
+        // navigation.navigate('Checkout', {plan: item})
+        handlePurchase("com.standard.emmy")
+      }}>
       <View style={styles.planDetails}>
         <Text style={styles.planName}>{item.name}</Text>
         <Text style={styles.planPrice}>{item.price}</Text>
