@@ -8,8 +8,8 @@ const PaymentPlan = ({item, navigation, handlePurchase}) => {
       disabled={item.is_free}
       style={styles.card}
       onPress={() => {
-        // navigation.navigate('Checkout', {plan: item})
-        handlePurchase("com.standard.emmy")
+        navigation.navigate('Checkout', {plan: item})
+        // handlePurchase("com.standard.emmy")
       }}>
       <View style={styles.planDetails}>
         <Text style={styles.planName}>{item.name}</Text>

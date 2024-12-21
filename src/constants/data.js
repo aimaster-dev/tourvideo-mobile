@@ -66,7 +66,8 @@ export const PaymentPlans = [
   {
     id: 2,
     name: 'Starter Plan',
-    price: '$20.00',
+    price: '$15.00',
+    package_id: "com.standard.emmy",
     is_free: false,
     features: [
       {
@@ -89,9 +90,10 @@ export const PaymentPlans = [
   },
   {
     id: 3,
-    name: 'Premium Plan',
-    price: '$50.00',
+    name: 'Advanced Plan',
+    price: '$30.00',
     is_free: false,
+    package_id: "com.advanced.emmy",
     features: [
       {
         id: 31,

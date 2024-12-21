@@ -1,10 +1,70 @@
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
-import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {Medium, Regular, Semibold} from '../constants/font';
 import Check from '../../asset/svg/Check.svg';
+import axios from 'axios';
+import {useAPI} from '../hooks/useAPI';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  endConnection,
+  finishTransaction,
+  flushFailedPurchasesCachedAsPendingAndroid,
+  getProducts,
+  initConnection,
+  requestPurchase,
+} from 'react-native-iap';
+
+const skus = ['com.standard.emmy', 'com.advanced.emmy'];
 
 const CheckoutScreen = ({route}) => {
+  const [availablePurchase, setAvailablePurchase] = useState([]);
   const {plan} = route.params ?? {};
+
+  const initilizeIAPConnection = async () => {
+    try {
+      const result = await initConnection();
+      if (result) {
+        await flushFailedPurchasesCachedAsPendingAndroid();
+        const subscriptions = await getProducts({
+          skus,
+        });
+        console.log(subscriptions, 'available purchase');
+        setAvailablePurchase(subscriptions);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handlePurchase = async productId => {
+    try {
+      const response = await requestPurchase({skus: [productId]});
+      console.log(response);
+      const transaction = await finishTransaction({
+        purchase: response[0],
+        isConsumable: true,
+        developerPayloadAndroid: undefined,
+      });
+      console.log(transaction, 'transaction ....');
+    } catch (error) {
+      Alert.alert('Error occurred while making purchase');
+    }
+  };
+
+  useEffect(() => {
+    initilizeIAPConnection();
+    return () => {
+      endConnection();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -33,7 +93,9 @@ const CheckoutScreen = ({route}) => {
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.button}
-              onPress={() => {}}>
+              onPress={() => {
+                handlePurchase(plan.package_id);
+              }}>
               <Text style={styles.buttonText}>Confirm Payment</Text>
             </TouchableOpacity>
           </View>

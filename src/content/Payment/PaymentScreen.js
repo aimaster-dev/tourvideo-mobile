@@ -7,49 +7,13 @@ import Transaction from './Transaction';
 import * as RNIap from "react-native-iap"
 import { PickerIOS } from '@react-native-picker/picker';
 
-const skus = ['com.standard.emmy'];
+// const skus = ['com.standard.emmy'];
 
 const PaymentScreen = ({ navigation, route }) => {
   const { params } = route?.params ?? {};
-  const [availablePurchase, setAvailablePurchase] = useState([])
   const [selectedPaymentOption, setSelectedPaymentOption] = useState(
     params ?? PaymentOptions[0].name,
   );
-
-  useEffect(() => {
-    initilizeIAPConnection();
-    return () => {
-      RNIap.endConnection()
-    }
-  }, []);
-
-  const initilizeIAPConnection = async () => {
-    try {
-      const result = await RNIap.initConnection()
-      console.log('IAP result', result);
-      if (result) {
-        await RNIap.flushFailedPurchasesCachedAsPendingAndroid()
-        const subscriptions = await RNIap.getProducts({
-          skus,
-        });
-        console.log(subscriptions, "available purchase")
-        setAvailablePurchase(subscriptions)
-      }
-    } catch (e) {
-      console.log(e)
-    }
-  };
-
-  const handlePurchase = async (productId) => {
-    try {
-      const response = await RNIap.requestPurchase({ skus: [productId] })
-      console.log(response)
-      const transaction = await RNIap.finishTransaction({purchase: response[0], isConsumable: true, developerPayloadAndroid: undefined})
-      console.log(transaction, "transaction ....")
-    } catch (error) {
-      Alert.alert('Error occurred while making purchase')
-    }
-  }
 
   return (
     <View style={styles.container}>
@@ -76,7 +40,7 @@ const PaymentScreen = ({ navigation, route }) => {
           style={styles.list}
           data={PaymentPlans}
           renderItem={({ item }) => (
-            <PaymentPlan item={item} navigation={navigation} handlePurchase={handlePurchase} />
+            <PaymentPlan item={item} navigation={navigation} />
           )}
         />
       )}
