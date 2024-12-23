@@ -163,6 +163,16 @@ const Player = ({route}) => {
       });
   };
 
+  const checkAndroidPermission = async () => {
+    try {
+      const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+      await PermissionsAndroid.request(permission);
+      Promise.resolve();
+    } catch (error) {
+      Promise.reject(error);
+    }
+  };
+
   const takeSnapShot = async () => {
     try {
       if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
@@ -336,9 +346,9 @@ const Player = ({route}) => {
     const height = 300;
 
     // Path for the output thumbnail
-    const thumbnailPath = `${RNFS.DownloadDirectoryPath}/output_thumbnail.jpg`;
+    const thumbnailPath = `${RNFS.DocumentDirectoryPath}/output_thumbnail.jpg`;
 
-    const thumbnailCommand = `-i ${path} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
+    const thumbnailCommand = `-y -i ${path} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
 
     await FFmpegKit.executeAsync(thumbnailCommand, async session => {
       const returnCode = await session.getReturnCode();
@@ -352,12 +362,13 @@ const Player = ({route}) => {
 
         try {
           console.log('Thumbnail saved to camera roll successfully');
-          await CameraRoll.saveAsset(thumbnailPath, {
-            type: 'photo',
-          });
+          // await CameraRoll.saveAsset(thumbnailPath, {
+          //   type: 'photo',
+          // });
           await uploadVideoToServer(path, thumbnailPath);
         } catch (error) {
           console.error('Failed to save thumbnail:', error);
+          showToast('Failed to save thumbnail', 'error');
           return error;
         }
       } else {
@@ -405,7 +416,7 @@ const Player = ({route}) => {
       console.log(returnCode, 'return code');
       if (returnCode.isValueSuccess) {
         // const outputPath = `${
-        //   RNFS.DownloadDirectoryPath
+        //   RNFS.DocumentDirectoryPath
         // }/recording_${Date.now()}.mp4`;
         await generateThumbnail(path);
       } else {
@@ -543,7 +554,15 @@ const Player = ({route}) => {
               styles.recordButton,
               restrictRecordingButton ? styles.disabledButton : null,
             ]}
-            onPress={handleRecordingPress}
+            onPress={async () => {
+              if (
+                Platform.OS === 'android' &&
+                !(await hasAndroidPermission())
+              ) {
+                return;
+              }
+              handleRecordingPress();
+            }}
             disabled={restrictRecordingButton}>
             {buttonLoading || isLoadingUpload ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -559,7 +578,7 @@ const Player = ({route}) => {
           <Text style={styles.recordingText}>{buttonStatus}</Text>
         </View>
         <TouchableOpacity
-          onPress={() => {
+          onPress={async () => {
             if (isRecording) {
               showToast(
                 "Can't take snapshots while the video is recording",
@@ -570,6 +589,9 @@ const Player = ({route}) => {
             } else if (selectedLimit && selectedLimit.snapshotremain == 0) {
               showToast('Insufficient recording limit', 'error');
             } else {
+              if (Platform.OS === 'android') {
+                await checkAndroidPermission();
+              }
               takeSnapShot();
             }
           }}
@@ -675,7 +697,7 @@ export default Player;
 //     const watermarkPath = await downloadImage(
 //       'https://i.ibb.co/F0Zq4PB/logo.png',
 //     );
-//     const outputPath = `${RNFS.DownloadDirectoryPath}/output_watermark.mp4`;
+//     const outputPath = `${RNFS.DocumentDirectoryPath}/output_watermark.mp4`;
 
 //     const command = `-i ${videoPath} -i ${watermarkPath} -filter_complex "[1:v]scale=iw/2:-1[scaled];[0:v][scaled]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2" -c:a copy ${outputPath}`;
 
@@ -712,7 +734,7 @@ export default Player;
 // };
 
 // const downloadImage = async url => {
-//   const localFilePath = `${RNFS.DownloadDirectoryPath}/watermark.png`;
+//   const localFilePath = `${RNFS.DocumentDirectoryPath}/watermark.png`;
 
 //   try {
 //     console.log('Downloading watermark image...');
