@@ -278,7 +278,7 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
-      console.log('Uploading video to server...', accessToken);
+     
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,

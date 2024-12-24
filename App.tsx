@@ -24,6 +24,8 @@ import ScreenGuardModule from 'react-native-screenguard';
 import notifee from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 import ForgotPassword from './src/auth/ForgotPassword';
+import VideoPlayer from './src/content/Recordings/VideoPlayer';
+import ImageViewer from './src/content/Recordings/ImageViewer';
 
 const Stack = createStackNavigator();
 
@@ -87,6 +89,16 @@ const AppStack = () => (
       component={VideoPlaybackScreen}
       options={{title: 'How to Use Our Program'}}
     />
+    <Stack.Screen
+      name="VideoPlayer"
+      component={VideoPlayer}
+      options={{title: 'Video Player'}}
+    />
+    <Stack.Screen
+      name="ImageViewer"
+      component={ImageViewer}
+      options={{title: 'Image Viewer'}}
+    />
   </Stack.Navigator>
 );
 
@@ -102,7 +114,6 @@ const AppNavigator = () => {
     try {
       await notifee.requestPermission();
       const token = await messaging().getToken();
-      console.log(token, "token")
       setNotificationToken(token)
     } catch (e) {
       console.log(e, 'error in checking token');

@@ -7,6 +7,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#0B1541',
     padding: 20,
   },
+  play: {position: 'absolute', top: '40%', left: '40%'},
   center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   featureContainer: {marginTop: 20},
   menu: {

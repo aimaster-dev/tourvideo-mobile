@@ -268,6 +268,7 @@ const Media = ({}) => {
             renderItem={({item, index}) => {
               return (
                 <Card
+                  item={item}
                   thumbnail={`${domain}/${item?.thumbnail}`}
                   index={index}
                   handlePress={() => {
@@ -289,6 +290,7 @@ const Media = ({}) => {
               renderItem={({item, index}) => {
                 return (
                   <Card
+                    item={item}
                     thumbnail={`${domain}/${item?.image_path}`}
                     index={index}
                     handlePress={() => {
