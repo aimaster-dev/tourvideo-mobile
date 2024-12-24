@@ -15,14 +15,13 @@ import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {domain, useAPI} from '../hooks/useAPI';
+import {useAPI} from '../hooks/useAPI';
 import {Regular} from '../constants/font';
 import ViewShot, {captureRef} from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
-import RNFetchBlob from 'rn-fetch-blob';
 
 const Player = ({route}) => {
   const {
@@ -59,7 +58,7 @@ const Player = ({route}) => {
 
   const {showToast} = useToast();
 
-  const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording.mp4`;
+  const generateFilePath = () => `${RNFS.DocumentDirectoryPath}/recording.mp4`;
 
   const requestPermissions = async () => {
     try {
@@ -123,6 +122,7 @@ const Player = ({route}) => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
       if (response.data.status) {
         setCameras(response.data.data);
         const defaultCamera = response.data.data.find(
@@ -278,6 +278,7 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
+      console.log('Uploading video to server...', accessToken);
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -415,9 +416,6 @@ const Player = ({route}) => {
       const output = await session.getOutput();
       console.log(returnCode, 'return code');
       if (returnCode.isValueSuccess) {
-        // const outputPath = `${
-        //   RNFS.DocumentDirectoryPath
-        // }/recording_${Date.now()}.mp4`;
         await generateThumbnail(path);
       } else {
         console.log('Recording failed:', output);
@@ -463,8 +461,27 @@ const Player = ({route}) => {
       {loadingLimits ? (
         <ActivityIndicator size="large" color="#FFFFFF" />
       ) : (
-        <View style={styles.pickerContainer}>
-          <Picker
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingHorizontal: 12,
+          }}>
+          <View
+            style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
+            <Text style={styles.blockText}>Recording Limit Left</Text>
+            <Text style={styles.blockSubText}>
+              {recordingLimits[0].videoremain}{' '}
+            </Text>
+          </View>
+          <View
+            style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
+            <Text style={styles.blockText}>Snapshot Limit Left</Text>
+            <Text style={styles.blockSubText}>
+              {recordingLimits[0].snapshotremain}
+            </Text>
+          </View>
+          {/* <Picker
             itemStyle={styles.picker}
             selectedValue={selectedLimit ? selectedLimit.price_id : null}
             style={styles.picker}
@@ -476,7 +493,6 @@ const Player = ({route}) => {
                 setSelectedLimit(selected);
               }
             }}>
-            {/* <Picker.Item label="Select Recording Time Limit" value={null} /> */}
             {recordingLimits.map(limit => (
               <Picker.Item
                 key={limit.price_id}
@@ -484,11 +500,11 @@ const Player = ({route}) => {
                 value={limit.price_id}
               />
             ))}
-          </Picker>
+          </Picker> */}
         </View>
       )}
 
-      <View style={styles.pickerContainer}>
+      {/* <View style={styles.pickerContainer}>
         <Picker
           itemStyle={styles.picker}
           selectedValue={selectedCamera}
@@ -508,7 +524,7 @@ const Player = ({route}) => {
             />
           ))}
         </Picker>
-      </View>
+      </View> */}
       <ViewShot ref={snapShotRef} style={styles.flex}>
         <View style={styles.videoContainer}>
           {isVideoLoading && (
@@ -559,6 +575,7 @@ const Player = ({route}) => {
                 Platform.OS === 'android' &&
                 !(await hasAndroidPermission())
               ) {
+                console.log('No permission to record');
                 return;
               }
               handleRecordingPress();
@@ -618,12 +635,13 @@ const styles = StyleSheet.create({
   snapshotButton: {alignItems: 'center'},
   flex: {flex: 1},
   pickerContainer: {
-    marginTop: 10,
-    backgroundColor: '#1C2749',
-    borderRadius: 10,
-    padding: 5,
-    marginHorizontal: 10,
+    // marginTop: 10,
+    // backgroundColor: '#1C2749',
+    // borderRadius: 10,
+    // padding: 5,
+    // marginHorizontal: 10,
   },
+  blockText: {color: '#FFFFFF', fontSize: 15, fontFamily: Regular},
   picker: {
     color: '#FFFFFF',
   },
@@ -679,6 +697,7 @@ const styles = StyleSheet.create({
   innerCircleActive: {
     backgroundColor: 'red',
   },
+  blockSubText: {color: '#FFFFFF', fontSize: 15, fontFamily: Regular},
   recordingText: {
     color: '#fff',
     fontSize: 16,

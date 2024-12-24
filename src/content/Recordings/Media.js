@@ -320,7 +320,7 @@ const Media = ({}) => {
                 <TouchableOpacity
                   onPress={() => handleAction(item)}
                   style={styles.row}>
-                  <Entypo name={item.icon} size={24} />
+                  <Entypo name={item.icon} size={24} color="grey" />
                   <View style={styles.modalContent}>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}</Text>

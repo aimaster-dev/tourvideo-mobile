@@ -63,6 +63,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  title:{fontSize: 18, fontFamily: Semibold},
-  description: {fontSize: 14, fontFamily: Regular}
+  title:{fontSize: 18, fontFamily: Semibold, color: 'grey'},
+  description: {fontSize: 14, fontFamily: Regular, color: 'black'}
 });
