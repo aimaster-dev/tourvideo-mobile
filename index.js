@@ -26,7 +26,7 @@ async function onDisplayNotification(data) {
     android: {
       channelId,
       smallIcon: 'ic_launcher_emmy',
-      color: '#0B1541',
+      color: '#FFFFFF',
       pressAction: {
         id: 'default',
       },
