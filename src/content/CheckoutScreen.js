@@ -35,7 +35,7 @@ const CheckoutScreen = ({route}) => {
         const subscriptions = await getProducts({
           skus,
         });
-        console.log(subscriptions, 'available purchase');
+        // console.log(subscriptions, 'available purchase');
         setAvailablePurchase(subscriptions);
       }
     } catch (e) {
@@ -46,7 +46,7 @@ const CheckoutScreen = ({route}) => {
   const handlePurchase = async productId => {
     try {
       const response = await requestPurchase({skus: [productId]});
-      console.log(response);
+      console.log(response, 'response of purchase');
       const transaction = await finishTransaction({
         purchase: response[0],
         isConsumable: true,
@@ -73,28 +73,26 @@ const CheckoutScreen = ({route}) => {
             <View style={styles.card}>
               <Text style={styles.summaryText}>Summary</Text>
               <View style={styles.planDetails}>
-                <Text style={styles.planName}>{plan.name}</Text>
-                <Text style={styles.planPrice}>{plan.price}</Text>
+                <Text style={styles.planName}>{plan.title}</Text>
+                <Text style={styles.planPrice}>${plan.price}</Text>
               </View>
               <View style={styles.services}>
                 <Text style={styles.servicesText}>Add on services</Text>
-                <FlatList
-                  style={styles.featureListContainer}
-                  data={plan.features}
-                  renderItem={({item}) => (
+                <View style={styles.featureListContainer}>
+                  {plan?.features?.map(item => (
                     <View style={styles.featureList}>
                       <Check width={28} height={28} />
-                      <Text style={styles.featureName}>{item.name}</Text>
+                      <Text style={styles.featureName}>{item}</Text>
                     </View>
-                  )}
-                />
+                  ))}
+                </View>
               </View>
             </View>
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.button}
               onPress={() => {
-                handlePurchase(plan.package_id);
+                handlePurchase(plan.product_id);
               }}>
               <Text style={styles.buttonText}>Confirm Payment</Text>
             </TouchableOpacity>

@@ -83,6 +83,7 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
+      console.log("calling", usertype)
       if (usertype === 2) {
         setLoadingLimits(false);
         return;
@@ -101,6 +102,7 @@ const Player = ({route}) => {
           record_time: 10,
         }));
         setSelectedLimit(updatedArray[0]);
+       
         setRecordingLimits(response.data.data);
         setLoadingLimits(false);
       }
@@ -471,14 +473,14 @@ const Player = ({route}) => {
             style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
             <Text style={styles.blockText}>Recording Limit Left</Text>
             <Text style={styles.blockSubText}>
-              {recordingLimits[0].videoremain}{' '}
+              {recordingLimits[0]?.videoremain}{' '}
             </Text>
           </View>
           <View
             style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
             <Text style={styles.blockText}>Snapshot Limit Left</Text>
             <Text style={styles.blockSubText}>
-              {recordingLimits[0].snapshotremain}
+              {recordingLimits[0]?.snapshotremain}
             </Text>
           </View>
           {/* <Picker
