@@ -24,6 +24,7 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       color: '#00FF7F',
       marginLeft: 4,
+      textTransform: "capitalize"
     },
     planName: {
       fontFamily: Semibold,

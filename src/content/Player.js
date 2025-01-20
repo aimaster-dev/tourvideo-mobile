@@ -83,27 +83,27 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
-      console.log("calling", usertype)
+
       if (usertype === 2) {
         setLoadingLimits(false);
         return;
       }
       const response = await api.get(
-        `invoice/validlist?tourplace=${tourplace_id}`,
+        `invoice/video-snapshot-count?tourplace=${tourplace_id}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         },
       );
-      if (response.data.status) {
-        const updatedArray = response.data.data.map(item => ({
-          ...item,
+
+      if (response.data.data) {
+        console.log(response.data.data)
+        const updatedArray = {
+          ...response.data.data,
           record_time: 10,
-        }));
-        setSelectedLimit(updatedArray[0]);
-       
-        setRecordingLimits(response.data.data);
+        };
+        setRecordingLimits(updatedArray);
         setLoadingLimits(false);
       }
     } catch (error) {
@@ -280,7 +280,7 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
-     
+
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -303,17 +303,15 @@ const Player = ({route}) => {
   const handleRecordingPress = async () => {
     if (usertype === 2) {
       showToast('Only clients are allowed to do recordings', 'error');
-    } else if (!selectedLimit) {
-      showToast('Please select the recording limit', 'error');
-    } else if (selectedLimit && selectedLimit.videoremain == 0) {
+    } else if (selectedLimit && selectedLimit.video_remaining == 0) {
       showToast('Insufficient recording limit', 'error');
     } else if (isRecording) {
       await stopRecording();
-    } else if (selectedLimit && selectedLimit.videoremain > 0) {
+    } else if (selectedLimit && selectedLimit.video_remaining > 0) {
       setButtonLoading(true);
       await startRecording();
     } else {
-      console.log('not recording...', selectedLimit.videoremain);
+      console.log('not recording...', selectedLimit.video_remaining);
     }
   };
 
@@ -473,14 +471,14 @@ const Player = ({route}) => {
             style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
             <Text style={styles.blockText}>Recording Limit Left</Text>
             <Text style={styles.blockSubText}>
-              {recordingLimits[0]?.videoremain}{' '}
+              {recordingLimits?.video_remaining}{' '}
             </Text>
           </View>
           <View
             style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
             <Text style={styles.blockText}>Snapshot Limit Left</Text>
             <Text style={styles.blockSubText}>
-              {recordingLimits[0]?.snapshotremain}
+              {recordingLimits?.snapshot_remaining}
             </Text>
           </View>
           {/* <Picker
@@ -603,9 +601,7 @@ const Player = ({route}) => {
                 "Can't take snapshots while the video is recording",
                 'error',
               );
-            } else if (!selectedLimit) {
-              showToast('Please select the recording limit', 'error');
-            } else if (selectedLimit && selectedLimit.snapshotremain == 0) {
+            } else if (selectedLimit && selectedLimit.snapshot_remaining == 0) {
               showToast('Insufficient recording limit', 'error');
             } else {
               if (Platform.OS === 'android') {

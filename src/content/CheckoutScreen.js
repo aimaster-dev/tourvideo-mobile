@@ -23,9 +23,11 @@ import {
 
 const skus = ['com.standard.emmy', 'com.advanced.emmy'];
 
-const CheckoutScreen = ({route}) => {
+const CheckoutScreen = ({route, navigation}) => {
   const [availablePurchase, setAvailablePurchase] = useState([]);
   const {plan} = route.params ?? {};
+
+  const api = useAPI();
 
   const initilizeIAPConnection = async () => {
     try {
@@ -53,8 +55,35 @@ const CheckoutScreen = ({route}) => {
         developerPayloadAndroid: undefined,
       });
       console.log(transaction, 'transaction ....');
+      const result = await uploadTransaction(response);
+      if(result){
+        navigation.navigate("Dashboard")
+      }
     } catch (error) {
       Alert.alert('Error occurred while making purchase');
+    }
+  };
+
+  const uploadTransaction = async (response) => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.post(
+        `/invoice/in-app-purchase`,
+        response,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      return data;
+    } catch (e) {
+      throw e;
     }
   };
 

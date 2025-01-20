@@ -17,6 +17,7 @@ const PaymentScreen = ({ navigation, route }) => {
     params ?? PaymentOptions[0].name,
   );
   const [paymentPlan, setPaymentPlan] = useState([])
+  const [transaction, setTransaction] = useState([])
 
   const api = useAPI()
 
@@ -43,8 +44,32 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   }
 
+  const getTransaction = async() => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+
+      const response = await api.get('invoice/transactions', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (response.data && response.data.status) {
+        console.log(response.data.data)
+        setTransaction(response.data.data.transactions)
+      }
+    }
+    catch(e){
+      console.log(e, "error")
+    }
+  }
+
   useEffect(() => {
     getPrice()
+    getTransaction()
   },[])
 
   return (
@@ -80,9 +105,9 @@ const PaymentScreen = ({ navigation, route }) => {
       {selectedPaymentOption === 'Transaction History' && (
         <FlatList
           style={styles.list}
-          data={paymentPlan}
+          data={transaction}
           ListHeaderComponent={() => <Text style={styles.recent}>Recent</Text>}
-          renderItem={({ }) => <Transaction />}
+          renderItem={({ item }) => <Transaction item={item} />}
         />
       )}
     </View>
