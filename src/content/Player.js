@@ -9,7 +9,6 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
 import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
@@ -22,32 +21,22 @@ import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
+import {useIsFocused} from '@react-navigation/native';
 
-const Player = ({route}) => {
-  const {
-    cam_id,
-    tourplace_id,
-    camera_name,
-    rtsp_url,
-    tourplace,
-    usertype,
-    user_id,
-  } = route.params;
+const Player = ({route, navigation}) => {
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
-  const [recordingStarted, setRecordingStarted] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
-  const [selectedLimit, setSelectedLimit] = useState(null);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [cameras, setCameras] = useState([]);
-  const [selectedCamera, setSelectedCamera] = useState(null);
   const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [buttonLoading, setButtonLoading] = useState(false);
   const [buttonStatus, setButtonStatus] = useState('Record');
+  const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
 
   const currentSessionRef = useRef(null);
   const alertShownRef = useRef(false);
@@ -55,6 +44,8 @@ const Player = ({route}) => {
   const api = useAPI();
 
   const snapShotRef = useRef();
+
+  const focused = useIsFocused();
 
   const {showToast} = useToast();
 
@@ -74,7 +65,7 @@ const Player = ({route}) => {
   };
 
   const restrictRecordingButton =
-    isLoadingUpload || buttonLoading || isVideoLoading;
+    isLoadingUpload || buttonLoading || isVideoLoading || isSnapshotLoading;
 
   const fetchRecordingLimits = async () => {
     try {
@@ -96,14 +87,10 @@ const Player = ({route}) => {
           },
         },
       );
-
+      console.log('Recording limits:', response.data.data);
       if (response.data.data) {
-        console.log(response.data.data)
-        const updatedArray = {
-          ...response.data.data,
-          record_time: 10,
-        };
-        setRecordingLimits(updatedArray);
+        setRecordingLimits(response.data.data);
+
         setLoadingLimits(false);
       }
     } catch (error) {
@@ -126,12 +113,10 @@ const Player = ({route}) => {
       });
 
       if (response.data.status) {
-        setCameras(response.data.data);
         const defaultCamera = response.data.data.find(
           camera => camera.id === cam_id,
         );
         if (defaultCamera) {
-          setSelectedCamera(defaultCamera.id);
           updateStreamUrl(defaultCamera);
         }
       }
@@ -180,6 +165,7 @@ const Player = ({route}) => {
       if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
         return;
       }
+      setIsSnapshotLoading(true);
       const uri = await captureRef(snapShotRef);
       const options = {
         // background image
@@ -215,13 +201,13 @@ const Player = ({route}) => {
       const savedSnapshot = await CameraRoll.saveAsset(markedImageUri, {
         type: 'photo',
       });
-      showToast('Snapshot saved successfully !', 'success');
       await uploadSnapshots(
         markedImageUri,
         savedSnapshot.node.type,
         savedSnapshot.node.image.filename,
       );
     } catch (e) {
+      setIsSnapshotLoading(false);
       console.log(e, 'error while taking snapshots ...');
       showToast('Some error occurred', 'error');
     }
@@ -268,7 +254,7 @@ const Player = ({route}) => {
         type: 'video/mp4',
         name: 'recording.mp4',
       });
-      formData.append('pricing_id', selectedLimit.price_id);
+      formData.append('pricing_id', recordingLimits?.price_id);
       formData.append('tourplace_id', tourplace_id);
       formData.append('thumbnail', {
         uri: `file://${thumbnailPath}`,
@@ -280,7 +266,7 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
-
+      console.log('Uploading video...', formData);
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -303,15 +289,29 @@ const Player = ({route}) => {
   const handleRecordingPress = async () => {
     if (usertype === 2) {
       showToast('Only clients are allowed to do recordings', 'error');
-    } else if (selectedLimit && selectedLimit.video_remaining == 0) {
-      showToast('Insufficient recording limit', 'error');
+    } else if (recordingLimits && recordingLimits.video_remaining == 0) {
+      Alert.alert(
+        'Limited Exceeded',
+        'You have exceeded the limit of recording. Please upgrade your plan to continue.',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Payment'),
+          },
+        ],
+      );
     } else if (isRecording) {
       await stopRecording();
-    } else if (selectedLimit && selectedLimit.video_remaining > 0) {
+    } else if (recordingLimits && recordingLimits.video_remaining > 0) {
       setButtonLoading(true);
       await startRecording();
     } else {
-      console.log('not recording...', selectedLimit.video_remaining);
+      console.log('not recording...', recordingLimits.video_remaining);
     }
   };
 
@@ -334,7 +334,11 @@ const Player = ({route}) => {
           'Content-Type': 'multipart/form-data',
         },
       });
+      await fetchRecordingLimits();
+      setIsSnapshotLoading(false);
+      showToast('Snapshot saved successfully !', 'success');
     } catch (e) {
+      setIsSnapshotLoading(false);
       setButtonLoading(false);
       console.log(e, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
@@ -392,7 +396,11 @@ const Player = ({route}) => {
     alertShownRef.current = false;
 
     const recordTime =
-      usertype === 2 ? 10 : selectedLimit ? selectedLimit.record_time : 0;
+      usertype === 2
+        ? 10
+        : recordingLimits?.video_remaining
+        ? recordingLimits?.record_time
+        : 0;
 
     if (recordTime === 0) {
       Alert.alert(
@@ -428,10 +436,14 @@ const Player = ({route}) => {
   };
 
   useEffect(() => {
+    fetchRecordingLimits();
+  }, [focused]);
+
+  useEffect(() => {
     if (Platform.OS === 'android') {
       requestPermissions();
     }
-    fetchRecordingLimits();
+
     fetchCameras();
 
     FFmpegKitConfig.enableLogCallback(log => {
@@ -442,11 +454,10 @@ const Player = ({route}) => {
       ) {
         alertShownRef.current = true;
         console.log('First frame detected. Recording started.');
-        setRecordingStarted(true);
         setTimeout(async () => {
           console.log('Time limit reached. Stopping recording...');
           await stopRecording();
-        }, (selectedLimit ? selectedLimit.record_time : 10) * 1000);
+        }, (recordingLimits ? recordingLimits?.record_time : 10) * 1000);
       }
     });
 
@@ -468,159 +479,147 @@ const Player = ({route}) => {
             paddingHorizontal: 12,
           }}>
           <View
-            style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
+            style={{
+              padding: 10,
+              backgroundColor: '#1C2749',
+              borderRadius: 10,
+            }}>
             <Text style={styles.blockText}>Recording Limit Left</Text>
             <Text style={styles.blockSubText}>
               {recordingLimits?.video_remaining}{' '}
             </Text>
           </View>
           <View
-            style={{padding: 10, backgroundColor: '#1C2749', borderRadius: 10}}>
+            style={{
+              padding: 10,
+              backgroundColor: '#1C2749',
+              borderRadius: 10,
+            }}>
             <Text style={styles.blockText}>Snapshot Limit Left</Text>
             <Text style={styles.blockSubText}>
               {recordingLimits?.snapshot_remaining}
             </Text>
           </View>
-          {/* <Picker
-            itemStyle={styles.picker}
-            selectedValue={selectedLimit ? selectedLimit.price_id : null}
-            style={styles.picker}
-            onValueChange={itemValue => {
-              let selected = recordingLimits.find(
-                limit => limit.price_id === itemValue,
-              );
-              if (selected) {
-                setSelectedLimit(selected);
-              }
-            }}>
-            {recordingLimits.map(limit => (
-              <Picker.Item
-                key={limit.price_id}
-                label={`${limit.comment} / ${limit.videoremain} videos remain / ${limit.snapshotremain} videos remain`}
-                value={limit.price_id}
-              />
-            ))}
-          </Picker> */}
         </View>
       )}
 
-      {/* <View style={styles.pickerContainer}>
-        <Picker
-          itemStyle={styles.picker}
-          selectedValue={selectedCamera}
-          style={styles.picker}
-          onValueChange={itemValue => {
-            const selectedCamera = cameras.find(
-              camera => camera.id === itemValue,
-            );
-            setSelectedCamera(itemValue);
-            updateStreamUrl(selectedCamera); // Update the stream URL with the selected camera
-          }}>
-          {cameras.map(camera => (
-            <Picker.Item
-              key={camera.id}
-              label={camera.camera_name}
-              value={camera.id}
-            />
-          ))}
-        </Picker>
-      </View> */}
-      <ViewShot ref={snapShotRef} style={styles.flex}>
-        <View style={styles.videoContainer}>
-          {isVideoLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#FFFFFF" />
+      {Object.keys(recordingLimits).length > 0 && (
+        <>
+          <ViewShot ref={snapShotRef} style={styles.flex}>
+            <View style={styles.videoContainer}>
+              {isVideoLoading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                </View>
+              )}
+              {streamUrl && (
+                <VLCPlayer
+                  style={styles.videoPlayer}
+                  source={{
+                    uri: streamUrl,
+                  }}
+                  onLoad={() => {
+                    console.log('loading ...');
+                    setIsVideoLoading(true);
+                  }}
+                  autoplay={true}
+                  onProgress={e => {
+                    if (e.currentTime > 0) {
+                      setIsVideoLoading(false);
+                    }
+                  }}
+                  onError={e => console.log('Error:', e)}
+                  onBuffering={e => {
+                    console.log('buffering ...');
+                    setIsVideoLoading(true);
+                  }}
+                  onStopped={() => {
+                    setIsVideoLoading(false);
+                  }}
+                />
+              )}
             </View>
-          )}
-          {streamUrl && (
-            <VLCPlayer
-              style={styles.videoPlayer}
-              source={{
-                uri: streamUrl,
-              }}
-              onLoad={() => {
-                console.log('loading ...');
-                setIsVideoLoading(true);
-              }}
-              autoplay={true}
-              onProgress={e => {
-                if (e.currentTime > 0) {
-                  setIsVideoLoading(false);
+          </ViewShot>
+
+          <View style={styles.actionContainer}>
+            <View style={styles.actionSpacing} />
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.recordButton,
+                  restrictRecordingButton ? styles.disabledButton : null,
+                ]}
+                onPress={async () => {
+                  if (
+                    Platform.OS === 'android' &&
+                    !(await hasAndroidPermission())
+                  ) {
+                    console.log('No permission to record');
+                    return;
+                  }
+                  handleRecordingPress();
+                }}
+                disabled={restrictRecordingButton}>
+                {buttonLoading || isLoadingUpload ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <View
+                    style={[
+                      styles.innerCircle,
+                      isRecording && styles.innerCircleActive,
+                    ]}
+                  />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.recordingText}>{buttonStatus}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={async () => {
+                if (isRecording) {
+                  showToast(
+                    "Can't take snapshots while the video is recording",
+                    'error',
+                  );
+                } else if (
+                  recordingLimits &&
+                  recordingLimits?.snapshot_remaining == 0
+                ) {
+                  Alert.alert(
+                    'Limited Exceeded',
+                    'You have exceeded the limit of snapshot. Please upgrade your plan to continue.',
+                    [
+                      {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'OK',
+                        onPress: () => navigation.navigate('Payment'),
+                      },
+                    ],
+                  );
+                } else {
+                  if (Platform.OS === 'android') {
+                    await checkAndroidPermission();
+                  }
+                  takeSnapShot();
                 }
               }}
-              onError={e => console.log('Error:', e)}
-              onBuffering={e => {
-                console.log('buffering ...');
-                setIsVideoLoading(true);
-              }}
-              onStopped={() => {
-                setIsVideoLoading(false);
-              }}
-            />
-          )}
-        </View>
-      </ViewShot>
-
-      <View style={styles.actionContainer}>
-        <View style={styles.actionSpacing} />
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.recordButton,
-              restrictRecordingButton ? styles.disabledButton : null,
-            ]}
-            onPress={async () => {
-              if (
-                Platform.OS === 'android' &&
-                !(await hasAndroidPermission())
-              ) {
-                console.log('No permission to record');
-                return;
-              }
-              handleRecordingPress();
-            }}
-            disabled={restrictRecordingButton}>
-            {buttonLoading || isLoadingUpload ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <View
-                style={[
-                  styles.innerCircle,
-                  isRecording && styles.innerCircleActive,
-                ]}
-              />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.recordingText}>{buttonStatus}</Text>
-        </View>
-        <TouchableOpacity
-          onPress={async () => {
-            if (isRecording) {
-              showToast(
-                "Can't take snapshots while the video is recording",
-                'error',
-              );
-            } else if (selectedLimit && selectedLimit.snapshot_remaining == 0) {
-              showToast('Insufficient recording limit', 'error');
-            } else {
-              if (Platform.OS === 'android') {
-                await checkAndroidPermission();
-              }
-              takeSnapShot();
-            }
-          }}
-          disabled={restrictRecordingButton}
-          activeOpacity={0.8}
-          style={styles.snapshotButton}>
-          <Feather
-            name="camera"
-            color={restrictRecordingButton ? 'grey' : 'white'}
-            size={32}
-          />
-          <Text style={styles.recordingText}>Snapshot</Text>
-        </TouchableOpacity>
-      </View>
+              disabled={restrictRecordingButton}
+              activeOpacity={0.8}
+              style={styles.snapshotButton}>
+              {isSnapshotLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather name="camera" size={30} color={restrictRecordingButton ? "grey":  "#FFFFFF"} />
+              )}
+              <Text style={styles.recordingText}>Snapshot</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 };

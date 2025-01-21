@@ -60,7 +60,7 @@ const CheckoutScreen = ({route, navigation}) => {
         navigation.navigate("Dashboard")
       }
     } catch (error) {
-      Alert.alert('Error occurred while making purchase');
+      console.log('Error occurred while making purchase');
     }
   };
 

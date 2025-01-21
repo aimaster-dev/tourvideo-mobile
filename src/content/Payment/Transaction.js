@@ -4,7 +4,6 @@ import DoubleTick from '../../../asset/svg/DoubleTick.svg';
 import { styles } from "./styles";
 
 const Transaction = ({item}) => {
-  console.log(item, "item")
   return (
     <TouchableOpacity style={styles.transactionCard}>
       <View style={styles.transactionPlan}>
