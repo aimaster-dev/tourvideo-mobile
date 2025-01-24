@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   logoContainer: {alignSelf: 'center'},
   logo: {
     width: 180,
-    height: 118,
+    height: 180,
     marginBottom: 30,
   },
   welcomeText: {

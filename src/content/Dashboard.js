@@ -123,10 +123,11 @@ const Dashboard = ({navigation}) => {
                     if (item.name === 'Camera') {
                       if (
                         data.recording_permissions.is_snapshot_allowed ||
-                        data.recording_permissions.is_video_allowed
+                        data.recording_permissions.is_video_recording_allowed
                       ) {
                         navigation.navigate(item.screen);
                       } else {
+                        console.log(data.recording_permissions)
                         Alert.alert(
                           'Limited Exceeded',
                           'You have exceeded the limit of recording. Please upgrade your plan to continue.',
