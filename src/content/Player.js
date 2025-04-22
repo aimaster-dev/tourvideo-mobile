@@ -87,7 +87,6 @@ const Player = ({route, navigation}) => {
           },
         },
       );
-      console.log('Recording limits:', response.data.data);
       if (response.data.data) {
         setRecordingLimits(response.data.data);
 
@@ -225,7 +224,7 @@ const Player = ({route, navigation}) => {
           try {
             await RNFS.unlink(thumbnail);
             await RNFS.unlink(recorded);
-            showToast('Video recorded successfully', 'success');
+            // showToast('Video recorded successfully', 'success');
             await fetchRecordingLimits();
           } catch (error) {
             console.error('Error deleting file:', error);
@@ -245,16 +244,17 @@ const Player = ({route, navigation}) => {
   };
 
   const uploadVideoToServer = async (recordedPath, thumbnailPath) => {
-    console.log('should call uploading ....', recordedPath, thumbnailPath);
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
+      console.log(`file://${recordedPath}`)
+      console.log(`file://${thumbnailPath}`)
       formData.append('video_path', {
         uri: `file://${recordedPath}`,
         type: 'video/mp4',
         name: 'recording.mp4',
       });
-      formData.append('pricing_id', recordingLimits?.price_id);
+      formData.append('pricing_id', recordingLimits?.price_id ?? "");
       formData.append('tourplace_id', tourplace_id);
       formData.append('thumbnail', {
         uri: `file://${thumbnailPath}`,
@@ -279,8 +279,9 @@ const Player = ({route, navigation}) => {
         await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
     } catch (error) {
+      // await unlinkRecordedFiles(thumbnailPath, recordedPath);
       showToast('Uploading Failed', 'error');
-      console.error('Upload Error:', error);
+      console.error(error, 'Upload Error:', error.response);
       setButtonStatus('Record');
       setButtonLoading(false);
     }
@@ -401,7 +402,7 @@ const Player = ({route, navigation}) => {
         : recordingLimits?.video_remaining
         ? recordingLimits?.record_time
         : 0;
-
+    console.log(recordingLimits, 'usertype');
     if (recordTime === 0) {
       Alert.alert(
         'Invalid Selection',
@@ -466,6 +467,8 @@ const Player = ({route, navigation}) => {
       setRecordingStopped(true);
     };
   }, []);
+
+  console.log(streamUrl, "stream url")
 
   return (
     <View style={styles.container}>

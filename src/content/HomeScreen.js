@@ -42,6 +42,7 @@ const HomeScreen = ({}) => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        console.log(response, "response of camera")
         if (response.data && response.data.status) {
           setCameraData(response.data.data);
         }

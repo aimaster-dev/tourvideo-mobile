@@ -22,11 +22,14 @@ import {Medium, Semibold} from '../constants/font';
 
 const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [selectedISP, setSelectedISP] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tourPlaces, setTourPlaces] = useState([]);
+  const [isp, setIsp] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIspValid, setIsIspValid] = useState(true);
   const [isTourPlaceValid, setIsTourPlaceValid] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(true);
@@ -38,6 +41,21 @@ const SignInScreen = ({navigation}) => {
   const {setUser, notificationToken} = useContext(AuthContext);
 
   const {showToast} = useToast();
+
+  const fetchISP = async () => {
+    try {
+      console.log(selectedPlace, "selected place in fetch")
+      const response = await api.get(
+        `user/venue/${selectedPlace?.id}/isps/`,
+      );
+      console.log(response.data.data, "get isp")
+      setIsp(response.data.data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching tour places:', error);
+      setLoading(false);
+    }
+  };
 
   // Fetch the tour places from the API
   useEffect(() => {
@@ -51,7 +69,6 @@ const SignInScreen = ({navigation}) => {
         setLoading(false);
       }
     };
-
     fetchTourPlaces();
   }, []);
 
@@ -59,8 +76,20 @@ const SignInScreen = ({navigation}) => {
     navigation.navigate('VideoPlayback');
   };
 
+  const handleISPChange = (itemValue) => {
+    const selected = isp?.isps?.find(place => place.id == itemValue);
+    setSelectedISP(selected);
+    setIsIspValid(true);
+  };
+
   const handlePlaceChange = itemValue => {
     const selected = tourPlaces.find(place => place.id == itemValue);
+    console.log(selected, "selected", itemValue)
+    if (selected?.id) {
+      fetchISP();
+    } else {
+      setIsIspValid(false);
+    }
     setSelectedPlace(selected);
     setIsTourPlaceValid(true);
   };
@@ -106,11 +135,12 @@ const SignInScreen = ({navigation}) => {
     }
 
     const requestData = {
-      tourplace: selectedPlace.id,
+      venue: selectedPlace.id,
       email: email,
       password: password,
-      device_token: notificationToken
+      device_token: notificationToken,
     };
+    console.log(requestData, "request data")
     setIsSubmitting(true);
 
     try {
@@ -135,7 +165,7 @@ const SignInScreen = ({navigation}) => {
         showToast('Account not verified. Please verify your account', 'error');
         navigation.navigate('OTPCheck', {userId});
       } else {
-        console.log('Login error:', JSON.stringify(error.data));
+        console.log('Login error:', JSON.stringify(error));
         showToast('Invalid credentials. Please try again.', 'error');
       }
     } finally {
@@ -163,24 +193,46 @@ const SignInScreen = ({navigation}) => {
         {loading ? (
           <ActivityIndicator size="large" color="#287BF3" />
         ) : (
-          <View style={styles.inputContainer}>
-            <Picker
-              itemStyle={styles.picker}
-              selectedValue={selectedPlace ? selectedPlace.id : null}
-              style={styles.picker}
-              onValueChange={handlePlaceChange}>
-              <Picker.Item label="Select Tour Place" value={null} />
-              {tourPlaces.map(place => (
-                <Picker.Item
-                  key={place.id}
-                  label={place.place_name}
-                  value={place.id}
-                />
-              ))}
-            </Picker>
-            {!isTourPlaceValid && (
-              <Text style={styles.requiredText}>Required*</Text>
-            )}
+          <View>
+            <View style={styles.inputContainer}>
+              <Picker
+                itemStyle={styles.picker}
+                selectedValue={selectedPlace ? selectedPlace.id : null}
+                style={styles.picker}
+                onValueChange={handlePlaceChange}>
+                <Picker.Item label="Select Tour Place" value={null} />
+                {tourPlaces.map(place => (
+                  <Picker.Item
+                    key={place.id}
+                    label={place.venue_name}
+                    value={place.id}
+                  />
+                ))}
+              </Picker>
+              {!isTourPlaceValid && (
+                <Text style={styles.requiredText}>Required*</Text>
+              )}
+            </View>
+            {isp?.isps?.length > 0 && <View style={styles.inputContainer}>
+              <Picker
+                itemStyle={styles.picker}
+                selectedValue={selectedISP ? selectedISP.id : null}
+                style={styles.picker}
+                onValueChange={handleISPChange}
+                >
+                <Picker.Item label="Select ISP" value={null} />
+                {isp?.isps?.map(place => (
+                  <Picker.Item
+                    key={place.id}
+                    label={place.name}
+                    value={place.id}
+                  />
+                ))}
+              </Picker>
+              {!isIspValid && (
+                <Text style={styles.requiredText}>Required*</Text>
+              )}
+            </View>}
           </View>
         )}
 

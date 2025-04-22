@@ -108,8 +108,8 @@ const CheckoutScreen = ({route, navigation}) => {
               <View style={styles.services}>
                 <Text style={styles.servicesText}>Add on services</Text>
                 <View style={styles.featureListContainer}>
-                  {plan?.features?.map(item => (
-                    <View style={styles.featureList}>
+                  {plan?.features?.map((item, index) => (
+                    <View style={styles.featureList} key={index}>
                       <Check width={28} height={28} />
                       <Text style={styles.featureName}>{item}</Text>
                     </View>

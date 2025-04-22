@@ -51,6 +51,7 @@ const Dashboard = ({navigation}) => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+      console.log(data, "data of profile")
       if (data && data.status) {
         setData(data?.data);
         setLoading(false);

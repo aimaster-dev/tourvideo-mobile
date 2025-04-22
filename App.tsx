@@ -12,7 +12,7 @@ import VideoPlaybackScreen from './src/content/VideoPlaybackScreen';
 import PaymentScreen from './src/content/Payment/PaymentScreen';
 import CheckoutScreen from './src/content/CheckoutScreen';
 import ProfileScreen from './src/content/ProfileScreen';
-import {LogBox, StyleSheet} from 'react-native';
+import {Alert, LogBox, StyleSheet} from 'react-native';
 import Dashboard from './src/content/Dashboard';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {AuthContext, AuthProvider} from './src/context/AuthContext';
@@ -114,6 +114,8 @@ const AppNavigator = () => {
     try {
       await notifee.requestPermission();
       const token = await messaging().getToken();
+      console.log(token, "token ...")
+      Alert.alert("DeviceToken" ,JSON.stringify(token))
       setNotificationToken(token)
     } catch (e) {
       console.log(e, 'error in checking token');
