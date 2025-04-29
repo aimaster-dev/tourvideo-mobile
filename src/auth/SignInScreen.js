@@ -42,11 +42,11 @@ const SignInScreen = ({navigation}) => {
 
   const {showToast} = useToast();
 
-  const fetchISP = async () => {
+  const fetchISP = async (place) => {
     try {
-      console.log(selectedPlace, "selected place in fetch")
+      console.log(place, "selected place in fetch")
       const response = await api.get(
-        `user/venue/${selectedPlace?.id}/isps/`,
+        `user/venue/${place?.id}/isps/`,
       );
       console.log(response.data.data, "get isp")
       setIsp(response.data.data || []);
@@ -83,10 +83,11 @@ const SignInScreen = ({navigation}) => {
   };
 
   const handlePlaceChange = itemValue => {
+    setIsp([])
     const selected = tourPlaces.find(place => place.id == itemValue);
-    console.log(selected, "selected", itemValue)
+    console.log(selected.id, "selected", itemValue)
     if (selected?.id) {
-      fetchISP();
+      fetchISP(selected);
     } else {
       setIsIspValid(false);
     }
@@ -148,10 +149,9 @@ const SignInScreen = ({navigation}) => {
         headers: {'Content-Type': 'application/json'},
       });
 
-      const {access, refresh, user_id, tourplace, usertype, username} =
+      const {access, refresh, user_id, venue, usertype, username} =
         response.data.data;
-      const user_data = {user_id, usertype, username, tourplace};
-
+      const user_data = {user_id, usertype, username, venue};
       await Promise.all([
         access && AsyncStorage.setItem('access_token', access),
         refresh && AsyncStorage.setItem('refresh_token', refresh),

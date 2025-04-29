@@ -114,8 +114,6 @@ const AppNavigator = () => {
     try {
       await notifee.requestPermission();
       const token = await messaging().getToken();
-      console.log(token, "token ...")
-      Alert.alert("DeviceToken" ,JSON.stringify(token))
       setNotificationToken(token)
     } catch (e) {
       console.log(e, 'error in checking token');

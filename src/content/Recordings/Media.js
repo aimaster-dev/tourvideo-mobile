@@ -64,6 +64,7 @@ const Media = ({}) => {
       const accessToken = await AsyncStorage.getItem('access_token');
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
+      console.log(parsed_data)
       if (!accessToken) {
         setLoading(false);
         console.error('No access token found');
@@ -71,7 +72,7 @@ const Media = ({}) => {
       }
       if (parsed_data) {
         const formData = new FormData();
-        formData.append('tourplace_id', parsed_data.tourplace.toString());
+        formData.append('venue_id', parsed_data.venue.toString());
         const {data} = await api.get('video/getall', {
           headers: {
             'Content-Type': 'multipart/form-data',

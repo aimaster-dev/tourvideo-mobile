@@ -224,7 +224,7 @@ const Player = ({route, navigation}) => {
           try {
             await RNFS.unlink(thumbnail);
             await RNFS.unlink(recorded);
-            // showToast('Video recorded successfully', 'success');
+            showToast('Video recorded successfully', 'success');
             await fetchRecordingLimits();
           } catch (error) {
             console.error('Error deleting file:', error);
@@ -254,13 +254,23 @@ const Player = ({route, navigation}) => {
         type: 'video/mp4',
         name: 'recording.mp4',
       });
+      console.log({
+        uri: `file://${recordedPath}`,
+        type: 'video/mp4',
+        name: 'recording.mp4',
+      }, "video")
       formData.append('pricing_id', recordingLimits?.price_id ?? "");
-      formData.append('tourplace_id', tourplace_id);
+      formData.append('venue_id', tourplace_id);
       formData.append('thumbnail', {
         uri: `file://${thumbnailPath}`,
         type: 'image/jpg',
         name: 'output_thumbnail.jpg',
       });
+      console.log({
+        uri: `file://${thumbnailPath}`,
+        type: 'image/jpg',
+        name: 'output_thumbnail.jpg',
+      }, "thumbnail")
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
@@ -467,8 +477,6 @@ const Player = ({route, navigation}) => {
       setRecordingStopped(true);
     };
   }, []);
-
-  console.log(streamUrl, "stream url")
 
   return (
     <View style={styles.container}>
