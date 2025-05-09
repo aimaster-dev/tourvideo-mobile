@@ -200,7 +200,7 @@ const SignInScreen = ({navigation}) => {
                 selectedValue={selectedPlace ? selectedPlace.id : null}
                 style={styles.picker}
                 onValueChange={handlePlaceChange}>
-                <Picker.Item label="Select Tour Place" value={null} />
+                <Picker.Item label="Select Venue" value={null} />
                 {tourPlaces.map(place => (
                   <Picker.Item
                     key={place.id}
