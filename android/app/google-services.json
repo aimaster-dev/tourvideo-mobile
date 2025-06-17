@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "562983804798",
+    "project_id": "emmy-s-videos",
+    "storage_bucket": "emmy-s-videos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:562983804798:android:6725b5b121113f0e9add2f",
+        "android_client_info": {
+          "package_name": "com.emmysvideos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjJx0GpV5Q2IYY9n2cT7eVMWKvB3nvK-4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

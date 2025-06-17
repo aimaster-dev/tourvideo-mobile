@@ -1,4 +1,4 @@
-package com.wmplayer
+package com.emmysvideos
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

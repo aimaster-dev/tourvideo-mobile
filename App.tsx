@@ -21,6 +21,8 @@ import Toast from './src/components/Toast';
 import {ToastProvider} from './src/context/ToastContext';
 import Media from './src/content/Recordings/Media';
 import ScreenGuardModule from 'react-native-screenguard';
+import notifee from '@notifee/react-native';
+import messaging from '@react-native-firebase/messaging';
 
 const Stack = createStackNavigator();
 
@@ -76,17 +78,32 @@ const AppStack = () => (
 );
 
 const AppNavigator = () => {
-  const {user, isLoading} = React.useContext(AuthContext);
+  const {user, isLoading, setNotificationToken} = React.useContext(AuthContext);
 
   const data = {
     radius: 35,
     timeAfterResume: 2000,
-   };
+  };
+
+  const checkToken = async () => {
+    try {
+      await notifee.requestPermission();
+      const token = await messaging().getToken();
+      console.log(token, "token")
+      setNotificationToken(token)
+    } catch (e) {
+      console.log(e, 'error in checking token');
+    }
+  };
+
+  React.useEffect(() => {
+    checkToken();
+  }, []);
 
   if (isLoading) {
     return <SplashScreen />;
   }
-  
+
   // ScreenGuardModule.registerWithBlurView(data);
   return (
     <SafeAreaProvider>
@@ -94,7 +111,7 @@ const AppNavigator = () => {
         <Toast />
         <NavigationContainer>
           <SafeAreaView edges={['top']} style={styles.container}>
-            {user ? <AppStack /> : <AuthStack />}
+            {user ? <AppStack /> : <AuthStack  />}
           </SafeAreaView>
         </NavigationContainer>
       </ToastProvider>

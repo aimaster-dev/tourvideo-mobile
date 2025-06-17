@@ -51,11 +51,15 @@ export const PaymentPlans = [
       },
       {
         id: 12,
-        name: 'Recoding Limits',
+        name: '2 Recording Limits',
       },
       {
         id: 13,
         name: '10s Recording Time Limits',
+      },
+      {
+        id: 14,
+        name: '2 Snapshot Limits',
       },
     ],
   },
@@ -77,6 +81,10 @@ export const PaymentPlans = [
         id: 23,
         name: '20s Recording Time Limits',
       },
+      {
+        id: 24,
+        name: '3 Snapshot Limits',
+      },
     ],
   },
   {
@@ -96,6 +104,10 @@ export const PaymentPlans = [
       {
         id: 33,
         name: '30s Recording Time Limits',
+      },
+      {
+        id: 34,
+        name: '4 Snapshot Limits',
       },
     ],
   },
