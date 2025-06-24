@@ -36,7 +36,7 @@ const PaymentScreen = ({navigation, route}) => {
         },
       });
       if (response.data && response.data.status) {
-        console.log(response.data.data);
+        console.log(response.data.data, 'payment plan');
         setPaymentPlan(response.data.data);
       }
     } catch (e) {

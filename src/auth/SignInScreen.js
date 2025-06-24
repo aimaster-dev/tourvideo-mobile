@@ -136,16 +136,16 @@ const SignInScreen = ({navigation}) => {
     }
 
     const requestData = {
-      venue: selectedPlace.id,
+      venue_id: selectedPlace.id,
+      isp_id: selectedISP.id,
       email: email,
       password: password,
       device_token: notificationToken,
     };
-    console.log(requestData, "request data")
     setIsSubmitting(true);
 
     try {
-      const response = await api.post('user/login', requestData, {
+      const response = await api.post('/user/login-with-venue-isp-id', requestData, {
         headers: {'Content-Type': 'application/json'},
       });
 

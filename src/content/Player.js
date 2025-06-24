@@ -254,11 +254,6 @@ const Player = ({route, navigation}) => {
         type: 'video/mp4',
         name: 'recording.mp4',
       });
-      console.log({
-        uri: `file://${recordedPath}`,
-        type: 'video/mp4',
-        name: 'recording.mp4',
-      }, "video")
       formData.append('pricing_id', recordingLimits?.price_id ?? "");
       formData.append('venue_id', tourplace_id);
       formData.append('thumbnail', {
@@ -351,7 +346,7 @@ const Player = ({route, navigation}) => {
     } catch (e) {
       setIsSnapshotLoading(false);
       setButtonLoading(false);
-      console.log(e, 'error in uploading snapshots');
+      console.log(e.response.data, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
     }
   };

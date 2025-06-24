@@ -17,6 +17,7 @@ import {AuthContext} from '../context/AuthContext';
 
 const ProfileScreen = ({route}) => {
   const {data} = route.params ?? {};
+  console.log(data, 'data in profile screen');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const api = useAPI();

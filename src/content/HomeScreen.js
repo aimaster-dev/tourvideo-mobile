@@ -42,11 +42,14 @@ const HomeScreen = ({}) => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+      console.log(accessToken)
+        
         if (response.data && response.data.status) {
+          console.log(response.data.data)
           setCameraData(response.data.data);
         }
       } catch (error) {
-        console.error('Error fetching camera data:', error);
+        console.error('Error fetching camera data:', error.response.data);
       } finally {
         setLoading(false);
       }

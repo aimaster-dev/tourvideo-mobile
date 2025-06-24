@@ -56,31 +56,27 @@ const CheckoutScreen = ({route, navigation}) => {
       });
       console.log(transaction, 'transaction ....');
       const result = await uploadTransaction(response);
-      if(result){
-        navigation.navigate("Dashboard")
+      if (result) {
+        navigation.navigate('Dashboard');
       }
     } catch (error) {
       console.log('Error occurred while making purchase');
     }
   };
 
-  const uploadTransaction = async (response) => {
+  const uploadTransaction = async response => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
         return;
       }
-      const {data} = await api.post(
-        `/invoice/in-app-purchase`,
-        response,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
+      const {data} = await api.post(`/invoice/in-app-purchase`, response, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
       return data;
     } catch (e) {
       throw e;
@@ -108,12 +104,18 @@ const CheckoutScreen = ({route, navigation}) => {
               <View style={styles.services}>
                 <Text style={styles.servicesText}>Add on services</Text>
                 <View style={styles.featureListContainer}>
-                  {plan?.features?.map((item, index) => (
-                    <View style={styles.featureList} key={index}>
-                      <Check width={28} height={28} />
-                      <Text style={styles.featureName}>{item}</Text>
-                    </View>
-                  ))}
+                  <View style={styles.featureList}>
+                    <Check width={28} height={28} />
+                     <Text style={styles.featureName}>Record up to {plan?.record_time} seconds per session.</Text>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Check width={28} height={28} />
+                    <Text style={styles.featureName}>Save up to {plan?.record_limit} recordings for quick access and review</Text>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Check width={28} height={28} />
+                     <Text style={styles.featureName}>Capture up to {plan?.snapshot_limit} snapshots to preserve key moments</Text>
+                  </View>
                 </View>
               </View>
             </View>

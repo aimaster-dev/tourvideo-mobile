@@ -4,7 +4,6 @@ import {styles} from './styles';
 import {Features} from '../../constants/data';
 
 const PaymentPlan = ({item, navigation, handlePurchase}) => {
-  console.log(item.features, 'feature');
   return (
     <TouchableOpacity
       disabled={item.is_free}
@@ -18,12 +17,20 @@ const PaymentPlan = ({item, navigation, handlePurchase}) => {
       </View>
 
       <View style={styles.featureContainer}>
-        {item?.features?.map(item => (
+        {/* {item?.features?.map(item => ( */}
           <View style={styles.featureList}>
             <Check width={28} height={28} />
-            <Text style={styles.featureName}>{item}</Text>
+            <Text style={styles.featureName}>Record up to {item?.record_time} seconds per session.</Text>
           </View>
-        ))}
+           <View style={styles.featureList}>
+            <Check width={28} height={28} />
+            <Text style={styles.featureName}>Save up to {item?.record_limit} recordings for quick access and review</Text>
+          </View>
+           <View style={styles.featureList}>
+            <Check width={28} height={28} />
+            <Text style={styles.featureName}>Capture up to {item?.snapshot_limit} snapshots to preserve key moments</Text>
+          </View>
+        {/* ))} */}
       </View>
 
       <TouchableOpacity
