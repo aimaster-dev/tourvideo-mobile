@@ -334,7 +334,7 @@ const SignUpScreen = ({navigation}) => {
               selectedValue={selectedISP ? selectedISP.id : null}
               style={styles.picker}
               onValueChange={handleISPChange}>
-              <Picker.Item label="Select ISP" value={null} />
+              <Picker.Item label="Select Business" value={null} />
               {isp?.isps?.map(place => (
                 <Picker.Item
                   key={place.id}

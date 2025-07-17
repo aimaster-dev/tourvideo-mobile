@@ -79,6 +79,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+     sourceSets {
+    main {
+      assets.srcDirs += 'src/main/assets'
+    }
+  }
+
     namespace "com.emmysvideos"
     defaultConfig {
         applicationId "com.emmysvideos"

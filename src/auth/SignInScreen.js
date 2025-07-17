@@ -85,7 +85,6 @@ const SignInScreen = ({navigation}) => {
   const handlePlaceChange = itemValue => {
     setIsp([])
     const selected = tourPlaces.find(place => place.id == itemValue);
-    console.log(selected.id, "selected", itemValue)
     if (selected?.id) {
       fetchISP(selected);
     } else {
@@ -183,7 +182,7 @@ const SignInScreen = ({navigation}) => {
             style={styles.logo}
             resizeMode="contain"
           />
-
+          <Text style={[styles.welcomeText, {fontSize: 14, marginBottom: 12}]}>© 2025 Jerry Durgin</Text>
           {/* Welcome Text */}
           <Text style={styles.welcomeText}>Welcome back,</Text>
           <Text style={styles.signinText}>Signin an Account</Text>
@@ -220,7 +219,7 @@ const SignInScreen = ({navigation}) => {
                 style={styles.picker}
                 onValueChange={handleISPChange}
                 >
-                <Picker.Item label="Select ISP" value={null} />
+                <Picker.Item label="Select Business" value={null} />
                 {isp?.isps?.map(place => (
                   <Picker.Item
                     key={place.id}
@@ -318,9 +317,9 @@ const SignInScreen = ({navigation}) => {
             Signup
           </Text>
         </Text>
-        <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
+        {/* <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
           How to use our program?
-        </Text>
+        </Text> */}
       </KeyboardAwareScrollView>
     </View>
   );
@@ -335,9 +334,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {alignSelf: 'center'},
   logo: {
-    width: 180,
-    height: 180,
-    marginBottom: 30,
+    width: 160,
+    height: 160,
+    marginBottom: 20,
+    alignSelf:"center"
   },
   welcomeText: {
     color: '#FFFFFF',

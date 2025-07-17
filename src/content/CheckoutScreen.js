@@ -21,7 +21,7 @@ import {
   requestPurchase,
 } from 'react-native-iap';
 
-const skus = ['com.standard.emmy', 'com.advanced.emmy'];
+const skus = ['com.test.demo', 'com.basic.demo', 'com.standard.demo', 'com.starter.demo', 'com.premium.demo'];
 
 const CheckoutScreen = ({route, navigation}) => {
   const [availablePurchase, setAvailablePurchase] = useState([]);
@@ -46,6 +46,7 @@ const CheckoutScreen = ({route, navigation}) => {
   };
 
   const handlePurchase = async productId => {
+    console.log(productId, "product id")
     try {
       const response = await requestPurchase({skus: [productId]});
       console.log(response, 'response of purchase');
@@ -123,7 +124,7 @@ const CheckoutScreen = ({route, navigation}) => {
               activeOpacity={0.8}
               style={styles.button}
               onPress={() => {
-                handlePurchase(plan.product_id);
+                handlePurchase('com.test.demo'); //plan.product_id
               }}>
               <Text style={styles.buttonText}>Confirm Payment</Text>
             </TouchableOpacity>
