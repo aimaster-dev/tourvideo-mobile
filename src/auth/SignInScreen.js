@@ -156,6 +156,7 @@ const SignInScreen = ({navigation}) => {
         refresh && AsyncStorage.setItem('refresh_token', refresh),
         AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
       ]);
+      console.log('User data:', user_data);
       showToast('Logged in successfully', 'success');
       setUser(JSON.stringify(user_data));
     } catch (error) {

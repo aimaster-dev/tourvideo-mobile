@@ -167,6 +167,18 @@ const Player = ({route, navigation}) => {
       }
       setIsSnapshotLoading(true);
       const uri = await captureRef(snapShotRef);
+      const accessToken = await AsyncStorage.getItem('access_token');
+      console.log(accessToken, 'access token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.get('user/getprofile', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(data?.data?.isp?.customer_name, 'data in snapshot');
       const options = {
         // background image
         backgroundImage: {
@@ -318,10 +330,13 @@ const Player = ({route, navigation}) => {
   };
 
   const handleRecordingPress = async () => {
+    console.log(recordingLimits, 'recording limits');
+    console.log(data?.has_unlimited_access, 'data?.has_unlimited_access');
     if (usertype === 2) {
       showToast('Only clients are allowed to do recordings', 'error');
     } else if (
-      (recordingLimits && recordingLimits.video_remaining == 0) ||
+      recordingLimits &&
+      recordingLimits.video_remaining == 0 &&
       !data?.has_unlimited_access
     ) {
       Alert.alert(
