@@ -482,6 +482,8 @@ const Player = ({route, navigation}) => {
       return;
     }
 
+    // const streamUrl = "rtsp://jerry:Milexx9186*@200.105.49.70:554/Streaming/Channels/2301"
+
     console.log(`Starting recording for ${recordTime} seconds.`);
 
     const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
@@ -491,8 +493,9 @@ const Player = ({route, navigation}) => {
     const session = await FFmpegKit.executeAsync(command, async session => {
       const returnCode = await session.getReturnCode();
       const output = await session.getOutput();
-      console.log(returnCode, 'return code');
+      console.log(returnCode.isValueSuccess, 'return code');
       if (returnCode.isValueSuccess) {
+        console.log("if", path)
         await addWatermarkToVideo(path);
         await generateThumbnail(path);
       } else {
@@ -594,13 +597,14 @@ const Player = ({route, navigation}) => {
                   }}
                   autoplay={true}
                   onProgress={e => {
-                    if (e.currentTime > 0) {
+                    // console.log(e, "e")
+                    // if (e.currentTime > 0) {
                       setIsVideoLoading(false);
-                    }
+                    // }
                   }}
                   onError={e => console.log('Error:', e)}
                   onBuffering={e => {
-                    console.log('buffering ...');
+                    // console.log('buffering ...');
                     setIsVideoLoading(true);
                   }}
                   onStopped={() => {
