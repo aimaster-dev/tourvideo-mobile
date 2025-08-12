@@ -24,13 +24,13 @@ import Marker, {ImageFormat, Position} from 'react-native-image-marker';
 import {useIsFocused} from '@react-navigation/native';
 
 const Player = ({route, navigation}) => {
-  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
+  const {cam_id, tourplace_id, stream_url, tourplace, usertype} = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
+  const [streamUrl, setStreamUrl] = useState(`${stream_url}`);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -126,7 +126,7 @@ const Player = ({route, navigation}) => {
   };
 
   const updateStreamUrl = camera => {
-    setStreamUrl(`${camera?.rtsp_url}`);
+    setStreamUrl(`${camera?.stream_url}`);
   };
 
   const stopRecording = async () => {
@@ -486,7 +486,10 @@ const Player = ({route, navigation}) => {
 
     console.log(`Starting recording for ${recordTime} seconds.`);
 
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
+    const isRTSP = streamUrl.startsWith("rtsp://");
+    const transportFlag = isRTSP ? "-rtsp_transport tcp" : "";
+    
+    const command = `-re ${transportFlag} -i ${streamUrl} -t ${
       recordTime + 4
     } -fflags nobuffer -flags low_delay -c copy ${path}`;
 
