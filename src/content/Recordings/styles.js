@@ -7,6 +7,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#0B1541',
     padding: 20,
   },
+  play: {position: 'absolute', top: '40%', left: '40%'},
   center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   featureContainer: {marginTop: 20},
   menu: {
@@ -63,6 +64,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  title:{fontSize: 18, fontFamily: Semibold},
-  description: {fontSize: 14, fontFamily: Regular}
+  title:{fontSize: 18, fontFamily: Semibold, color: 'grey'},
+  description: {fontSize: 14, fontFamily: Regular, color: 'black'}
 });

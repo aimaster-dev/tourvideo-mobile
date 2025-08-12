@@ -15,38 +15,14 @@ import {Medium, Regular, Semibold} from '../constants/font';
 import {useAPI} from '../hooks/useAPI';
 import {AuthContext} from '../context/AuthContext';
 
-const ProfileScreen = () => {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
+const ProfileScreen = ({route}) => {
+  const {data} = route.params ?? {};
+  console.log(data, 'data in profile screen');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const api = useAPI();
 
   const {logout} = useContext(AuthContext);
-
-  const getProfile = async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem('access_token');
-      if (!accessToken) {
-        setLoading(false);
-        console.error('No access token found');
-        return;
-      }
-
-      const {data} = await api.get('user/getprofile', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      setLoading(false);
-      if (data && data.status) {
-        setData(data?.data);
-      }
-    } catch (e) {
-      setLoading(false);
-      console.log(e, 'error in profile');
-    }
-  };
 
   const deleteAccount = async () => {
     try {
@@ -102,41 +78,29 @@ const ProfileScreen = () => {
     }
   };
 
-  useEffect(() => {
-    getProfile();
-  }, []);
-
   return (
     <View style={styles.container}>
       <View style={styles.flex}>
-        {!loading ? (
-          <View style={styles.flex}>
-            <View style={styles.card}>
-              <Icon name="email" size={24} color="white" />
-              <Text style={styles.text}>{data?.email}</Text>
-            </View>
-            <View style={styles.card}>
-              <Icon name="cellphone" size={24} color="white" />
-              <Text style={styles.text}>{data?.phone_number}</Text>
-            </View>
-            <View style={styles.card}>
-              <Icon name="at" size={24} color="white" />
-              <Text style={styles.text}>{data?.username}</Text>
-            </View>
-            {data?.tourplace && (
-              <View style={styles.card}>
-                <Icon name="flag" size={24} color="white" />
-                <Text style={styles.text}>
-                  {data?.tourplace[0]?.place_name}
-                </Text>
-              </View>
-            )}
+        <View style={styles.flex}>
+          <View style={styles.card}>
+            <Icon name="email" size={24} color="white" />
+            <Text style={styles.text}>{data?.email}</Text>
           </View>
-        ) : (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color="#287BF3" />
+          <View style={styles.card}>
+            <Icon name="cellphone" size={24} color="white" />
+            <Text style={styles.text}>{data?.phone_number}</Text>
           </View>
-        )}
+          <View style={styles.card}>
+            <Icon name="at" size={24} color="white" />
+            <Text style={styles.text}>{data?.username}</Text>
+          </View>
+          {data?.tourplace && (
+            <View style={styles.card}>
+              <Icon name="flag" size={24} color="white" />
+              <Text style={styles.text}>{data?.tourplace[0]?.place_name}</Text>
+            </View>
+          )}
+        </View>
       </View>
       <TouchableOpacity
         style={styles.deleteButton}

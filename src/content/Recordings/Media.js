@@ -64,6 +64,7 @@ const Media = ({}) => {
       const accessToken = await AsyncStorage.getItem('access_token');
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
+      console.log(parsed_data)
       if (!accessToken) {
         setLoading(false);
         console.error('No access token found');
@@ -71,7 +72,7 @@ const Media = ({}) => {
       }
       if (parsed_data) {
         const formData = new FormData();
-        formData.append('tourplace_id', parsed_data.tourplace.toString());
+        formData.append('venue_id', parsed_data.venue.toString());
         const {data} = await api.get('video/getall', {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -140,7 +141,7 @@ const Media = ({}) => {
           }
           if (Platform.OS === 'android') {
             console.log('file downloaded');
-            showToast(`${filename} video saved successfully`, 'success');
+            showToast(`${filename} saved successfully`, 'success');
           }
         })
         .catch(e => {
@@ -222,19 +223,7 @@ const Media = ({}) => {
         showToast('Downloading in progress', 'success');
         await handleDownload(path);
       } else if (selectedRecordingOption === 'Snapshots') {
-        const filePath = `${
-          RNFS.CachesDirectoryPath
-        }/${new Date().getTime()}.jpg`;
-        const downloadResult = await RNFS.downloadFile({
-          fromUrl: `${domain}${path}`,
-          toFile: filePath,
-          progress: res => {
-            let progressPercent = (res.bytesWritten / res.contentLength) * 100;
-            console.log(progressPercent, 'progress');
-          },
-        }).promise;
-        await CameraRoll.saveAsset(filePath, {type: 'photo'});
-        showToast('Snapshot saved successfully !', 'success');
+        await handleDownload(path);
       }
     } else if (item?.title === 'Delete') {
       if (selectedRecordingOption === 'Snapshots') {
@@ -280,6 +269,7 @@ const Media = ({}) => {
             renderItem={({item, index}) => {
               return (
                 <Card
+                  item={item}
                   thumbnail={`${domain}/${item?.thumbnail}`}
                   index={index}
                   handlePress={() => {
@@ -301,6 +291,7 @@ const Media = ({}) => {
               renderItem={({item, index}) => {
                 return (
                   <Card
+                    item={item}
                     thumbnail={`${domain}/${item?.image_path}`}
                     index={index}
                     handlePress={() => {
@@ -332,7 +323,7 @@ const Media = ({}) => {
                 <TouchableOpacity
                   onPress={() => handleAction(item)}
                   style={styles.row}>
-                  <Entypo name={item.icon} size={24} />
+                  <Entypo name={item.icon} size={24} color="grey" />
                   <View style={styles.modalContent}>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}</Text>

@@ -21,6 +21,7 @@ export const AuthProvider = ({children}) => {
   const checkIsAuthenticated = async () => {
     try {
       const data = await AsyncStorage.getItem('access_token');
+      console.log(data, "data of token")
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
       if (data && parsed_data) {

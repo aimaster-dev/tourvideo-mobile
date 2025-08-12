@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: '#0B1541',
-      padding: 20,
+      paddingHorizontal: 20,
     },
     featureContainer: {marginTop: 20},
     menu: {
@@ -24,6 +24,7 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       color: '#00FF7F',
       marginLeft: 4,
+      textTransform: "capitalize"
     },
     planName: {
       fontFamily: Semibold,
@@ -45,6 +46,7 @@ export const styles = StyleSheet.create({
       backgroundColor: '#575B721A',
       padding: 8,
       borderRadius: 100,
+      marginTop: 20
     },
     transactionDetails: {
       flexDirection: 'row',

@@ -3,20 +3,20 @@ import { Text, TouchableOpacity, View } from "react-native";
 import DoubleTick from '../../../asset/svg/DoubleTick.svg';
 import { styles } from "./styles";
 
-const Transaction = () => {
+const Transaction = ({item}) => {
   return (
     <TouchableOpacity style={styles.transactionCard}>
       <View style={styles.transactionPlan}>
-        <Text style={styles.transactionPlanName}>Monthly Subscription</Text>
-        <Text style={styles.transactionPlanPrice}>$49.99</Text>
+        <Text style={styles.transactionPlanName}>{item.plan_name}</Text>
+        <Text style={styles.transactionPlanPrice}>${item.amount}</Text>
       </View>
       <View style={styles.transactionDetails}>
         <Text style={styles.transactionTime}>
-          {moment().format('dddd')} / {moment().format('DD.MM.YYYY')}{' '}
+          {moment(item.created_at).format('dddd')} / {moment(item.created_at).format('DD.MM.YYYY')}{' '}
         </Text>
         <View style={styles.transactionStatusContainer}>
           <DoubleTick />
-          <Text style={styles.transactionStatus}>Completed</Text>
+          <Text style={styles.transactionStatus}>{item.status}</Text>
         </View>
       </View>
     </TouchableOpacity>

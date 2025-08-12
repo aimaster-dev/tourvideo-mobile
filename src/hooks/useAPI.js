@@ -2,7 +2,7 @@ import {useContext} from 'react';
 import {AuthContext} from '../context/AuthContext';
 import axios from 'axios';
 
-export const domain = `https://api.emmysvideos.com`;
+export const domain = `https://api.dwareapps.com`;
 const api = axios.create({
   baseURL: `${domain}/api/v1`,
 });

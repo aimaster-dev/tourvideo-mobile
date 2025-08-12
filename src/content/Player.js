@@ -9,46 +9,35 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
 import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {domain, useAPI} from '../hooks/useAPI';
+import {useAPI} from '../hooks/useAPI';
 import {Regular} from '../constants/font';
 import ViewShot, {captureRef} from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
-import RNFetchBlob from 'rn-fetch-blob';
+import {useIsFocused} from '@react-navigation/native';
 
-const Player = ({route}) => {
-  const {
-    cam_id,
-    tourplace_id,
-    camera_name,
-    rtsp_url,
-    tourplace,
-    usertype,
-    user_id,
-  } = route.params;
+const Player = ({route, navigation}) => {
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
-  const [recordingStarted, setRecordingStarted] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
-  const [selectedLimit, setSelectedLimit] = useState(null);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [cameras, setCameras] = useState([]);
-  const [selectedCamera, setSelectedCamera] = useState(null);
   const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [buttonLoading, setButtonLoading] = useState(false);
   const [buttonStatus, setButtonStatus] = useState('Record');
+  const [isSnapshotLoading, setIsSnapshotLoading] = useState(false);
+  const [data, setData] = useState([]);
 
   const currentSessionRef = useRef(null);
   const alertShownRef = useRef(false);
@@ -57,9 +46,11 @@ const Player = ({route}) => {
 
   const snapShotRef = useRef();
 
+  const focused = useIsFocused();
+
   const {showToast} = useToast();
 
-  const generateFilePath = () => `${RNFS.DownloadDirectoryPath}/recording.mp4`;
+  const generateFilePath = () => `${RNFS.DocumentDirectoryPath}/recording.mp4`;
 
   const requestPermissions = async () => {
     try {
@@ -75,11 +66,7 @@ const Player = ({route}) => {
   };
 
   const restrictRecordingButton =
-    usertype !== 2 &&
-    (!selectedLimit ||
-      selectedLimit.videoremain === 0 ||
-      isLoadingUpload ||
-      buttonLoading);
+    isLoadingUpload || buttonLoading || isVideoLoading || isSnapshotLoading;
 
   const fetchRecordingLimits = async () => {
     try {
@@ -88,20 +75,22 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
+
       if (usertype === 2) {
         setLoadingLimits(false);
         return;
       }
       const response = await api.get(
-        `invoice/validlist?tourplace=${tourplace_id}`,
+        `invoice/video-snapshot-count?tourplace=${tourplace_id}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         },
       );
-      if (response.data.status) {
+      if (response.data.data) {
         setRecordingLimits(response.data.data);
+
         setLoadingLimits(false);
       }
     } catch (error) {
@@ -122,13 +111,12 @@ const Player = ({route}) => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
       if (response.data.status) {
-        setCameras(response.data.data);
         const defaultCamera = response.data.data.find(
           camera => camera.id === cam_id,
         );
         if (defaultCamera) {
-          setSelectedCamera(defaultCamera.id);
           updateStreamUrl(defaultCamera);
         }
       }
@@ -162,12 +150,35 @@ const Player = ({route}) => {
       });
   };
 
+  const checkAndroidPermission = async () => {
+    try {
+      const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+      await PermissionsAndroid.request(permission);
+      Promise.resolve();
+    } catch (error) {
+      Promise.reject(error);
+    }
+  };
+
   const takeSnapShot = async () => {
     try {
       if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
         return;
       }
+      setIsSnapshotLoading(true);
       const uri = await captureRef(snapShotRef);
+      const accessToken = await AsyncStorage.getItem('access_token');
+      console.log(accessToken, 'access token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+      const {data} = await api.get('user/getprofile', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(data?.data?.isp?.customer_name, 'data in snapshot');
       const options = {
         // background image
         backgroundImage: {
@@ -202,13 +213,13 @@ const Player = ({route}) => {
       const savedSnapshot = await CameraRoll.saveAsset(markedImageUri, {
         type: 'photo',
       });
-      showToast('Snapshot saved successfully !', 'success');
       await uploadSnapshots(
         markedImageUri,
         savedSnapshot.node.type,
         savedSnapshot.node.image.filename,
       );
     } catch (e) {
+      setIsSnapshotLoading(false);
       console.log(e, 'error while taking snapshots ...');
       showToast('Some error occurred', 'error');
     }
@@ -227,6 +238,7 @@ const Player = ({route}) => {
             await RNFS.unlink(thumbnail);
             await RNFS.unlink(recorded);
             showToast('Video recorded successfully', 'success');
+            await fetchRecordingLimits();
           } catch (error) {
             console.error('Error deleting file:', error);
           }
@@ -245,27 +257,37 @@ const Player = ({route}) => {
   };
 
   const uploadVideoToServer = async (recordedPath, thumbnailPath) => {
-    console.log('should call uploading ....', recordedPath, thumbnailPath);
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
+      console.log(`file://${recordedPath}`);
+      console.log(`file://${thumbnailPath}`);
       formData.append('video_path', {
         uri: `file://${recordedPath}`,
         type: 'video/mp4',
         name: 'recording.mp4',
       });
-      formData.append('pricing_id', selectedLimit.price_id);
-      formData.append('tourplace_id', tourplace_id);
+      formData.append('pricing_id', recordingLimits?.price_id ?? '');
+      formData.append('venue_id', tourplace_id);
       formData.append('thumbnail', {
         uri: `file://${thumbnailPath}`,
         type: 'image/jpg',
         name: 'output_thumbnail.jpg',
       });
+      console.log(
+        {
+          uri: `file://${thumbnailPath}`,
+          type: 'image/jpg',
+          name: 'output_thumbnail.jpg',
+        },
+        'thumbnail',
+      );
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
         return;
       }
+      console.log('Uploading video...', formData);
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -278,23 +300,67 @@ const Player = ({route}) => {
         await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
     } catch (error) {
+      // await unlinkRecordedFiles(thumbnailPath, recordedPath);
       showToast('Uploading Failed', 'error');
-      console.error('Upload Error:', error);
+      console.error(error, 'Upload Error:', error.response);
       setButtonStatus('Record');
       setButtonLoading(false);
     }
   };
 
-  const handleRecordingPress = async () => {
-    if (isRecording) {
-      await stopRecording();
-    } else if (selectedLimit) {
-      if (selectedLimit.videoremain > 0) {
-        setButtonLoading(true);
-        await startRecording();
-      } else {
-        showToast('You have reached your recording limit.', 'error');
+  const getProfile = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
       }
+
+      const {data} = await api.get('user/getprofile', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (data && data.status) {
+        setData(data?.data);
+      }
+    } catch (e) {
+      console.log(e, 'error in profile');
+    }
+  };
+
+  const handleRecordingPress = async () => {
+    console.log(recordingLimits, 'recording limits');
+    console.log(data?.has_unlimited_access, 'data?.has_unlimited_access');
+    if (usertype === 2) {
+      showToast('Only clients are allowed to do recordings', 'error');
+    } else if (
+      recordingLimits &&
+      recordingLimits.video_remaining == 0 &&
+      !data?.has_unlimited_access
+    ) {
+      Alert.alert(
+        'Limit Exceeded',
+        'You have exceeded the limit of recording. Please upgrade your plan to continue.',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Payment'),
+          },
+        ],
+      );
+    } else if (isRecording) {
+      await stopRecording();
+    } else if (recordingLimits && recordingLimits.video_remaining > 0) {
+      setButtonLoading(true);
+      await startRecording();
+    } else {
+      console.log('not recording...', recordingLimits.video_remaining);
     }
   };
 
@@ -311,15 +377,20 @@ const Player = ({route}) => {
         console.error('No access token found');
         return;
       }
-      await api.post('video/snapshot/add', formData, {
+      const {data} = await api.post('video/snapshot/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data',
         },
       });
+      console.log(data, 'data');
+      await fetchRecordingLimits();
+      setIsSnapshotLoading(false);
+      showToast('Snapshot saved successfully !', 'success');
     } catch (e) {
+      setIsSnapshotLoading(false);
       setButtonLoading(false);
-      console.log(e, 'error in uploading snapshots');
+      console.log(e.response.data, 'error in uploading snapshots');
       showToast('Some error occurred in snapshots', 'error');
     }
   };
@@ -330,9 +401,9 @@ const Player = ({route}) => {
     const height = 300;
 
     // Path for the output thumbnail
-    const thumbnailPath = `${RNFS.DownloadDirectoryPath}/output_thumbnail.jpg`;
+    const thumbnailPath = `${RNFS.DocumentDirectoryPath}/output_thumbnail.jpg`;
 
-    const thumbnailCommand = `-i ${path} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
+    const thumbnailCommand = `-y -i ${path} -ss 00:00:${start_time} -vframes 1 -s ${width}x${height} -pix_fmt yuv420p -loglevel trace ${thumbnailPath}`;
 
     await FFmpegKit.executeAsync(thumbnailCommand, async session => {
       const returnCode = await session.getReturnCode();
@@ -346,17 +417,37 @@ const Player = ({route}) => {
 
         try {
           console.log('Thumbnail saved to camera roll successfully');
-          await CameraRoll.saveAsset(thumbnailPath, {
-            type: 'photo',
-          });
+          // await CameraRoll.saveAsset(thumbnailPath, {
+          //   type: 'photo',
+          // });
           await uploadVideoToServer(path, thumbnailPath);
         } catch (error) {
           console.error('Failed to save thumbnail:', error);
+          showToast('Failed to save thumbnail', 'error');
           return error;
         }
       } else {
         setButtonLoading(false);
         console.error('Thumbnail generation failed. Check logs for details.');
+      }
+    });
+  };
+
+  const addWatermarkToVideo = async videoPath => {
+    const watermarkedPath = `${RNFS.DocumentDirectoryPath}/watermarked_video.mp4`;
+    const watermarkText = 'My Watermark';
+
+    const watermarkCommand = `-i ${videoPath} -vf drawtext="text='${watermarkText}':x=10:y=H-th-10:fontsize=24:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2" -codec:a copy ${watermarkedPath}`;
+
+    await FFmpegKit.executeAsync(watermarkCommand, async session => {
+      const returnCode = await session.getReturnCode();
+      if (returnCode.isValueSuccess()) {
+        console.log('Watermark added successfully.');
+        // Replace original path
+        await RNFS.unlink(videoPath);
+        await RNFS.moveFile(watermarkedPath, videoPath);
+      } else {
+        console.error('Failed to add watermark.');
       }
     });
   };
@@ -374,8 +465,12 @@ const Player = ({route}) => {
     alertShownRef.current = false;
 
     const recordTime =
-      usertype === 2 ? 10 : selectedLimit ? selectedLimit.record_time : 0;
-
+      usertype === 2
+        ? 10
+        : recordingLimits?.video_remaining
+        ? recordingLimits?.record_time
+        : 0;
+    console.log(recordingLimits, 'usertype');
     if (recordTime === 0) {
       Alert.alert(
         'Invalid Selection',
@@ -387,6 +482,8 @@ const Player = ({route}) => {
       return;
     }
 
+    // const streamUrl = "rtsp://jerry:Milexx9186*@200.105.49.70:554/Streaming/Channels/2301"
+
     console.log(`Starting recording for ${recordTime} seconds.`);
 
     const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
@@ -396,11 +493,10 @@ const Player = ({route}) => {
     const session = await FFmpegKit.executeAsync(command, async session => {
       const returnCode = await session.getReturnCode();
       const output = await session.getOutput();
-      console.log(returnCode, 'return code');
+      console.log(returnCode.isValueSuccess, 'return code');
       if (returnCode.isValueSuccess) {
-        // const outputPath = `${
-        //   RNFS.DownloadDirectoryPath
-        // }/recording_${Date.now()}.mp4`;
+        console.log("if", path)
+        await addWatermarkToVideo(path);
         await generateThumbnail(path);
       } else {
         console.log('Recording failed:', output);
@@ -413,10 +509,14 @@ const Player = ({route}) => {
   };
 
   useEffect(() => {
+    fetchRecordingLimits();
+  }, [focused]);
+
+  useEffect(() => {
     if (Platform.OS === 'android') {
       requestPermissions();
     }
-    fetchRecordingLimits();
+    getProfile();
     fetchCameras();
 
     FFmpegKitConfig.enableLogCallback(log => {
@@ -427,11 +527,10 @@ const Player = ({route}) => {
       ) {
         alertShownRef.current = true;
         console.log('First frame detected. Recording started.');
-        setRecordingStarted(true);
         setTimeout(async () => {
           console.log('Time limit reached. Stopping recording...');
           await stopRecording();
-        }, (selectedLimit ? selectedLimit.record_time : 10) * 1000);
+        }, (recordingLimits ? recordingLimits?.record_time : 10) * 1000);
       }
     });
 
@@ -446,131 +545,159 @@ const Player = ({route}) => {
       {loadingLimits ? (
         <ActivityIndicator size="large" color="#FFFFFF" />
       ) : (
-        <View style={styles.pickerContainer}>
-          <Picker
-            itemStyle={styles.picker}
-            selectedValue={selectedLimit ? selectedLimit.price_id : null}
-            style={styles.picker}
-            onValueChange={itemValue => {
-              let selected = recordingLimits.find(
-                limit => limit.price_id === itemValue,
-              );
-              if (selected) {
-                selected.record_time = 10;
-                console.log(selected, 'selected');
-                setSelectedLimit(selected);
-              }
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingHorizontal: 12,
+          }}>
+          <View
+            style={{
+              padding: 10,
+              backgroundColor: '#1C2749',
+              borderRadius: 10,
             }}>
-            <Picker.Item label="Select Recording Time Limit" value={null} />
-            {recordingLimits.map(limit => (
-              <Picker.Item
-                key={limit.price_id}
-                label={`${limit.comment} / ${limit.videoremain} videos remain // ${limit.snapshotremain} videos remain`}
-                value={limit.price_id}
-              />
-            ))}
-          </Picker>
+            <Text style={styles.blockText}>Recording Limit Left</Text>
+            <Text style={styles.blockSubText}>
+              {recordingLimits?.video_remaining}{' '}
+            </Text>
+          </View>
+          <View
+            style={{
+              padding: 10,
+              backgroundColor: '#1C2749',
+              borderRadius: 10,
+            }}>
+            <Text style={styles.blockText}>Snapshot Limit Left</Text>
+            <Text style={styles.blockSubText}>
+              {recordingLimits?.snapshot_remaining}
+            </Text>
+          </View>
         </View>
       )}
 
-      <View style={styles.pickerContainer}>
-        <Picker
-          itemStyle={styles.picker}
-          selectedValue={selectedCamera}
-          style={styles.picker}
-          onValueChange={itemValue => {
-            const selectedCamera = cameras.find(
-              camera => camera.id === itemValue,
-            );
-            setSelectedCamera(itemValue);
-            updateStreamUrl(selectedCamera); // Update the stream URL with the selected camera
-          }}>
-          {cameras.map(camera => (
-            <Picker.Item
-              key={camera.id}
-              label={camera.camera_name}
-              value={camera.id}
-            />
-          ))}
-        </Picker>
-      </View>
-      <ViewShot ref={snapShotRef} style={styles.flex}>
-        <View style={styles.videoContainer}>
-          {isVideoLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#FFFFFF" />
+      {Object.keys(recordingLimits).length > 0 && (
+        <>
+          <ViewShot ref={snapShotRef} style={styles.flex}>
+            <View style={styles.videoContainer}>
+              {isVideoLoading && (
+                <View style={styles.loadingOverlay}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                </View>
+              )}
+              {streamUrl && (
+                <VLCPlayer
+                  style={styles.videoPlayer}
+                  source={{
+                    uri: streamUrl,
+                  }}
+                  onLoad={() => {
+                    console.log('loading ...');
+                    setIsVideoLoading(true);
+                  }}
+                  autoplay={true}
+                  onProgress={e => {
+                    // console.log(e, "e")
+                    // if (e.currentTime > 0) {
+                      setIsVideoLoading(false);
+                    // }
+                  }}
+                  onError={e => console.log('Error:', e)}
+                  onBuffering={e => {
+                    // console.log('buffering ...');
+                    setIsVideoLoading(true);
+                  }}
+                  onStopped={() => {
+                    setIsVideoLoading(false);
+                  }}
+                />
+              )}
             </View>
-          )}
-          {streamUrl && (
-            <VLCPlayer
-              style={styles.videoPlayer}
-              source={{
-                uri: streamUrl,
-              }}
-              onLoad={() => {
-                console.log('loading ...');
-                setIsVideoLoading(true);
-              }}
-              autoplay={true}
-              onProgress={e => {
-                if (e.currentTime > 0) {
-                  setIsVideoLoading(false);
+          </ViewShot>
+
+          <View style={styles.actionContainer}>
+            <View style={styles.actionSpacing} />
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.recordButton,
+                  restrictRecordingButton ? styles.disabledButton : null,
+                ]}
+                onPress={async () => {
+                  if (
+                    Platform.OS === 'android' &&
+                    !(await hasAndroidPermission())
+                  ) {
+                    console.log('No permission to record');
+                    return;
+                  }
+                  handleRecordingPress();
+                }}
+                disabled={restrictRecordingButton}>
+                {buttonLoading || isLoadingUpload ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <View
+                    style={[
+                      styles.innerCircle,
+                      isRecording && styles.innerCircleActive,
+                    ]}
+                  />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.recordingText}>{buttonStatus}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={async () => {
+                if (isRecording) {
+                  showToast(
+                    "Can't take snapshots while the video is recording",
+                    'error',
+                  );
+                } else if (
+                  recordingLimits &&
+                  recordingLimits?.snapshot_remaining == 0
+                ) {
+                  Alert.alert(
+                    'Limited Exceeded',
+                    'You have exceeded the limit of snapshot. Please upgrade your plan to continue.',
+                    [
+                      {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'OK',
+                        onPress: () => navigation.navigate('Payment'),
+                      },
+                    ],
+                  );
+                } else {
+                  if (Platform.OS === 'android') {
+                    await checkAndroidPermission();
+                  }
+                  takeSnapShot();
                 }
               }}
-              onError={e => console.log('Error:', e)}
-              onBuffering={e => {
-                console.log('buffering ...');
-                setIsVideoLoading(true);
-              }}
-              onStopped={() => {
-                setIsVideoLoading(false);
-              }}
-            />
-          )}
-        </View>
-      </ViewShot>
-
-      <View style={styles.actionContainer}>
-        <View style={styles.actionSpacing} />
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.recordButton,
-              restrictRecordingButton ? styles.disabledButton : null,
-            ]}
-            onPress={handleRecordingPress}
-            disabled={restrictRecordingButton}>
-            {buttonLoading || isLoadingUpload ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <View
-                style={[
-                  styles.innerCircle,
-                  isRecording && styles.innerCircleActive,
-                ]}
-              />
-            )}
-          </TouchableOpacity>
-          <Text style={styles.recordingText}>{buttonStatus}</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => takeSnapShot()}
-          disabled={
-            isRecording ||
-            restrictRecordingButton ||
-            selectedLimit?.snapshotremain <= 0
-          }
-          activeOpacity={0.8}
-          style={styles.snapshotButton}>
-          <Feather
-            name="camera"
-            color={isRecording || restrictRecordingButton ? 'grey' : 'white'}
-            size={32}
-          />
-          <Text style={styles.recordingText}>Snapshot</Text>
-        </TouchableOpacity>
-      </View>
+              disabled={restrictRecordingButton}
+              activeOpacity={0.8}
+              style={styles.snapshotButton}>
+              {isSnapshotLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather
+                  name="camera"
+                  size={30}
+                  color={restrictRecordingButton ? 'grey' : '#FFFFFF'}
+                />
+              )}
+              <Text style={styles.recordingText}>Snapshot</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 };
@@ -583,12 +710,13 @@ const styles = StyleSheet.create({
   snapshotButton: {alignItems: 'center'},
   flex: {flex: 1},
   pickerContainer: {
-    marginTop: 10,
-    backgroundColor: '#1C2749',
-    borderRadius: 10,
-    padding: 5,
-    marginHorizontal: 10,
+    // marginTop: 10,
+    // backgroundColor: '#1C2749',
+    // borderRadius: 10,
+    // padding: 5,
+    // marginHorizontal: 10,
   },
+  blockText: {color: '#FFFFFF', fontSize: 15, fontFamily: Regular},
   picker: {
     color: '#FFFFFF',
   },
@@ -644,6 +772,7 @@ const styles = StyleSheet.create({
   innerCircleActive: {
     backgroundColor: 'red',
   },
+  blockSubText: {color: '#FFFFFF', fontSize: 15, fontFamily: Regular},
   recordingText: {
     color: '#fff',
     fontSize: 16,

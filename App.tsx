@@ -12,7 +12,7 @@ import VideoPlaybackScreen from './src/content/VideoPlaybackScreen';
 import PaymentScreen from './src/content/Payment/PaymentScreen';
 import CheckoutScreen from './src/content/CheckoutScreen';
 import ProfileScreen from './src/content/ProfileScreen';
-import {LogBox, StyleSheet} from 'react-native';
+import {Alert, LogBox, StyleSheet} from 'react-native';
 import Dashboard from './src/content/Dashboard';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {AuthContext, AuthProvider} from './src/context/AuthContext';
@@ -23,16 +23,31 @@ import Media from './src/content/Recordings/Media';
 import ScreenGuardModule from 'react-native-screenguard';
 import notifee from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
+import ForgotPassword from './src/auth/ForgotPassword';
+import VideoPlayer from './src/content/Recordings/VideoPlayer';
+import ImageViewer from './src/content/Recordings/ImageViewer';
 
 const Stack = createStackNavigator();
 
 LogBox.ignoreAllLogs();
 
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Signin" component={SignInScreen} />
-    <Stack.Screen name="Signup" component={SignUpScreen} />
+  <Stack.Navigator
+    screenOptions={{
+      headerStatusBarHeight: 0,
+      headerStyle: {
+        backgroundColor: '#0B1541',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontFamily: Semibold,
+        fontSize: 20,
+      },
+    }}>
+    <Stack.Screen name="Signin" component={SignInScreen} options={{headerShown: false}}/>
+    <Stack.Screen name="Signup" component={SignUpScreen} options={{headerShown: false}} />
     <Stack.Screen name="OTPCheck" component={OTPScreen} />
+    <Stack.Screen name="Forgot Password" component={ForgotPassword} />
   </Stack.Navigator>
 );
 
@@ -74,6 +89,16 @@ const AppStack = () => (
       component={VideoPlaybackScreen}
       options={{title: 'How to Use Our Program'}}
     />
+    <Stack.Screen
+      name="VideoPlayer"
+      component={VideoPlayer}
+      options={{title: 'Video Player'}}
+    />
+    <Stack.Screen
+      name="ImageViewer"
+      component={ImageViewer}
+      options={{title: 'Image Viewer'}}
+    />
   </Stack.Navigator>
 );
 
@@ -89,7 +114,6 @@ const AppNavigator = () => {
     try {
       await notifee.requestPermission();
       const token = await messaging().getToken();
-      console.log(token, "token")
       setNotificationToken(token)
     } catch (e) {
       console.log(e, 'error in checking token');

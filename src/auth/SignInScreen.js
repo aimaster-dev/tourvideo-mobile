@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -8,22 +8,30 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
+import Feather from "react-native-vector-icons/Feather"
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckBox from '@react-native-community/checkbox';
-import {useAPI} from '../hooks/useAPI';
-import {AuthContext} from '../context/AuthContext';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {useToast} from '../context/ToastContext';
+import { useAPI } from '../hooks/useAPI';
+import { AuthContext } from '../context/AuthContext';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useToast } from '../context/ToastContext';
+import { Link } from '@react-navigation/native';
+import { Medium, Semibold } from '../constants/font';
 
-const SignInScreen = ({navigation}) => {
+const SignInScreen = ({ navigation }) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [showPassword, setShowPassword] = useState(false)
+  const [selectedISP, setSelectedISP] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tourPlaces, setTourPlaces] = useState([]);
+  const [isp, setIsp] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIspValid, setIsIspValid] = useState(true);
   const [isTourPlaceValid, setIsTourPlaceValid] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(true);
@@ -32,9 +40,24 @@ const SignInScreen = ({navigation}) => {
 
   const api = useAPI();
 
-  const {setUser, notificationToken} = useContext(AuthContext);
+  const { setUser, notificationToken } = useContext(AuthContext);
 
-  const {showToast} = useToast();
+  const { showToast } = useToast();
+
+  const fetchISP = async (place) => {
+    try {
+      console.log(place, "selected place in fetch")
+      const response = await api.get(
+        `user/venue/${place?.id}/isps/`,
+      );
+      console.log(response.data.data, "get isp")
+      setIsp(response.data.data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching tour places:', error);
+      setLoading(false);
+    }
+  };
 
   // Fetch the tour places from the API
   useEffect(() => {
@@ -48,7 +71,6 @@ const SignInScreen = ({navigation}) => {
         setLoading(false);
       }
     };
-
     fetchTourPlaces();
   }, []);
 
@@ -56,8 +78,20 @@ const SignInScreen = ({navigation}) => {
     navigation.navigate('VideoPlayback');
   };
 
+  const handleISPChange = (itemValue) => {
+    const selected = isp?.isps?.find(place => place.id == itemValue);
+    setSelectedISP(selected);
+    setIsIspValid(true);
+  };
+
   const handlePlaceChange = itemValue => {
+    setIsp([])
     const selected = tourPlaces.find(place => place.id == itemValue);
+    if (selected?.id) {
+      fetchISP(selected);
+    } else {
+      setIsIspValid(false);
+    }
     setSelectedPlace(selected);
     setIsTourPlaceValid(true);
   };
@@ -103,36 +137,37 @@ const SignInScreen = ({navigation}) => {
     }
 
     const requestData = {
-      tourplace: selectedPlace.id,
+      venue_id: selectedPlace.id,
+      isp_id: selectedISP.id,
       email: email,
       password: password,
-      device_token: notificationToken
+      device_token: notificationToken,
     };
     setIsSubmitting(true);
 
     try {
-      const response = await api.post('user/login', requestData, {
-        headers: {'Content-Type': 'application/json'},
+      const response = await api.post('/user/login-with-venue-isp-id', requestData, {
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      const {access, refresh, user_id, tourplace, usertype, username} =
+      const { access, refresh, user_id, venue, usertype, username } =
         response.data.data;
-      const user_data = {user_id, usertype, username, tourplace};
-
+      const user_data = { user_id, usertype, username, venue };
       await Promise.all([
         access && AsyncStorage.setItem('access_token', access),
         refresh && AsyncStorage.setItem('refresh_token', refresh),
         AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
       ]);
+      console.log('User data:', user_data);
       showToast('Logged in successfully', 'success');
       setUser(JSON.stringify(user_data));
     } catch (error) {
       if (error.response && error.response.status === 406) {
         const userId = error.response.data.data.user_id;
         showToast('Account not verified. Please verify your account', 'error');
-        navigation.navigate('OTPCheck', {userId});
+        navigation.navigate('OTPCheck', { userId });
       } else {
-        console.log('Login error:', JSON.stringify(error.data));
+        console.log('Login error:', JSON.stringify(error));
         showToast('Invalid credentials. Please try again.', 'error');
       }
     } finally {
@@ -150,7 +185,7 @@ const SignInScreen = ({navigation}) => {
             style={styles.logo}
             resizeMode="contain"
           />
-
+          <Text style={[styles.welcomeText, { fontSize: 14, marginBottom: 12 }]}>© 2025 Jerry Durgin</Text>
           {/* Welcome Text */}
           <Text style={styles.welcomeText}>Welcome back,</Text>
           <Text style={styles.signinText}>Signin an Account</Text>
@@ -160,24 +195,46 @@ const SignInScreen = ({navigation}) => {
         {loading ? (
           <ActivityIndicator size="large" color="#287BF3" />
         ) : (
-          <View style={styles.inputContainer}>
-            <Picker
-              itemStyle={styles.picker}
-              selectedValue={selectedPlace ? selectedPlace.id : null}
-              style={styles.picker}
-              onValueChange={handlePlaceChange}>
-              <Picker.Item label="Select Tour Place" value={null} />
-              {tourPlaces.map(place => (
-                <Picker.Item
-                  key={place.id}
-                  label={place.place_name}
-                  value={place.id}
-                />
-              ))}
-            </Picker>
-            {!isTourPlaceValid && (
-              <Text style={styles.requiredText}>Required*</Text>
-            )}
+          <View>
+            <View style={styles.inputContainer}>
+              <Picker
+                itemStyle={styles.picker}
+                selectedValue={selectedPlace ? selectedPlace.id : null}
+                style={styles.picker}
+                onValueChange={handlePlaceChange}>
+                <Picker.Item label="Select Venue" value={null} />
+                {tourPlaces.map(place => (
+                  <Picker.Item
+                    key={place.id}
+                    label={place.venue_name}
+                    value={place.id}
+                  />
+                ))}
+              </Picker>
+              {!isTourPlaceValid && (
+                <Text style={styles.requiredText}>Required*</Text>
+              )}
+            </View>
+            {isp?.isps?.length > 0 && <View style={styles.inputContainer}>
+              <Picker
+                itemStyle={styles.picker}
+                selectedValue={selectedISP ? selectedISP.id : null}
+                style={styles.picker}
+                onValueChange={handleISPChange}
+              >
+                <Picker.Item label="Select Business" value={null} />
+                {isp?.isps?.map(place => (
+                  <Picker.Item
+                    key={place.id}
+                    label={place.name}
+                    value={place.id}
+                  />
+                ))}
+              </Picker>
+              {!isIspValid && (
+                <Text style={styles.requiredText}>Required*</Text>
+              )}
+            </View>}
           </View>
         )}
 
@@ -196,32 +253,57 @@ const SignInScreen = ({navigation}) => {
         </View>
 
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#CCCCCC"
-            onChangeText={handlePasswordChange}
-            value={password}
-            secureTextEntry={true}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#CCCCCC"
+              onChangeText={handlePasswordChange}
+              value={password}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword
+            )}>
+              <Feather name={showPassword ? "eye-off" : "eye"} color="white" size={16} />
+            </TouchableOpacity>
+          </View>
           {!isPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
-
+        {/* <TouchableOpacity
+          onPress={() => navigation.navigate('Forgot Password')}>
+          <Text style={styles.forgotPassword}>Forgot Password ?</Text>
+        </TouchableOpacity> */}
         <View style={styles.checkboxContainer}>
           <CheckBox
             value={isAccepted}
             onValueChange={setIsAccepted}
             style={styles.checkbox}
-            tintColors={{true: '#287BF3', false: '#FFFFFF'}}
+            tintColors={{ true: '#287BF3', false: '#FFFFFF' }}
           />
           <Text style={styles.checkboxText}>
             By continuing you accept our{' '}
-            {/* <Text style={styles.link} onPress={() => navigation.navigate('PrivacyPolicy')}> */}
-            <Text style={styles.link}>Privacy Policy</Text> &{' '}
-            {/* <Text style={styles.link} onPress={() => navigation.navigate('TermsOfUse')}> */}
-            <Text style={styles.link}>Term of Use</Text>
+            <Text
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.termsfeed.com/live/f1b50918-7205-48c6-9ed7-4104af3e9923',
+                )
+              }>
+              Privacy Policy
+            </Text>{' '}
+            &{' '}
+            <Text
+              style={styles.link}
+              onPress={() =>
+                Linking.openURL(
+                  'https://www.termsfeed.com/live/37f2647d-1d82-47a2-b15f-10421454ee9d',
+                )
+              }>
+              Term of Use
+            </Text>
           </Text>
         </View>
         {!isAcceptedValid && <Text style={styles.requiredText}>Required*</Text>}
@@ -245,9 +327,9 @@ const SignInScreen = ({navigation}) => {
             Signup
           </Text>
         </Text>
-        <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
+        {/* <Text style={styles.helpLink} onPress={handleHelpLinkPress}>
           How to use our program?
-        </Text>
+        </Text> */}
       </KeyboardAwareScrollView>
     </View>
   );
@@ -260,11 +342,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from the design
     paddingHorizontal: 20,
   },
-  logoContainer: {alignSelf: 'center'},
+  logoContainer: { alignSelf: 'center' },
   logo: {
-    width: 180,
-    height: 118,
-    marginBottom: 30,
+    width: 160,
+    height: 160,
+    marginBottom: 20,
+    alignSelf: "center"
   },
   welcomeText: {
     color: '#FFFFFF',
@@ -277,6 +360,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  forgotPassword: {
+    textAlign: 'right',
+    color: 'white',
+    fontFamily: Semibold,
   },
   inputContainer: {
     width: '100%',

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,16 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import Feather from "react-native-vector-icons/Feather"
 import CheckBox from '@react-native-community/checkbox';
 import {useAPI} from '../hooks/useAPI';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Toast from '../components/Toast';
 import {useToast} from '../context/ToastContext';
+import {Picker} from '@react-native-picker/picker';
 
 const SignUpScreen = ({navigation}) => {
+  const [selectedPlace, setSelectedPlace] = useState(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -28,11 +31,18 @@ const SignUpScreen = ({navigation}) => {
   const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
   const [isAccepted, setIsAccepted] = useState(false);
+  const [isTourPlaceValid, setIsTourPlaceValid] = useState(true);
+  const [tourPlaces, setTourPlaces] = useState([]);
+  const [isp, setIsp] = useState([]);
+    const [isIspValid, setIsIspValid] = useState(true);
+  const [selectedISP, setSelectedISP] = useState(null);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
   const [toast, setToast] = useState({
     show: false,
     message: '',
   });
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {showToast} = useToast();
 
@@ -43,6 +53,19 @@ const SignUpScreen = ({navigation}) => {
     if (value) {
       setIsEmailValid(true); // Clear validation error when user types in email
     }
+  };
+
+  const handlePlaceChange = itemValue => {
+    setIsp([]);
+    const selected = tourPlaces.find(place => place.id == itemValue);
+    console.log(selected.id, 'selected', itemValue);
+    if (selected?.id) {
+      fetchISP(selected);
+    } else {
+      setIsIspValid(false);
+    }
+    setSelectedPlace(selected);
+    setIsTourPlaceValid(true);
   };
 
   const handleUserNameChange = value => {
@@ -57,6 +80,12 @@ const SignUpScreen = ({navigation}) => {
     if (value) {
       setIsPhoneNumberValid(true); // Clear validation error when user types in user name
     }
+  };
+
+    const handleISPChange = (itemValue) => {
+    const selected = isp?.isps?.find(place => place.id == itemValue);
+    setSelectedISP(selected);
+    setIsIspValid(true);
   };
 
   const handlePasswordChange = value => {
@@ -129,7 +158,10 @@ const SignUpScreen = ({navigation}) => {
       password: password,
       usertype: 3,
       level: 0,
+      venue: selectedPlace ? [selectedPlace.id] : null,
+      isp: selectedISP ? selectedISP.id : null,
     };
+    console.log(requestData, 'request data in signup', selectedPlace, selectedISP);
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
@@ -160,7 +192,7 @@ const SignUpScreen = ({navigation}) => {
           errorMessage = 'Error creating account. Please check your input.';
         }
         showToast(errorMessage, 'error');
-        console.log('Signup error response:', errorData);
+        console.log('Signup error response:', errorData.data);
       } else {
         console.log('Signup error:', error.message);
         showToast(error.message, 'error');
@@ -169,6 +201,29 @@ const SignUpScreen = ({navigation}) => {
       setIsSubmitting(false); // Set submitting state to false after request is complete
     }
   };
+
+  const fetchISP = async place => {
+    try {
+      console.log(place, 'selected place in fetch');
+      const response = await api.get(`user/venue/${place?.id}/isps/`);
+      console.log(response.data.data, 'get isp');
+      setIsp(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching tour places:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchTourPlaces = async () => {
+      try {
+        const response = await api.get('tourplace/getall');
+        setTourPlaces(response.data.data || []);
+      } catch (error) {
+        console.error('Error fetching tour places:', error);
+      }
+    };
+    fetchTourPlaces();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -229,14 +284,21 @@ const SignUpScreen = ({navigation}) => {
 
         {/* Password Input */}
         <View style={styles.inputContainer}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+
           <TextInput
             style={styles.input}
             placeholder="Password"
             placeholderTextColor="#CCCCCC"
             onChangeText={handlePasswordChange}
             value={password}
-            secureTextEntry={true}
+            secureTextEntry={!showPassword}
           />
+           <TouchableOpacity onPress={() => setShowPassword(!showPassword
+            )}>
+              <Feather name={showPassword ? "eye-off" : "eye"} color="white" size={16} />
+            </TouchableOpacity>
+          </View>
           {!isPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
@@ -244,18 +306,62 @@ const SignUpScreen = ({navigation}) => {
 
         {/* Confirm Password Input */}
         <View style={styles.inputContainer}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <TextInput
             style={styles.input}
             placeholder="Confirm Password"
             placeholderTextColor="#CCCCCC"
             onChangeText={handleConfirmPasswordChange}
             value={confirmPassword}
-            secureTextEntry={true}
+            secureTextEntry={!showConfirmPassword}
           />
+           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword
+            )}>
+              <Feather name={showConfirmPassword ? "eye-off" : "eye"} color="white" size={16} />
+            </TouchableOpacity>
+            </View>
           {!isConformPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
+        <View style={styles.inputContainer}>
+          <Picker
+            itemStyle={styles.picker}
+            selectedValue={selectedPlace ? selectedPlace.id : null}
+            style={styles.picker}
+            onValueChange={handlePlaceChange}>
+            <Picker.Item label="Select Venue" value={null} />
+            {tourPlaces.map(place => (
+              <Picker.Item
+                key={place.id}
+                label={place.venue_name}
+                value={place.id}
+              />
+            ))}
+          </Picker>
+          {!isTourPlaceValid && (
+            <Text style={styles.requiredText}>Required*</Text>
+          )}
+        </View>
+        {isp?.isps?.length > 0 && (
+          <View style={styles.inputContainer}>
+            <Picker
+              itemStyle={styles.picker}
+              selectedValue={selectedISP ? selectedISP.id : null}
+              style={styles.picker}
+              onValueChange={handleISPChange}>
+              <Picker.Item label="Select Business" value={null} />
+              {isp?.isps?.map(place => (
+                <Picker.Item
+                  key={place.id}
+                  label={place.name}
+                  value={place.id}
+                />
+              ))}
+            </Picker>
+            {!isIspValid && <Text style={styles.requiredText}>Required*</Text>}
+          </View>
+        )}
         <View style={styles.checkboxContainer}>
           <CheckBox
             value={isAccepted}
@@ -304,9 +410,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
   },
+  picker: {
+    color: '#FFFFFF',
+  },
   logo: {
     width: 180,
-    height: 118,
+    height: 180,
     marginBottom: 30,
     alignSelf: 'center',
   },
@@ -340,7 +449,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#287BF3', // Blue button from the design
     paddingVertical: 15,
     borderRadius: 10,
-    flexDirection: "row",
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,

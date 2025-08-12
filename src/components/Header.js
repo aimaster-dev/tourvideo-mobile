@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AuthContext} from '../context/AuthContext';
 
-const Header = ({navigation}) => {
+const Header = ({navigation, data}) => {
   const [username, setUsername] = useState('');
 
   const {logout} = useContext(AuthContext);
@@ -31,7 +31,7 @@ const Header = ({navigation}) => {
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.circle}
-          onPress={() => navigation.navigate('Profile')}>
+          onPress={() => navigation.navigate('Profile', {data})}>
           <Icon name="user" size={24} color="red" />
         </TouchableOpacity>
         <View>
