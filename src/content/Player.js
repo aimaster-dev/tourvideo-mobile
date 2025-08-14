@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import RNFS from 'react-native-fs';
-import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
+import { FFmpegKit, FFmpegKitConfig } from '@react-native-oh-tpl/react-native-ffmpeg-kit';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useAPI} from '../hooks/useAPI';
@@ -22,15 +22,16 @@ import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
 import {useIsFocused} from '@react-navigation/native';
+//import {createThumbnail} from 'react-native-create-thumbnail';
 
 const Player = ({route, navigation}) => {
-  const {cam_id, tourplace_id, stream_url, tourplace, usertype} = route.params;
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [streamUrl, setStreamUrl] = useState(`${stream_url}`);
+  const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -126,6 +127,7 @@ const Player = ({route, navigation}) => {
   };
 
   const updateStreamUrl = camera => {
+//    setStreamUrl(`${camera?.rtsp_url}`);
     setStreamUrl(`${camera?.stream_url}`);
   };
 
@@ -179,6 +181,7 @@ const Player = ({route, navigation}) => {
         },
       });
       console.log(data?.data?.isp?.customer_name, 'data in snapshot');
+      console.log(data?.data);
       const options = {
         // background image
         backgroundImage: {
@@ -482,23 +485,17 @@ const Player = ({route, navigation}) => {
       return;
     }
 
-    // const streamUrl = "rtsp://jerry:Milexx9186*@200.105.49.70:554/Streaming/Channels/2301"
-
     console.log(`Starting recording for ${recordTime} seconds.`);
 
-    const isRTSP = streamUrl.startsWith("rtsp://");
-    const transportFlag = isRTSP ? "-rtsp_transport tcp" : "";
-    
-    const command = `-re ${transportFlag} -i ${streamUrl} -t ${
+    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
       recordTime + 4
     } -fflags nobuffer -flags low_delay -c copy ${path}`;
 
     const session = await FFmpegKit.executeAsync(command, async session => {
       const returnCode = await session.getReturnCode();
       const output = await session.getOutput();
-      console.log(returnCode.isValueSuccess, 'return code');
+      console.log(returnCode, 'return code');
       if (returnCode.isValueSuccess) {
-        console.log("if", path)
         await addWatermarkToVideo(path);
         await generateThumbnail(path);
       } else {
@@ -510,7 +507,7 @@ const Player = ({route, navigation}) => {
     });
     currentSessionRef.current = session;
   };
-
+    
   useEffect(() => {
     fetchRecordingLimits();
   }, [focused]);
@@ -522,20 +519,20 @@ const Player = ({route, navigation}) => {
     getProfile();
     fetchCameras();
 
-    FFmpegKitConfig.enableLogCallback(log => {
-      if (
-        log.getMessage().includes('frame=') &&
-        !alertShownRef.current &&
-        !recordingStopped
-      ) {
-        alertShownRef.current = true;
-        console.log('First frame detected. Recording started.');
-        setTimeout(async () => {
-          console.log('Time limit reached. Stopping recording...');
-          await stopRecording();
-        }, (recordingLimits ? recordingLimits?.record_time : 10) * 1000);
-      }
-    });
+//    FFmpegKitConfig.enableLogCallback(log => {
+//      if (
+//        log.getMessage().includes('frame=') &&
+//        !alertShownRef.current &&
+//        !recordingStopped
+//      ) {
+//        alertShownRef.current = true;
+//        console.log('First frame detected. Recording started.');
+//        setTimeout(async () => {
+//          console.log('Time limit reached. Stopping recording...');
+//          await stopRecording();
+//        }, (recordingLimits ? recordingLimits?.record_time : 10) * 1000);
+//      }
+//    });
 
     return () => {
       alertShownRef.current = false;
@@ -573,7 +570,7 @@ const Player = ({route, navigation}) => {
             }}>
             <Text style={styles.blockText}>Snapshot Limit Left</Text>
             <Text style={styles.blockSubText}>
-              {recordingLimits?.snapshot_remaining}
+              {recordingLimits?.snapshot_remaining}{' '}
             </Text>
           </View>
         </View>
@@ -600,14 +597,13 @@ const Player = ({route, navigation}) => {
                   }}
                   autoplay={true}
                   onProgress={e => {
-                    // console.log(e, "e")
-                    // if (e.currentTime > 0) {
+                    if (e.currentTime > 0) {
                       setIsVideoLoading(false);
-                    // }
+                    }
                   }}
                   onError={e => console.log('Error:', e)}
                   onBuffering={e => {
-                    // console.log('buffering ...');
+                    console.log('buffering ...');
                     setIsVideoLoading(true);
                   }}
                   onStopped={() => {

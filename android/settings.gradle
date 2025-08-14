@@ -4,3 +4,8 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'wmplayer'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+include ':@react-native-oh-tpl_react-native-ffmpeg-kit'
+project(':@react-native-oh-tpl_react-native-ffmpeg-kit').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-oh-tpl/react-native-ffmpeg-kit/android')
+
+
+

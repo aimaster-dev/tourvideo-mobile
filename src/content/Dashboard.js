@@ -41,7 +41,10 @@ const Dashboard = ({navigation}) => {
   const getProfile = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('access_token');
-      if (!accessToken) {
+    
+        if (!accessToken) {
+            console.log('accessToken =========>  $accessToken');
+            console.log(accessToken);
         console.error('No access token found');
         return;
       }

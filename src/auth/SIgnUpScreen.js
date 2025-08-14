@@ -9,7 +9,6 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Feather from "react-native-vector-icons/Feather"
 import CheckBox from '@react-native-community/checkbox';
 import {useAPI} from '../hooks/useAPI';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -41,8 +40,6 @@ const SignUpScreen = ({navigation}) => {
     show: false,
     message: '',
   });
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {showToast} = useToast();
 
@@ -284,21 +281,14 @@ const SignUpScreen = ({navigation}) => {
 
         {/* Password Input */}
         <View style={styles.inputContainer}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-
           <TextInput
             style={styles.input}
             placeholder="Password"
             placeholderTextColor="#CCCCCC"
             onChangeText={handlePasswordChange}
             value={password}
-            secureTextEntry={!showPassword}
+            secureTextEntry={true}
           />
-           <TouchableOpacity onPress={() => setShowPassword(!showPassword
-            )}>
-              <Feather name={showPassword ? "eye-off" : "eye"} color="white" size={16} />
-            </TouchableOpacity>
-          </View>
           {!isPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
@@ -306,20 +296,14 @@ const SignUpScreen = ({navigation}) => {
 
         {/* Confirm Password Input */}
         <View style={styles.inputContainer}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <TextInput
             style={styles.input}
             placeholder="Confirm Password"
             placeholderTextColor="#CCCCCC"
             onChangeText={handleConfirmPasswordChange}
             value={confirmPassword}
-            secureTextEntry={!showConfirmPassword}
+            secureTextEntry={true}
           />
-           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword
-            )}>
-              <Feather name={showConfirmPassword ? "eye-off" : "eye"} color="white" size={16} />
-            </TouchableOpacity>
-            </View>
           {!isConformPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}

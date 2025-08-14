@@ -71,7 +71,7 @@ const HomeScreen = ({}) => {
       cam_id: item.id,
       tourplace_id: item.venue[0]?.id,
       camera_name: item.camera_name,
-      stream_url: item.stream_url,
+      rtsp_url: item.rtsp_url,
       tourplace: item.venue[0]?.venue_name || 'Unknown Place',
       usertype: userData?.usertype,
       user_id: userData?.user_id,
