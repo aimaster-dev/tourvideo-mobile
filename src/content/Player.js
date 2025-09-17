@@ -187,7 +187,7 @@ const Player = ({route, navigation}) => {
         },
         watermarkTexts: [
           {
-            text: tourplace,
+            text: data?.data?.isp?.customer_name,
             position: {
               position: Position.center,
             },
@@ -601,9 +601,9 @@ const Player = ({route, navigation}) => {
                   autoplay={true}
                   onProgress={e => {
                     // console.log(e, "e")
-                    // if (e.currentTime > 0) {
+                    if (e.currentTime > 0) {
                       setIsVideoLoading(false);
-                    // }
+                    }
                   }}
                   onError={e => console.log('Error:', e)}
                   onBuffering={e => {
