@@ -3,6 +3,9 @@ PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.75.4)
+  - ffmpeg-kit-react-native (6.0.2):
+    - React-Core
+    - wmplayer-ffmpeg-kit-ios-https
   - Firebase/CoreOnly (11.11.0):
     - FirebaseCore (~> 11.11.0)
   - Firebase/Messaging (11.11.0):
@@ -1315,7 +1318,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-cameraroll (7.10.0):
+  - react-native-cameraroll (7.10.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1336,14 +1339,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-image-marker (1.2.6):
+  - react-native-image-marker (1.2.9):
     - React-Core
-  - react-native-safe-area-context (5.4.0):
+  - react-native-safe-area-context (5.6.2):
     - React-Core
-  - react-native-screenguard (1.0.6):
-    - React-Core
-    - SDWebImage (~> 5.19.4)
-  - react-native-video (6.13.0):
+  - react-native-screenguard (1.1.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1356,7 +1356,29 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.13.0)
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SDWebImage (~> 5.21.0)
+    - Yoga
+  - react-native-video (6.18.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - react-native-video/Video (= 6.18.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1365,7 +1387,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.13.0):
+  - react-native-video/Video (6.18.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1673,12 +1695,12 @@ PODS:
     - React-utils (= 0.75.4)
   - rn-fetch-blob (0.12.0):
     - React-Core
-  - RNCAsyncStorage (2.1.2):
+  - RNCAsyncStorage (2.2.0):
     - React-Core
-  - RNCCheckbox (0.5.17):
+  - RNCCheckbox (0.5.20):
     - BEMCheckBox (~> 1.4)
     - React-Core
-  - RNCClipboard (1.16.2):
+  - RNCClipboard (1.16.3):
     - React-Core
   - RNCMaskedView (0.3.2):
     - DoubleConversion
@@ -1701,7 +1723,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNCPicker (2.11.0):
+  - RNCPicker (2.11.4):
     - React-Core
   - RNFBApp (21.14.0):
     - Firebase/CoreOnly (= 11.11.0)
@@ -1713,7 +1735,7 @@ PODS:
     - RNFBApp
   - RNFS (2.20.0):
     - React-Core
-  - RNGestureHandler (2.25.0):
+  - RNGestureHandler (2.30.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1734,16 +1756,16 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNIap (12.16.2):
+  - RNIap (12.16.4):
     - React-Core
   - RNNotifee (9.1.8):
     - React-Core
     - RNNotifee/NotifeeCore (= 9.1.8)
   - RNNotifee/NotifeeCore (9.1.8):
     - React-Core
-  - RNPermissions (5.3.0):
+  - RNPermissions (5.4.4):
     - React-Core
-  - RNScreens (4.10.0):
+  - RNScreens (4.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1765,9 +1787,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.11.2):
+  - RNSVG (15.15.1):
     - React-Core
-  - RNVectorIcons (10.2.0):
+  - RNVectorIcons (10.3.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1788,16 +1810,18 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage (5.19.7):
-    - SDWebImage/Core (= 5.19.7)
-  - SDWebImage/Core (5.19.7)
+  - SDWebImage (5.21.5):
+    - SDWebImage/Core (= 5.21.5)
+  - SDWebImage/Core (5.21.5)
   - SocketRocket (0.7.0)
+  - wmplayer-ffmpeg-kit-ios-https (6.0.2)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
+  - ffmpeg-kit-react-native (from `../node_modules/ffmpeg-kit-react-native`)
   - FirebaseCore
   - FirebaseCoreInternal
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -1885,6 +1909,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
+  - wmplayer-ffmpeg-kit-ios-https (from `..`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1911,6 +1936,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
+  ffmpeg-kit-react-native:
+    :path: "../node_modules/ffmpeg-kit-react-native"
   fmt:
     :podspec: "../node_modules/react-native/third-party-podspecs/fmt.podspec"
   glog:
@@ -2074,6 +2101,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
+  wmplayer-ffmpeg-kit-ios-https:
+    :path: ".."
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2082,6 +2111,7 @@ SPEC CHECKSUMS:
   boost: 4cb898d0bf20404aab1850c656dcea009429d6c1
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: 430e10366de01d1e3d57374500b1b150fe482e6d
+  ffmpeg-kit-react-native: 382114f3f2abc9bfb8f688f2080070e1f5f7d116
   Firebase: 6a8f201c61eda24e98f1ce2b44b1b9c2caf525cc
   FirebaseCore: 2321536f9c423b1f857e047a82b8a42abc6d9e2c
   FirebaseCoreExtension: 3a64994969dd05f4bcb7e6896c654eded238e75b
@@ -2125,11 +2155,11 @@ SPEC CHECKSUMS:
   React-logger: d79b704bf215af194f5213a6b7deec50ba8e6a9b
   React-Mapbuffer: b982d5bba94a8bc073bda48f0d27c9b28417fae3
   React-microtasksnativemodule: 2b73e68f0462f3175f98782db08896f8501afd20
-  react-native-cameraroll: 9a1e0fcf731da9092595987466b903771f00387a
-  react-native-image-marker: 01caff7bfa50f44277922cf84e7c29a732994ea8
-  react-native-safe-area-context: 8870dc3e45c8d241336cd8ee3fa3fc76f3a040ac
-  react-native-screenguard: 3ff56ba4614b74e3a9169691a2ab2966ea86c6c5
-  react-native-video: 5ebe3a7b61ff065643f6732e2064be9c966fda9e
+  react-native-cameraroll: 9adca0bcba192a78871f67554edc73905f42bedf
+  react-native-image-marker: 7b6ffc64084559c9d34c68f87f5991ae095fcac1
+  react-native-safe-area-context: e48706fb09fde89f82e12bfb49b140cfdcb761f7
+  react-native-screenguard: 63d8b8e0ef13bed19fa39bdd2e8ca3eb2db1dd67
+  react-native-video: 85031b301675dd970de696b05d68831095210002
   react-native-view-shot: 8c2a4beffea24492167dc347fa29664d0f41fddf
   react-native-vlc-media-player: 0f9860bded57cd6764ac55b5c0e97347069cb40a
   React-nativeconfig: 8c83d992b9cc7d75b5abe262069eaeea4349f794
@@ -2159,25 +2189,26 @@ SPEC CHECKSUMS:
   ReactCodegen: 4bcb34e6b5ebf6eef5cee34f55aa39991ea1c1f1
   ReactCommon: 6a952e50c2a4b694731d7682aaa6c79bc156e4ad
   rn-fetch-blob: f065bb7ab7fb48dd002629f8bdcb0336602d3cba
-  RNCAsyncStorage: addfc2cb6511dbe199c56c6b26ede383b6c38919
-  RNCCheckbox: a3ca9978cb0846b981d28da4e9914bd437403d77
-  RNCClipboard: 4411a880506f11fbcbdc03b5093eb8ffb246d900
+  RNCAsyncStorage: 23e56519cc41d3bade3c8d4479f7760cb1c11996
+  RNCCheckbox: 471ebdc33884c084f362615c1ef3507496cc07f1
+  RNCClipboard: dfeb43751adff21e588657b5b6c888c72f3aa68e
   RNCMaskedView: e07a0b5e9e8d6962826def06e6ff2ecdb815433f
-  RNCPicker: 4f6d5e8d107064be32dfc8f1bcb5a3741135db0b
+  RNCPicker: 0ce5d66262fe7f79e95664bae9447b0d7ed857da
   RNFBApp: b67ded6e4b0a6c0fee5e4f8e75e3a31567949a08
   RNFBMessaging: 7202ad4c49bdcdc7fd3634d85827a6305049c148
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
-  RNGestureHandler: d11cebb14e1e0e9fb857ded703fa018258989206
-  RNIap: 2fba6c91f79fb7c71fcc44465f606061653caf01
+  RNGestureHandler: 1bc6844d2f4cb45b2226b5b4902bd8d459e2ef71
+  RNIap: cc6ad44185936b2ced74691b154cc9c322a2cb5a
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
-  RNPermissions: 8bccf82d4caa70a90ca6cf7f419c75f8c8c725c9
-  RNScreens: 726a7ab8451c122ef11d5ae38e7f981092bf86de
-  RNSVG: 8b18fe2c2884a86e5e2e008acee0f3503dc19ff2
-  RNVectorIcons: 6382277afab3c54658e9d555ee0faa7a37827136
-  SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
+  RNPermissions: c98d72e827cba865b4e53f57b21e4e941bc8c63c
+  RNScreens: b51f1a8be0dd7bb470b757f6cca8ba878acb2000
+  RNSVG: dc7227619497ef44af38b6500e5be8aa1db50dfe
+  RNVectorIcons: 7b570967922afe0f414e11bcfc043b9edab55854
+  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
+  wmplayer-ffmpeg-kit-ios-https: 7f3d9a9fcee27c4966e588a29caf50fa7ec0299b
   Yoga: 055f92ad73f8c8600a93f0e25ac0b2344c3b07e6
 
-PODFILE CHECKSUM: 0993ad0a2b44b457b5c1334dd72a62a50c938cda
+PODFILE CHECKSUM: 62310e5c3a7ea8d2e4cc930e649572bef1ab2ba9
 
 COCOAPODS: 1.15.2

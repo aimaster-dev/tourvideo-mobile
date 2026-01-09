@@ -128,7 +128,7 @@ const AppNavigator = () => {
     return <SplashScreen />;
   }
 
-  // ScreenGuardModule.registerWithBlurView(data);
+  ScreenGuardModule.registerWithBlurView(data);
   return (
     <SafeAreaProvider>
       <ToastProvider>
