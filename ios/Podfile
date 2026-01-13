@@ -23,6 +23,9 @@ target 'wmplayer' do
   pod 'FirebaseCore', :modular_headers => true
   pod 'MobileVLCKit', :modular_headers => true
 
+use_frameworks! :linkage => :static
+$RNFirebaseAsStaticFramework = true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

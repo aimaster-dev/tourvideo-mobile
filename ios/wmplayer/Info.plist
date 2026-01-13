@@ -41,9 +41,6 @@
 	<string>Allow $(PRODUCT_NAME) to access your photos.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>fonts/Medium.OTF</string>
-		<string>fonts/Bold.OTF</string>
-		<string>fonts/Regular.OTF</string>
 		<string>AntDesign.ttf</string>
 		<string>Entypo.ttf</string>
 		<string>EvilIcons.ttf</string>
