@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import { NativeModules } from 'react-native';
+const { VideoWatermark } = NativeModules;
 import RNFS from 'react-native-fs';
 import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
@@ -22,15 +24,15 @@ import {hasAndroidPermission} from '../helper/permission';
 import {useToast} from '../context/ToastContext';
 import Marker, {ImageFormat, Position} from 'react-native-image-marker';
 import {useIsFocused} from '@react-navigation/native';
+import createWatermarkPNG from '../components/WaterMark';
 
 const Player = ({route, navigation}) => {
   const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
-
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
+  const [streamUrl, setStreamUrl] = useState(rtsp_url);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -168,7 +170,6 @@ const Player = ({route, navigation}) => {
       setIsSnapshotLoading(true);
       const uri = await captureRef(snapShotRef);
       const accessToken = await AsyncStorage.getItem('access_token');
-      console.log(accessToken, 'access token');
       if (!accessToken) {
         console.error('No access token found');
         return;
@@ -178,7 +179,6 @@ const Player = ({route, navigation}) => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log(data?.data?.isp?.customer_name, 'data in snapshot');
       const options = {
         // background image
         backgroundImage: {
@@ -260,8 +260,6 @@ const Player = ({route, navigation}) => {
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
-      console.log(`file://${recordedPath}`);
-      console.log(`file://${thumbnailPath}`);
       formData.append('video_path', {
         uri: `file://${recordedPath}`,
         type: 'video/mp4',
@@ -274,28 +272,17 @@ const Player = ({route, navigation}) => {
         type: 'image/jpg',
         name: 'output_thumbnail.jpg',
       });
-      console.log(
-        {
-          uri: `file://${thumbnailPath}`,
-          type: 'image/jpg',
-          name: 'output_thumbnail.jpg',
-        },
-        'thumbnail',
-      );
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
         return;
       }
-      console.log('Uploading video...', formData);
       const response = await api.post('video/video/add', formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Video uploaded successfully!');
-      console.log('Server Response:', response.data.data.video_path);
       if (response.data) {
         await unlinkRecordedFiles(thumbnailPath, recordedPath);
       }
@@ -330,8 +317,6 @@ const Player = ({route, navigation}) => {
   };
 
   const handleRecordingPress = async () => {
-    console.log(recordingLimits, 'recording limits');
-    console.log(data?.has_unlimited_access, 'data?.has_unlimited_access');
     if (usertype === 2) {
       showToast('Only clients are allowed to do recordings', 'error');
     } else if (
@@ -383,7 +368,6 @@ const Player = ({route, navigation}) => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(data, 'data');
       await fetchRecordingLimits();
       setIsSnapshotLoading(false);
       showToast('Snapshot saved successfully !', 'success');
@@ -409,12 +393,7 @@ const Player = ({route, navigation}) => {
       const returnCode = await session.getReturnCode();
       const logs = await session.getAllLogs();
       const logMessages = logs.map(log => log.getMessage());
-
-      console.log(logMessages, 'Logs while generating the thumbnail');
-
       if (returnCode.isValueSuccess()) {
-        console.log('Thumbnail generated successfully at:', thumbnailPath);
-
         try {
           console.log('Thumbnail saved to camera roll successfully');
           // await CameraRoll.saveAsset(thumbnailPath, {
@@ -433,80 +412,176 @@ const Player = ({route, navigation}) => {
     });
   };
 
-  const addWatermarkToVideo = async videoPath => {
-    const watermarkedPath = `${RNFS.DocumentDirectoryPath}/watermarked_video.mp4`;
-    const watermarkText = 'My Watermark';
+const addWatermarkToVideo = async videoPath => {
+  try {
+    console.log('🎬 Starting native iOS watermark');
+    
+    const fileExists = await RNFS.exists(videoPath);
+    if (!fileExists) {
+      throw new Error('Video file not found');
+    }
 
-    const watermarkCommand = `-i ${videoPath} -vf drawtext="text='${watermarkText}':x=10:y=H-th-10:fontsize=24:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2" -codec:a copy ${watermarkedPath}`;
+    const stats = await RNFS.stat(videoPath);
+    console.log('📹 Video size:', stats.size, 'bytes');
 
-    await FFmpegKit.executeAsync(watermarkCommand, async session => {
-      const returnCode = await session.getReturnCode();
-      if (returnCode.isValueSuccess()) {
-        console.log('Watermark added successfully.');
-        // Replace original path
-        await RNFS.unlink(videoPath);
-        await RNFS.moveFile(watermarkedPath, videoPath);
-      } else {
-        console.error('Failed to add watermark.');
+    // Clean up any old watermark files
+    const files = await RNFS.readDir(RNFS.DocumentDirectoryPath);
+    const watermarkFiles = files.filter(file => file.name.startsWith('watermark_'));
+    for (const file of watermarkFiles) {
+      try {
+        await RNFS.unlink(file.path);
+      } catch (e) {
+        // Ignore cleanup errors
       }
-    });
-  };
-
-  const startRecording = async () => {
-    if (isRecording || currentSessionRef.current) {
-      console.log('Another session is running, skipping...');
-      return;
     }
 
-    const path = generateFilePath();
-    setIsRecording(true);
-    setButtonStatus('Recording');
-    setRecordingStopped(false);
-    alertShownRef.current = false;
-
-    const recordTime =
-      usertype === 2
-        ? 10
-        : recordingLimits?.video_remaining
-        ? recordingLimits?.record_time
-        : 0;
-    console.log(recordingLimits, 'usertype');
-    if (recordTime === 0) {
-      Alert.alert(
-        'Invalid Selection',
-        'Please select a valid recording option.',
-      );
-      setButtonLoading(false);
-      setIsRecording(false);
-      setButtonStatus('Record');
-      return;
+    console.log('🏷️ Adding watermark:', tourplace);
+    const watermarkedPath = await VideoWatermark.addWatermark(videoPath, tourplace);
+    console.log('✅ Watermarked at:', watermarkedPath);
+    
+    const watermarkedExists = await RNFS.exists(watermarkedPath);
+    if (!watermarkedExists) {
+      throw new Error('Watermarked file not created');
     }
+    
+    await RNFS.unlink(videoPath);
+    await RNFS.moveFile(watermarkedPath, videoPath);
+    
+    console.log('✅ Native watermark complete');
+    return true;
+  } catch (error) {
+    console.error('❌ Native watermark error:', error);
+    
+    // Continue without watermark if it fails
+    console.warn('⚠️ Skipping watermark, continuing with upload');
+    return true;
+  }
+};
 
-    // const streamUrl = "rtsp://jerry:Milexx9186*@200.105.49.70:554/Streaming/Channels/2301"
+const startRecording = async () => {
+  if (isRecording || currentSessionRef.current) {
+    console.log('Another session is running, skipping...');
+    return;
+  }
 
-    console.log(`Starting recording for ${recordTime} seconds.`);
+  // Validate streamUrl before starting
+  if (!rtsp_url || rtsp_url === 'undefined') {
+    console.error('❌ Invalid stream URL:', rtsp_url);
+    showToast('Stream URL not available', 'error');
+    setButtonLoading(false);
+    setButtonStatus('Record');
+    return;
+  }
 
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
-      recordTime + 4
-    } -fflags nobuffer -flags low_delay -c copy ${path}`;
+  const path = generateFilePath();
+  
+  // Delete any existing file first
+  const exists = await RNFS.exists(path);
+  if (exists) {
+    await RNFS.unlink(path);
+    console.log('Deleted existing recording file');
+  }
+  
+  console.log('Recording to path:', path);
+  console.log('Stream URL:', rtsp_url);
+  
+  setIsRecording(true);
+  setButtonStatus('Recording');
+  setRecordingStopped(false);
+  alertShownRef.current = false;
 
-    const session = await FFmpegKit.executeAsync(command, async session => {
-      const returnCode = await session.getReturnCode();
-      const output = await session.getOutput();
-      console.log(returnCode.isValueSuccess, 'return code');
-      if (returnCode.isValueSuccess) {
-        console.log("if", path)
-        await addWatermarkToVideo(path);
-        await generateThumbnail(path);
-      } else {
-        console.log('Recording failed:', output);
+  const recordTime = usertype === 2 ? 10 : recordingLimits?.video_remaining ? recordingLimits?.record_time : 0;
+  
+  if (recordTime === 0) {
+    Alert.alert('Invalid Selection', 'Please select a valid recording option.');
+    setButtonLoading(false);
+    setIsRecording(false);
+    setButtonStatus('Record');
+    return;
+  }
+
+  console.log(`Starting recording for ${recordTime} seconds from ${rtsp_url}`);
+  
+  if (!rtsp_url) {
+    console.error('❌ No valid stream URL available');
+    showToast('Cannot connect to camera', 'error');
+    setButtonLoading(false);
+    setIsRecording(false);
+    setButtonStatus('Record');
+    return;
+  }
+  
+  const command = `-re -rtsp_transport tcp -i "${rtsp_url}" -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy "${path}"`;
+
+  console.log('FFmpeg command:', command);
+
+  const session = await FFmpegKit.executeAsync(command, async session => {
+    const returnCode = await session.getReturnCode();
+    const output = await session.getOutput();
+    const allLogs = await session.getAllLogsAsString();
+    
+    console.log('Recording return code:', returnCode.isValueSuccess());
+
+    if (returnCode.isValueSuccess()) {
+      console.log('✅ Recording completed at:', path);
+      
+      // CRITICAL: Wait longer for file to be fully written and flushed to disk
+      console.log('⏳ Waiting for file to be fully written...');
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3 seconds
+      
+      // Verify file exists and has content
+      const recordingExists = await RNFS.exists(path);
+      if (!recordingExists) {
+        console.error('❌ Recording file disappeared after completion');
+        showToast('Recording failed - file not saved', 'error');
         setButtonLoading(false);
+        setButtonStatus('Record');
+        setIsRecording(false);
+        currentSessionRef.current = null;
+        return;
       }
-      setIsRecording(false);
-      currentSessionRef.current = null;
-    });
-    currentSessionRef.current = session;
-  };
+
+      // Check file size
+      const stats = await RNFS.stat(path);
+      console.log('📹 Recorded file size:', stats.size, 'bytes');
+      
+      if (stats.size < 1000) {
+        console.error('❌ Recording file too small, likely corrupted');
+        showToast('Recording failed - file too small', 'error');
+        setButtonLoading(false);
+        setButtonStatus('Record');
+        setIsRecording(false);
+        currentSessionRef.current = null;
+        return;
+      }
+
+      try {
+        // Add watermark
+        await addWatermarkToVideo(path);
+        
+        // Generate thumbnail
+        await generateThumbnail(path);
+      } catch (error) {
+        console.error('❌ Post-processing failed:', error);
+        showToast('Video processing failed', 'error');
+        setButtonLoading(false);
+        setButtonStatus('Record');
+      }
+    } else {
+      console.log('❌ Recording failed');
+      console.log('Error output:', output);
+      console.log('Full logs:', allLogs);
+      showToast('Recording failed - check camera connection', 'error');
+      setButtonLoading(false);
+      setButtonStatus('Record');
+    }
+    
+    setIsRecording(false);
+    currentSessionRef.current = null;
+  });
+
+  currentSessionRef.current = session;
+};
 
   useEffect(() => {
     fetchRecordingLimits();
@@ -585,12 +660,10 @@ const Player = ({route, navigation}) => {
                   <ActivityIndicator size="large" color="#FFFFFF" />
                 </View>
               )}
-              {streamUrl && (
+              {rtsp_url && (
                 <VLCPlayer
                   style={styles.videoPlayer}
-                  source={{
-                    uri: streamUrl,
-                  }}
+                  source={{uri: rtsp_url}}
                   onLoad={() => {
                     console.log('loading ...');
                     setIsVideoLoading(true);
@@ -599,7 +672,7 @@ const Player = ({route, navigation}) => {
                   onProgress={e => {
                     // console.log(e, "e")
                     // if (e.currentTime > 0) {
-                      setIsVideoLoading(false);
+                    setIsVideoLoading(false);
                     // }
                   }}
                   onError={e => console.log('Error:', e)}

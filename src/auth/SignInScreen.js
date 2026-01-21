@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -10,20 +10,21 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import Feather from "react-native-vector-icons/Feather"
-import { Picker } from '@react-native-picker/picker';
+import Feather from 'react-native-vector-icons/Feather';
+import {Picker} from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckBox from '@react-native-community/checkbox';
-import { useAPI } from '../hooks/useAPI';
-import { AuthContext } from '../context/AuthContext';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useToast } from '../context/ToastContext';
-import { Link } from '@react-navigation/native';
-import { Medium, Semibold } from '../constants/font';
+import {useAPI} from '../hooks/useAPI';
+import {AuthContext} from '../context/AuthContext';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {useToast} from '../context/ToastContext';
+import {Link} from '@react-navigation/native';
+import {Medium, Semibold} from '../constants/font';
+import Dropdown from '../components/Dropdown';
 
-const SignInScreen = ({ navigation }) => {
+const SignInScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedISP, setSelectedISP] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,17 +41,13 @@ const SignInScreen = ({ navigation }) => {
 
   const api = useAPI();
 
-  const { setUser, notificationToken } = useContext(AuthContext);
+  const {setUser, notificationToken} = useContext(AuthContext);
 
-  const { showToast } = useToast();
+  const {showToast} = useToast();
 
-  const fetchISP = async (place) => {
+  const fetchISP = async place => {
     try {
-      console.log(place, "selected place in fetch")
-      const response = await api.get(
-        `user/venue/${place?.id}/isps/`,
-      );
-      console.log(response.data.data, "get isp")
+      const response = await api.get(`user/venue/${place?.id}/isps/`);
       setIsp(response.data.data || []);
       setLoading(false);
     } catch (error) {
@@ -78,20 +75,26 @@ const SignInScreen = ({ navigation }) => {
     navigation.navigate('VideoPlayback');
   };
 
-  const handleISPChange = (itemValue) => {
-    const selected = isp?.isps?.find(place => place.id == itemValue);
-    setSelectedISP(selected);
-    setIsIspValid(true);
+  const handleISPChange = selected => {
+    if (selected?.id) {
+      setSelectedISP(selected);
+      setIsIspValid(true);
+    } else {
+      setSelectedISP(null);
+      setIsIspValid(false);
+    }
   };
 
-  const handlePlaceChange = itemValue => {
-    setIsp([])
-    const selected = tourPlaces.find(place => place.id == itemValue);
+  const handlePlaceChange = selected => {
+    setIsp([]);
+
     if (selected?.id) {
       fetchISP(selected);
+      setIsIspValid(true);
     } else {
       setIsIspValid(false);
     }
+
     setSelectedPlace(selected);
     setIsTourPlaceValid(true);
   };
@@ -143,29 +146,33 @@ const SignInScreen = ({ navigation }) => {
       password: password,
       device_token: notificationToken,
     };
+
     setIsSubmitting(true);
 
     try {
-      const response = await api.post('/user/login-with-venue-isp-id', requestData, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await api.post(
+        '/user/login-with-venue-isp-id',
+        requestData,
+        {
+          headers: {'Content-Type': 'application/json'},
+        },
+      );
 
-      const { access, refresh, user_id, venue, usertype, username } =
+      const {access, refresh, user_id, venue, usertype, username} =
         response.data.data;
-      const user_data = { user_id, usertype, username, venue };
+      const user_data = {user_id, usertype, username, venue};
       await Promise.all([
         access && AsyncStorage.setItem('access_token', access),
         refresh && AsyncStorage.setItem('refresh_token', refresh),
         AsyncStorage.setItem('user_details', JSON.stringify(user_data)),
       ]);
-      console.log('User data:', user_data);
       showToast('Logged in successfully', 'success');
       setUser(JSON.stringify(user_data));
     } catch (error) {
       if (error.response && error.response.status === 406) {
         const userId = error.response.data.data.user_id;
         showToast('Account not verified. Please verify your account', 'error');
-        navigation.navigate('OTPCheck', { userId });
+        navigation.navigate('OTPCheck', {userId});
       } else {
         console.log('Login error:', JSON.stringify(error));
         showToast('Invalid credentials. Please try again.', 'error');
@@ -185,7 +192,9 @@ const SignInScreen = ({ navigation }) => {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={[styles.welcomeText, { fontSize: 14, marginBottom: 12 }]}>© 2025 Jerry Durgin</Text>
+          <Text style={[styles.welcomeText, {fontSize: 14, marginBottom: 12}]}>
+            © 2025 Jerry Durgin
+          </Text>
           {/* Welcome Text */}
           <Text style={styles.welcomeText}>Welcome back,</Text>
           <Text style={styles.signinText}>Signin an Account</Text>
@@ -197,44 +206,34 @@ const SignInScreen = ({ navigation }) => {
         ) : (
           <View>
             <View style={styles.inputContainer}>
-              <Picker
-                itemStyle={styles.picker}
-                selectedValue={selectedPlace ? selectedPlace.id : null}
-                style={styles.picker}
-                onValueChange={handlePlaceChange}>
-                <Picker.Item label="Select Venue" value={null} />
-                {tourPlaces.map(place => (
-                  <Picker.Item
-                    key={place.id}
-                    label={place.venue_name}
-                    value={place.id}
-                  />
-                ))}
-              </Picker>
+              <Dropdown
+                placeholder="Select Venue"
+                data={tourPlaces}
+                labelKey="venue_name"
+                valueKey="id"
+                value={selectedPlace}
+                onChange={handlePlaceChange}
+              />
+
               {!isTourPlaceValid && (
                 <Text style={styles.requiredText}>Required*</Text>
               )}
             </View>
-            {isp?.isps?.length > 0 && <View style={styles.inputContainer}>
-              <Picker
-                itemStyle={styles.picker}
-                selectedValue={selectedISP ? selectedISP.id : null}
-                style={styles.picker}
-                onValueChange={handleISPChange}
-              >
-                <Picker.Item label="Select Business" value={null} />
-                {isp?.isps?.map(place => (
-                  <Picker.Item
-                    key={place.id}
-                    label={place.name}
-                    value={place.id}
-                  />
-                ))}
-              </Picker>
-              {!isIspValid && (
-                <Text style={styles.requiredText}>Required*</Text>
-              )}
-            </View>}
+            {isp?.isps?.length > 0 && (
+              <View style={styles.inputContainer}>
+                <Dropdown
+                  placeholder="Select ISP"
+                  data={isp?.isps || []}
+                  labelKey="name"
+                  valueKey="id"
+                  value={selectedISP}
+                  onChange={handleISPChange}
+                />
+                {!isIspValid && (
+                  <Text style={styles.requiredText}>Required*</Text>
+                )}
+              </View>
+            )}
           </View>
         )}
 
@@ -253,8 +252,12 @@ const SignInScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.inputContainer}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
             <TextInput
               style={styles.input}
               placeholder="Password"
@@ -263,9 +266,12 @@ const SignInScreen = ({ navigation }) => {
               value={password}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword
-            )}>
-              <Feather name={showPassword ? "eye-off" : "eye"} color="white" size={16} />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? 'eye-off' : 'eye'}
+                color="white"
+                size={16}
+              />
             </TouchableOpacity>
           </View>
           {!isPasswordValid && (
@@ -281,7 +287,7 @@ const SignInScreen = ({ navigation }) => {
             value={isAccepted}
             onValueChange={setIsAccepted}
             style={styles.checkbox}
-            tintColors={{ true: '#287BF3', false: '#FFFFFF' }}
+            tintColors={{true: '#287BF3', false: '#FFFFFF'}}
           />
           <Text style={styles.checkboxText}>
             By continuing you accept our{' '}
@@ -342,12 +348,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1541', // Background color from the design
     paddingHorizontal: 20,
   },
-  logoContainer: { alignSelf: 'center' },
+  logoContainer: {alignSelf: 'center'},
   logo: {
     width: 160,
     height: 160,
     marginBottom: 20,
-    alignSelf: "center"
+    alignSelf: 'center',
   },
   welcomeText: {
     color: '#FFFFFF',

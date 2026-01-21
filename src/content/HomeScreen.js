@@ -42,10 +42,8 @@ const HomeScreen = ({}) => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-      console.log(accessToken)
         
         if (response.data && response.data.status) {
-          console.log(response.data.data)
           setCameraData(response.data.data);
         }
       } catch (error) {
@@ -71,7 +69,7 @@ const HomeScreen = ({}) => {
       cam_id: item.id,
       tourplace_id: item.venue[0]?.id,
       camera_name: item.camera_name,
-      rtsp_url: item.rtsp_url,
+      rtsp_url: item.stream_url,
       tourplace: item.venue[0]?.venue_name || 'Unknown Place',
       usertype: userData?.usertype,
       user_id: userData?.user_id,

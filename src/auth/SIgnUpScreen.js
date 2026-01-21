@@ -16,6 +16,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Toast from '../components/Toast';
 import {useToast} from '../context/ToastContext';
 import {Picker} from '@react-native-picker/picker';
+import Dropdown from '../components/Dropdown';
 
 const SignUpScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -55,15 +56,16 @@ const SignUpScreen = ({navigation}) => {
     }
   };
 
-  const handlePlaceChange = itemValue => {
+  const handlePlaceChange = selected => {
     setIsp([]);
-    const selected = tourPlaces.find(place => place.id == itemValue);
-    console.log(selected.id, 'selected', itemValue);
+
     if (selected?.id) {
       fetchISP(selected);
+      setIsIspValid(true);
     } else {
       setIsIspValid(false);
     }
+
     setSelectedPlace(selected);
     setIsTourPlaceValid(true);
   };
@@ -82,11 +84,15 @@ const SignUpScreen = ({navigation}) => {
     }
   };
 
-    const handleISPChange = (itemValue) => {
-    const selected = isp?.isps?.find(place => place.id == itemValue);
+  const handleISPChange = (selected) => {
+  if (selected?.id) {
     setSelectedISP(selected);
     setIsIspValid(true);
-  };
+  } else {
+    setSelectedISP(null);
+    setIsIspValid(false);
+  }
+};
 
   const handlePasswordChange = value => {
     setPassword(value);
@@ -161,7 +167,6 @@ const SignUpScreen = ({navigation}) => {
       venue: selectedPlace ? [selectedPlace.id] : null,
       isp: selectedISP ? selectedISP.id : null,
     };
-    console.log(requestData, 'request data in signup', selectedPlace, selectedISP);
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
@@ -325,40 +330,28 @@ const SignUpScreen = ({navigation}) => {
           )}
         </View>
         <View style={styles.inputContainer}>
-          <Picker
-            itemStyle={styles.picker}
-            selectedValue={selectedPlace ? selectedPlace.id : null}
-            style={styles.picker}
-            onValueChange={handlePlaceChange}>
-            <Picker.Item label="Select Venue" value={null} />
-            {tourPlaces.map(place => (
-              <Picker.Item
-                key={place.id}
-                label={place.venue_name}
-                value={place.id}
+           <Dropdown
+                placeholder="Select Venue"
+                data={tourPlaces}
+                labelKey="venue_name"
+                valueKey="id"
+                value={selectedPlace}
+                onChange={handlePlaceChange}
               />
-            ))}
-          </Picker>
           {!isTourPlaceValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
         {isp?.isps?.length > 0 && (
           <View style={styles.inputContainer}>
-            <Picker
-              itemStyle={styles.picker}
-              selectedValue={selectedISP ? selectedISP.id : null}
-              style={styles.picker}
-              onValueChange={handleISPChange}>
-              <Picker.Item label="Select Business" value={null} />
-              {isp?.isps?.map(place => (
-                <Picker.Item
-                  key={place.id}
-                  label={place.name}
-                  value={place.id}
-                />
-              ))}
-            </Picker>
+            <Dropdown
+                placeholder="Select ISP"
+                data={isp?.isps || []}
+                labelKey="name"
+                valueKey="id"
+                value={selectedISP}
+                onChange={handleISPChange}
+              />
             {!isIspValid && <Text style={styles.requiredText}>Required*</Text>}
           </View>
         )}

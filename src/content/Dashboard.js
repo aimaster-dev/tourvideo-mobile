@@ -127,7 +127,6 @@ const Dashboard = ({navigation}) => {
                       ) {
                         navigation.navigate(item.screen);
                       } else {
-                        console.log(data.recording_permissions)
                         Alert.alert(
                           'Limit Exceeded',
                           'You have exceeded the limit of recording. Please upgrade your plan to continue.',
