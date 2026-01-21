@@ -21,7 +21,7 @@ const VideoPlayer = ({route}) => {
           paused={false}
           repeat={true}
           muted={false}
-          onLoad={() => console.log('loaded')}
+          onLoad={() => {}}
           onProgress={e => {
             // console.log('progress', e);
             if (loading) {
@@ -29,7 +29,6 @@ const VideoPlayer = ({route}) => {
             }
           }}
           onEnd={() => {
-            console.log('ended');
             setLoading(false);
           }}
           onError={() => {
