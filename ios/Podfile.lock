@@ -1339,7 +1339,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-image-marker (1.2.9):
+  - react-native-image-marker (1.2.11):
     - React-Core
   - react-native-safe-area-context (5.6.2):
     - React-Core
@@ -1365,7 +1365,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SDWebImage (~> 5.21.0)
     - Yoga
-  - react-native-video (6.18.0):
+  - react-native-video (6.19.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1378,7 +1378,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.18.0)
+    - react-native-video/Video (= 6.19.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1387,7 +1387,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.18.0):
+  - react-native-video/Video (6.19.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2155,10 +2155,10 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 42c779748af341935a63ad8831723b8cb1e97830
   React-microtasksnativemodule: fc15e6b9e8cc5a99d1cfa0f31c454c4c3de4e7ae
   react-native-cameraroll: 2e9bc2c2df03dc7fea503b9410a6c19d7a455f0a
-  react-native-image-marker: 7b6ffc64084559c9d34c68f87f5991ae095fcac1
+  react-native-image-marker: 8ad6fdee9e33fb7f51e918dcaf77a2765a63f6c7
   react-native-safe-area-context: e48706fb09fde89f82e12bfb49b140cfdcb761f7
   react-native-screenguard: d3a335f6826b88d0e134176d65f0adf4115e3322
-  react-native-video: 34d191ee93c30e24519d5bc3eafec9e32391b6d0
+  react-native-video: 977c94e6060e89fe6628abe2e2552b59c0c9c6b7
   react-native-view-shot: 4fc2e9c2ef1a316ca05e0c5ad2c58251298e5085
   react-native-vlc-media-player: 0f9860bded57cd6764ac55b5c0e97347069cb40a
   React-nativeconfig: 31072ab0146e643594f6959c7f970a04b6c9ddd0

@@ -1,5 +1,6 @@
 #import "AppDelegate.h"
 #import <Firebase.h>
+#import <FirebaseMessaging/FirebaseMessaging.h>
 
 #import <React/RCTBundleURLProvider.h>
 
@@ -30,18 +31,24 @@
 #endif
 }
 
-// ✅ Remote notification delegates (for Firebase or other SDKs)
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-  [super application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+/// Required for Firebase push notifications
+- (void)application:(UIApplication *)application
+didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+  [FIRMessaging messaging].APNSToken = deviceToken;
 }
 
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-  [super application:application didFailToRegisterForRemoteNotificationsWithError:error];
+- (void)application:(UIApplication *)application
+didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+  NSLog(@"APNS registration failed: %@", error);
 }
 
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
-fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-  [super application:application didReceiveRemoteNotification:userInfo fetchCompletionHandler:completionHandler];
+- (void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo
+fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+  completionHandler(UIBackgroundFetchResultNoData);
 }
 
 @end

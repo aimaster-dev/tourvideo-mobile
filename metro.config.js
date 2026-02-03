@@ -18,25 +18,40 @@ const config = {
     }),
   },
 
-  resolver: {
-    assetExts: defaultConfig.resolver.assetExts.filter(
-      (ext) => ext !== "svg"
-    ),
-    sourceExts: [...defaultConfig.resolver.sourceExts, "svg"],
+resolver: {
+  assetExts: defaultConfig.resolver.assetExts.filter(
+    (ext) => ext !== "svg"
+  ),
+  sourceExts: [...defaultConfig.resolver.sourceExts, "svg"],
 
-    extraNodeModules: {
-      "react-native": path.resolve(__dirname, "node_modules/react-native"),
-      react: path.resolve(__dirname, "node_modules/react"),
-      "@babel/runtime": path.resolve(
-        __dirname,
-        "node_modules/@babel/runtime"
-      ),
-    },
+  extraNodeModules: {
+    "react-native": path.resolve(__dirname, "node_modules/react-native"),
+    react: path.resolve(__dirname, "node_modules/react"),
+    "@babel/runtime": path.resolve(__dirname, "node_modules/@babel/runtime"),
 
-    blockList: [
-      /.*\/ffmpeg-kit\/react-native\/node_modules\/.*/,
-    ],
+    // 👇 ADD THESE
+    crypto: require.resolve("react-native-crypto"),
+    stream: require.resolve("stream-browserify"),
+    buffer: require.resolve("buffer"),
   },
+
+  // 👇 FORCE AXIOS TO USE BROWSER BUILD
+  resolveRequest: (context, moduleName, platform) => {
+    if (moduleName === "axios") {
+      return context.resolveRequest(
+        context,
+        "axios/dist/browser/axios.cjs",
+        platform
+      );
+    }
+    return context.resolveRequest(context, moduleName, platform);
+  },
+
+  blockList: [
+    /.*\/ffmpeg-kit\/react-native\/node_modules\/.*/,
+  ],
+},
+
 };
 
 module.exports = mergeConfig(defaultConfig, config);
