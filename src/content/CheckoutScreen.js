@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Medium, Regular, Semibold} from '../constants/font';
@@ -33,11 +34,13 @@ const CheckoutScreen = ({route, navigation}) => {
     try {
       const result = await initConnection();
       if (result) {
-        await flushFailedPurchasesCachedAsPendingAndroid();
+        if(Platform.OS === "android"){
+          await flushFailedPurchasesCachedAsPendingAndroid();
+        }
         const subscriptions = await getProducts({
           skus,
         });
-        // console.log(subscriptions, 'available purchase');
+        console.log(subscriptions, 'available purchase');
         setAvailablePurchase(subscriptions);
       }
     } catch (e) {

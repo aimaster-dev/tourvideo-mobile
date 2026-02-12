@@ -1810,9 +1810,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage (5.21.5):
-    - SDWebImage/Core (= 5.21.5)
-  - SDWebImage/Core (5.21.5)
+  - SDWebImage (5.21.6):
+    - SDWebImage/Core (= 5.21.6)
+  - SDWebImage/Core (5.21.6)
   - SocketRocket (0.7.0)
   - wmplayer-ffmpeg-kit-ios-https (6.0.2)
   - Yoga (0.0.0)
@@ -2203,7 +2203,7 @@ SPEC CHECKSUMS:
   RNScreens: 67c6c2d9f4c917508c0414167fba805976e634f4
   RNSVG: dc7227619497ef44af38b6500e5be8aa1db50dfe
   RNVectorIcons: a01d18455b4e435c93ae84174dfd71530a4907e6
-  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
+  SDWebImage: 1bb6a1b84b6fe87b972a102bdc77dd589df33477
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   wmplayer-ffmpeg-kit-ios-https: 7f3d9a9fcee27c4966e588a29caf50fa7ec0299b
   Yoga: b05994d1933f507b0a28ceaa4fdb968dc18da178

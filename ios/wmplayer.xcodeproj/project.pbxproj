@@ -530,6 +530,7 @@
 				DEVELOPMENT_TEAM = KSB9ZUHTRR;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = wmplayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dware App";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -559,6 +560,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KSB9ZUHTRR;
 				INFOPLIST_FILE = wmplayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dware App";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
