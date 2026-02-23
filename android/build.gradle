@@ -1,7 +1,7 @@
 buildscript {
     ext {
         buildToolsVersion = "30.0.3"
-        minSdkVersion = 24
+        minSdkVersion = 26
         compileSdkVersion = 35
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
@@ -17,6 +17,16 @@ buildscript {
         classpath("com.google.gms:google-services:4.4.2")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        flatDir {
+            dirs "$rootDir/libs"
+        }
     }
 }
 

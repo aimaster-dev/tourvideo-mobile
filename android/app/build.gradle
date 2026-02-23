@@ -1,3 +1,4 @@
+import java.net.URL
 apply plugin: "com.android.application"
 apply plugin: "com.google.gms.google-services"
 apply plugin: "org.jetbrains.kotlin.android"
@@ -79,6 +80,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+     repositories {
+        flatDir {
+            dirs "$rootDir/libs"
+        }
+    }
+
      sourceSets {
     main {
       assets.srcDirs += 'src/main/assets'
@@ -120,6 +127,8 @@ android {
 }
 
 dependencies {
+      implementation(name: 'ffmpeg-kit-full-gpl', ext: 'aar')
+    implementation 'com.arthenica:smart-exception-java:0.2.1'
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation "com.android.billingclient:billing:4.0.0"
@@ -129,4 +138,30 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+}
+
+afterEvaluate {
+    def aarUrl = 'https://github.com/NooruddinLakhani/ffmpeg-kit-full-gpl/releases/download/v1.0.0/ffmpeg-kit-full-gpl.aar'
+    def aarFile = file("${rootDir}/libs/ffmpeg-kit-full-gpl.aar")
+
+    tasks.register("downloadAar") {
+        doLast {
+             if (!aarFile.parentFile.exists()) {
+                println "📁 Creating directory: ${aarFile.parentFile.absolutePath}"
+                aarFile.parentFile.mkdirs()
+            }
+            if (!aarFile.exists()) {
+                println "⏬ Downloading AAR from $aarUrl..."
+                new URL(aarUrl).withInputStream { i ->
+                    aarFile.withOutputStream { it << i }
+                }
+                println "✅ AAR downloaded to ${aarFile.absolutePath}"
+            } else {
+                println "ℹ️ AAR already exists at ${aarFile.absolutePath}"
+            }
+        }
+    }
+
+    // Make sure the AAR is downloaded before compilation begins
+    preBuild.dependsOn("downloadAar")
 }
