@@ -17,6 +17,7 @@ end
 target 'wmplayer' do
   config = use_native_modules!
   
+  pod 'wmplayer-ffmpeg-kit-ios-https', :path => '..'
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
