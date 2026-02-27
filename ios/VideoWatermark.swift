@@ -15,23 +15,32 @@ class VideoWatermark: NSObject {
     }
     
     // Load asset asynchronously with proper error handling
-    let asset = AVAsset(url: videoURL)
-    
+    // Use AVURLAsset with options to handle files produced by ffmpeg
+    let options: [String: Any] = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
+    let asset = AVURLAsset(url: videoURL, options: options)
+
     // First check if asset is readable
-    asset.loadValuesAsynchronously(forKeys: ["tracks", "duration"]) {
+    asset.loadValuesAsynchronously(forKeys: ["tracks", "duration", "isPlayable"]) {
       var error: NSError?
       let tracksStatus = asset.statusOfValue(forKey: "tracks", error: &error)
-      
+
       if tracksStatus == .failed {
         DispatchQueue.main.async {
-          rejecter("LOAD_FAILED", "Failed to load video tracks: \(error?.localizedDescription ?? "Unknown error")", error)
+          rejecter("LOAD_FAILED", "Cannot decode video — codec may be unsupported by AVFoundation: \(error?.localizedDescription ?? "Unknown error")", error)
         }
         return
       }
-      
+
       if tracksStatus != .loaded {
         DispatchQueue.main.async {
-          rejecter("NOT_LOADED", "Video tracks not loaded", nil)
+          rejecter("NOT_LOADED", "Video tracks not loaded (status: \(tracksStatus.rawValue))", nil)
+        }
+        return
+      }
+
+      guard asset.isPlayable else {
+        DispatchQueue.main.async {
+          rejecter("NOT_PLAYABLE", "Video file is not playable by AVFoundation", nil)
         }
         return
       }

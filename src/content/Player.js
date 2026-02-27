@@ -412,48 +412,34 @@ const Player = ({route, navigation}) => {
     });
   };
 
-const addWatermarkToVideo = async videoPath => {
+const addWatermarkToVideo = async (videoPath) => {
   try {
-    console.log('🎬 Starting native iOS watermark');
-    
+    console.log('🎬 Starting native AVFoundation watermark');
+
     const fileExists = await RNFS.exists(videoPath);
     if (!fileExists) {
       throw new Error('Video file not found');
     }
 
-    const stats = await RNFS.stat(videoPath);
-    console.log('📹 Video size:', stats.size, 'bytes');
+    const outputPath = await VideoWatermark.addWatermark(videoPath, tourplace);
+    console.log('✅ Watermark created at:', outputPath);
 
-    // Clean up any old watermark files
-    const files = await RNFS.readDir(RNFS.DocumentDirectoryPath);
-    const watermarkFiles = files.filter(file => file.name.startsWith('watermark_'));
-    for (const file of watermarkFiles) {
-      try {
-        await RNFS.unlink(file.path);
-      } catch (e) {
-        // Ignore cleanup errors
-      }
-    }
-
-    console.log('🏷️ Adding watermark:', tourplace);
-    const watermarkedPath = await VideoWatermark.addWatermark(videoPath, tourplace);
-    console.log('✅ Watermarked at:', watermarkedPath);
-    
-    const watermarkedExists = await RNFS.exists(watermarkedPath);
+    const watermarkedExists = await RNFS.exists(outputPath);
     if (!watermarkedExists) {
       throw new Error('Watermarked file not created');
     }
-    
-    await RNFS.unlink(videoPath);
-    await RNFS.moveFile(watermarkedPath, videoPath);
-    
-    console.log('✅ Native watermark complete');
+
+    const originalExists = await RNFS.exists(videoPath);
+    if (originalExists) {
+      await RNFS.unlink(videoPath);
+    }
+    await RNFS.moveFile(outputPath, videoPath);
+    console.log('🎉 Watermark complete');
     return true;
+
   } catch (error) {
-    console.error('❌ Native watermark error:', error);
-    
-    // Continue without watermark if it fails
-    console.warn('⚠️ Skipping watermark, continuing with upload');
+    console.error('❌ Watermark error:', error);
+    console.warn('⚠️ Skipping watermark, continuing upload');
     return true;
   }
 };
@@ -511,7 +497,7 @@ const startRecording = async () => {
     return;
   }
   
-  const command = `-re -rtsp_transport tcp -i "${rtsp_url}" -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy "${path}"`;
+    const command = `-re -rtsp_transport tcp -i "${rtsp_url}" -t ${recordTime + 4} -fflags nobuffer -flags low_delay -c copy "${path}"`;
 
   console.log('FFmpeg command:', command);
 
@@ -669,15 +655,11 @@ const startRecording = async () => {
                     setIsVideoLoading(true);
                   }}
                   autoplay={true}
-                  onProgress={e => {
-                    // console.log(e, "e")
-                    // if (e.currentTime > 0) {
+                  onProgress={() => {
                     setIsVideoLoading(false);
-                    // }
                   }}
                   onError={e => console.log('Error:', e)}
-                  onBuffering={e => {
-                    // console.log('buffering ...');
+                  onBuffering={() => {
                     setIsVideoLoading(true);
                   }}
                   onStopped={() => {
