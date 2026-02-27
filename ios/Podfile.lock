@@ -3,9 +3,6 @@ PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.75.4)
-  - ffmpeg-kit-react-native (6.0.2):
-    - React-Core
-    - wmplayer-ffmpeg-kit-ios-https
   - Firebase/CoreOnly (11.11.0):
     - FirebaseCore (~> 11.11.0)
   - Firebase/Messaging (11.11.0):
@@ -1341,7 +1338,7 @@ PODS:
     - Yoga
   - react-native-image-marker (1.2.11):
     - React-Core
-  - react-native-safe-area-context (5.6.2):
+  - react-native-safe-area-context (5.7.0):
     - React-Core
   - react-native-screenguard (1.1.1):
     - DoubleConversion
@@ -1787,7 +1784,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.15.1):
+  - RNSVG (15.15.3):
     - React-Core
   - RNVectorIcons (10.3.0):
     - DoubleConversion
@@ -1810,18 +1807,16 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage (5.21.6):
-    - SDWebImage/Core (= 5.21.6)
-  - SDWebImage/Core (5.21.6)
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
   - SocketRocket (0.7.0)
-  - wmplayer-ffmpeg-kit-ios-https (6.0.2)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
-  - ffmpeg-kit-react-native (from `../node_modules/ffmpeg-kit-react-native`)
   - FirebaseCore
   - FirebaseCoreInternal
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -1908,7 +1903,6 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
-  - wmplayer-ffmpeg-kit-ios-https (from `..`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1935,8 +1929,6 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
-  ffmpeg-kit-react-native:
-    :path: "../node_modules/ffmpeg-kit-react-native"
   fmt:
     :podspec: "../node_modules/react-native/third-party-podspecs/fmt.podspec"
   glog:
@@ -2100,8 +2092,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
-  wmplayer-ffmpeg-kit-ios-https:
-    :path: ".."
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2110,7 +2100,6 @@ SPEC CHECKSUMS:
   boost: 4cb898d0bf20404aab1850c656dcea009429d6c1
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: 430e10366de01d1e3d57374500b1b150fe482e6d
-  ffmpeg-kit-react-native: 382114f3f2abc9bfb8f688f2080070e1f5f7d116
   Firebase: 6a8f201c61eda24e98f1ce2b44b1b9c2caf525cc
   FirebaseCore: 2321536f9c423b1f857e047a82b8a42abc6d9e2c
   FirebaseCoreExtension: 3a64994969dd05f4bcb7e6896c654eded238e75b
@@ -2156,7 +2145,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: fc15e6b9e8cc5a99d1cfa0f31c454c4c3de4e7ae
   react-native-cameraroll: 2e9bc2c2df03dc7fea503b9410a6c19d7a455f0a
   react-native-image-marker: 8ad6fdee9e33fb7f51e918dcaf77a2765a63f6c7
-  react-native-safe-area-context: e48706fb09fde89f82e12bfb49b140cfdcb761f7
+  react-native-safe-area-context: 37b720094bcaa36abcd593e08f2ad16507a94769
   react-native-screenguard: d3a335f6826b88d0e134176d65f0adf4115e3322
   react-native-video: 977c94e6060e89fe6628abe2e2552b59c0c9c6b7
   react-native-view-shot: 4fc2e9c2ef1a316ca05e0c5ad2c58251298e5085
@@ -2201,13 +2190,12 @@ SPEC CHECKSUMS:
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
   RNPermissions: c98d72e827cba865b4e53f57b21e4e941bc8c63c
   RNScreens: 67c6c2d9f4c917508c0414167fba805976e634f4
-  RNSVG: dc7227619497ef44af38b6500e5be8aa1db50dfe
+  RNSVG: 6d262cf38fab9dcd67181c1c22c5604b437ae022
   RNVectorIcons: a01d18455b4e435c93ae84174dfd71530a4907e6
-  SDWebImage: 1bb6a1b84b6fe87b972a102bdc77dd589df33477
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
-  wmplayer-ffmpeg-kit-ios-https: 7f3d9a9fcee27c4966e588a29caf50fa7ec0299b
   Yoga: b05994d1933f507b0a28ceaa4fdb968dc18da178
 
-PODFILE CHECKSUM: a08170ff135d51b0ee598ff758c7f139ae0e8c82
+PODFILE CHECKSUM: 3ff958148a452521657d686d0c64dea0b4f87fac
 
 COCOAPODS: 1.15.2

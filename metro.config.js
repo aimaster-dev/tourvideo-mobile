@@ -1,57 +1,23 @@
-// metro.config.js
+//metro.config.js
 const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
-const path = require("path");
 
 const defaultConfig = getDefaultConfig(__dirname);
+const { assetExts, sourceExts } = defaultConfig.resolver;
 
+/**
+ * Metro configuration
+ * https://facebook.github.io/metro/docs/configuration
+ *
+ * @type {import('metro-config').MetroConfig}
+ */
 const config = {
-  watchFolders: [
-    path.resolve(__dirname, "ffmpeg-kit/react-native"),
-  ],
-
   transformer: {
-    babelTransformerPath: require.resolve("react-native-svg-transformer"),
-    getTransformOptions: async () => ({
-      transform: {
-        inlineRequires: true,
-      },
-    }),
+    babelTransformerPath: require.resolve("react-native-svg-transformer")
   },
-
-resolver: {
-  assetExts: defaultConfig.resolver.assetExts.filter(
-    (ext) => ext !== "svg"
-  ),
-  sourceExts: [...defaultConfig.resolver.sourceExts, "svg"],
-
-  extraNodeModules: {
-    "react-native": path.resolve(__dirname, "node_modules/react-native"),
-    react: path.resolve(__dirname, "node_modules/react"),
-    "@babel/runtime": path.resolve(__dirname, "node_modules/@babel/runtime"),
-
-    // 👇 ADD THESE
-    crypto: require.resolve("react-native-crypto"),
-    stream: require.resolve("stream-browserify"),
-    buffer: require.resolve("buffer"),
-  },
-
-  // 👇 FORCE AXIOS TO USE BROWSER BUILD
-  resolveRequest: (context, moduleName, platform) => {
-    if (moduleName === "axios") {
-      return context.resolveRequest(
-        context,
-        "axios/dist/browser/axios.cjs",
-        platform
-      );
-    }
-    return context.resolveRequest(context, moduleName, platform);
-  },
-
-  blockList: [
-    /.*\/ffmpeg-kit\/react-native\/node_modules\/.*/,
-  ],
-},
-
+  resolver: {
+    assetExts: assetExts.filter((ext) => ext !== "svg"),
+    sourceExts: [...sourceExts, "svg"]
+  }
 };
 
 module.exports = mergeConfig(defaultConfig, config);
