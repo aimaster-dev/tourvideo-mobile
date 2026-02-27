@@ -87,5 +87,9 @@
 	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSLocalNetworkUsageDescription</key>
+<string>This app requires access to devices on your local network to connect and communicate with them.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>We need access to your photo library so you can select images to share with your friends within the app.</string>
 </dict>
 </plist>

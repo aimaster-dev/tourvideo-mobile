@@ -22,12 +22,12 @@ const SignUpScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUserNameValid, setIsUserNameValid] = useState(true);
-  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
+  // const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
@@ -126,12 +126,12 @@ const SignUpScreen = ({navigation}) => {
     } else {
       setIsEmailValid(true);
     }
-    if (!phoneNumber) {
-      setIsPhoneNumberValid(false);
-      return;
-    } else {
-      setIsPhoneNumberValid(true);
-    }
+    // if (!phoneNumber) {
+    //   setIsPhoneNumberValid(false);
+    //   return;
+    // } else {
+    //   setIsPhoneNumberValid(true);
+    // }
     if (!password) {
       setIsPasswordValid(false);
       return;
@@ -160,7 +160,7 @@ const SignUpScreen = ({navigation}) => {
     const requestData = {
       username: fullName,
       email: email,
-      phone_number: phoneNumber,
+      phone_number: '',
       password: password,
       usertype: 3,
       level: 0,
@@ -273,7 +273,7 @@ const SignUpScreen = ({navigation}) => {
         </View>
 
         {/* Phone Number Input */}
-        <View style={styles.inputContainer}>
+        {/* <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Phone Number"
@@ -285,7 +285,7 @@ const SignUpScreen = ({navigation}) => {
           {!isPhoneNumberValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
-        </View>
+        </View> */}
 
         {/* Password Input */}
         <View style={styles.inputContainer}>
