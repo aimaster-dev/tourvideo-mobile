@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { NativeModules } from 'react-native';
-const { VideoWatermark } = NativeModules;
+// const { VideoWatermark } = NativeModules;
 import RNFS from 'react-native-fs';
-import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
+import {FFmpegKit, FFmpegKitConfig, ReturnCode} from 'ffmpeg-kit-react-native';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useAPI} from '../hooks/useAPI';
@@ -414,33 +414,25 @@ const Player = ({route, navigation}) => {
 
 const addWatermarkToVideo = async (videoPath) => {
   try {
-    console.log('🎬 Starting native AVFoundation watermark');
+    const watermarkImagePath = await createWatermarkPNG(tourplace);
+    const outputPath = `${RNFS.DocumentDirectoryPath}/watermarked_${Date.now()}.mp4`;
 
-    const fileExists = await RNFS.exists(videoPath);
-    if (!fileExists) {
-      throw new Error('Video file not found');
+    const command = `-i "${videoPath}" -i "${watermarkImagePath}" -filter_complex "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2" -codec:a copy "${outputPath}"`;
+
+    const session = await FFmpegKit.execute(command);
+    const returnCode = await session.getReturnCode();
+    console.log(returnCode, "return code")
+
+    if (!ReturnCode.isSuccess(returnCode)) {
+      throw new Error("Watermark failed");
     }
 
-    const outputPath = await VideoWatermark.addWatermark(videoPath, tourplace);
-    console.log('✅ Watermark created at:', outputPath);
-
-    const watermarkedExists = await RNFS.exists(outputPath);
-    if (!watermarkedExists) {
-      throw new Error('Watermarked file not created');
-    }
-
-    const originalExists = await RNFS.exists(videoPath);
-    if (originalExists) {
-      await RNFS.unlink(videoPath);
-    }
+    await RNFS.unlink(videoPath);
     await RNFS.moveFile(outputPath, videoPath);
-    console.log('🎉 Watermark complete');
     return true;
-
   } catch (error) {
-    console.error('❌ Watermark error:', error);
-    console.warn('⚠️ Skipping watermark, continuing upload');
-    return true;
+    console.error("Watermark error:", error);
+    return false;
   }
 };
 
