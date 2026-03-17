@@ -1365,7 +1365,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SDWebImage (~> 5.21.0)
     - Yoga
-  - react-native-video (6.19.0):
+  - react-native-video (6.19.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1378,7 +1378,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.19.0)
+    - react-native-video/Video (= 6.19.1)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1387,7 +1387,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.19.0):
+  - react-native-video/Video (6.19.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1763,7 +1763,7 @@ PODS:
     - RNNotifee/NotifeeCore (= 9.1.8)
   - RNNotifee/NotifeeCore (9.1.8):
     - React-Core
-  - RNPermissions (5.4.4):
+  - RNPermissions (5.5.1):
     - React-Core
   - RNScreens (4.5.0):
     - DoubleConversion
@@ -1828,6 +1828,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - MobileVLCKit (= 3.5.1)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2158,7 +2159,7 @@ SPEC CHECKSUMS:
   react-native-image-marker: 8ad6fdee9e33fb7f51e918dcaf77a2765a63f6c7
   react-native-safe-area-context: 37b720094bcaa36abcd593e08f2ad16507a94769
   react-native-screenguard: d3a335f6826b88d0e134176d65f0adf4115e3322
-  react-native-video: 977c94e6060e89fe6628abe2e2552b59c0c9c6b7
+  react-native-video: e400a005a3375c8561c809eff9e0920c9216d4cd
   react-native-view-shot: 4fc2e9c2ef1a316ca05e0c5ad2c58251298e5085
   react-native-vlc-media-player: 0f9860bded57cd6764ac55b5c0e97347069cb40a
   React-nativeconfig: 31072ab0146e643594f6959c7f970a04b6c9ddd0
@@ -2199,7 +2200,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 2ce5d052b0a3c3a8cda29e0a1e746f26793d7a21
   RNIap: f3ca6e7597afccb2c1631de97d88f2e33b10dafd
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
-  RNPermissions: c98d72e827cba865b4e53f57b21e4e941bc8c63c
+  RNPermissions: 2313103968fa75dee603dbeee84e0518d7c710aa
   RNScreens: 67c6c2d9f4c917508c0414167fba805976e634f4
   RNSVG: 6d262cf38fab9dcd67181c1c22c5604b437ae022
   RNVectorIcons: a01d18455b4e435c93ae84174dfd71530a4907e6
@@ -2208,6 +2209,6 @@ SPEC CHECKSUMS:
   wmplayer-ffmpeg-kit-ios-https: 7f3d9a9fcee27c4966e588a29caf50fa7ec0299b
   Yoga: b05994d1933f507b0a28ceaa4fdb968dc18da178
 
-PODFILE CHECKSUM: a08170ff135d51b0ee598ff758c7f139ae0e8c82
+PODFILE CHECKSUM: eaeae54c5fd7c11c9942a7d117718265136ea9c1
 
 COCOAPODS: 1.16.2

@@ -21,7 +21,7 @@ target 'wmplayer' do
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
-  # pod 'MobileVLCKit', :modular_headers => true
+  pod 'MobileVLCKit', '3.5.1'
 
 use_frameworks! :linkage => :static
 $RNFirebaseAsStaticFramework = true

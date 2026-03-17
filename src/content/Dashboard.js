@@ -122,8 +122,9 @@ const Dashboard = ({navigation}) => {
                   onPress={() => {
                     if (item.name === 'Camera') {
                       if (
-                        data.recording_permissions.is_snapshot_allowed ||
-                        data.recording_permissions.is_video_recording_allowed || data?.has_unlimited_access
+                        false
+                        // data.recording_permissions.is_snapshot_allowed ||
+                        // data.recording_permissions.is_video_recording_allowed || data?.has_unlimited_access
                       ) {
                         navigation.navigate(item.screen);
                       } else {

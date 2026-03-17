@@ -21,20 +21,28 @@ import {
   initConnection,
   requestPurchase,
 } from 'react-native-iap';
+import {useToast} from '../context/ToastContext';
 
-const skus = ['com.test.demo', 'com.basic.demo', 'com.standard.demo', 'com.starter.demo', 'com.premium.demo'];
+const skus = [
+  'com.test.demo',
+  'com.basic.demo',
+  'com.standard.demo',
+  'com.starter.demo',
+  'com.premium.demo',
+];
 
 const CheckoutScreen = ({route, navigation}) => {
   const [availablePurchase, setAvailablePurchase] = useState([]);
   const {plan} = route.params ?? {};
 
   const api = useAPI();
+  const {showToast} = useToast();
 
   const initilizeIAPConnection = async () => {
     try {
       const result = await initConnection();
       if (result) {
-        if(Platform.OS === "android"){
+        if (Platform.OS === 'android') {
           await flushFailedPurchasesCachedAsPendingAndroid();
         }
         const subscriptions = await getProducts({
@@ -49,27 +57,43 @@ const CheckoutScreen = ({route, navigation}) => {
   };
 
   const handlePurchase = async productId => {
-    console.log(productId, "product id")
+    console.log(productId, 'product id');
+
     try {
-      const response = await requestPurchase({skus: [productId]});
+      let response;
+
+      if (Platform.OS === 'ios') {
+        response = await requestPurchase({sku: productId});
+      } else {
+        response = await requestPurchase({skus: [productId]});
+      }
+
       console.log(response, 'response of purchase');
+
+      const purchase = Platform.OS === 'ios' ? response : response[0];
+
       const transaction = await finishTransaction({
-        purchase: response[0],
+        purchase,
         isConsumable: true,
-        developerPayloadAndroid: undefined,
       });
+
       console.log(transaction, 'transaction ....');
-      const result = await uploadTransaction(response);
+
+      const result = await uploadTransaction(purchase);
+
       if (result) {
         navigation.navigate('Dashboard');
+      } else {
+        showToast('Error occurred while submitting the payment request', "error");
       }
     } catch (error) {
-      console.log('Error occurred while making purchase');
+      showToast('Error occurred while making purchase', "error");
+      console.log(error, 'Error occurred while making purchase');
     }
   };
-
   const uploadTransaction = async response => {
     try {
+      console.log(response, 'response');
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
@@ -110,15 +134,23 @@ const CheckoutScreen = ({route, navigation}) => {
                 <View style={styles.featureListContainer}>
                   <View style={styles.featureList}>
                     <Check width={28} height={28} />
-                     <Text style={styles.featureName}>Record up to {plan?.record_time} seconds per session.</Text>
+                    <Text style={styles.featureName}>
+                      Record up to {plan?.record_time} seconds per session.
+                    </Text>
                   </View>
                   <View style={styles.featureList}>
                     <Check width={28} height={28} />
-                    <Text style={styles.featureName}>Save up to {plan?.record_limit} recordings for quick access and review</Text>
+                    <Text style={styles.featureName}>
+                      Save up to {plan?.record_limit} recordings for quick
+                      access and review
+                    </Text>
                   </View>
                   <View style={styles.featureList}>
                     <Check width={28} height={28} />
-                     <Text style={styles.featureName}>Capture up to {plan?.snapshot_limit} snapshots to preserve key moments</Text>
+                    <Text style={styles.featureName}>
+                      Capture up to {plan?.snapshot_limit} snapshots to preserve
+                      key moments
+                    </Text>
                   </View>
                 </View>
               </View>
