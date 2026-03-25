@@ -160,7 +160,7 @@ const SignUpScreen = ({navigation}) => {
     const requestData = {
       username: fullName,
       email: email,
-      phone_number: '',
+      phone_number: '1234567890',
       password: password,
       usertype: 3,
       level: 0,

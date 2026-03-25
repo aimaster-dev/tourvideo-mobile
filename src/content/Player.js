@@ -27,7 +27,7 @@ import {useIsFocused} from '@react-navigation/native';
 import createWatermarkPNG from '../components/WaterMark';
 
 const Player = ({route, navigation}) => {
-  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params ?? {};
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
