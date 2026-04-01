@@ -64,7 +64,6 @@ const Media = ({}) => {
       const accessToken = await AsyncStorage.getItem('access_token');
       const user_data = await AsyncStorage.getItem('user_details');
       const parsed_data = JSON.parse(user_data);
-      console.log(parsed_data)
       if (!accessToken) {
         setLoading(false);
         console.error('No access token found');

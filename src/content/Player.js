@@ -27,7 +27,9 @@ import {useIsFocused} from '@react-navigation/native';
 import createWatermarkPNG from '../components/WaterMark';
 
 const Player = ({route, navigation}) => {
-  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params ?? {};
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} =
+    route.params ?? {};
+
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
@@ -628,6 +630,11 @@ const startRecording = async () => {
           </View>
         </View>
       )}
+      {isVideoLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
 
       {Object.keys(recordingLimits).length > 0 && (
         <>
@@ -647,11 +654,15 @@ const startRecording = async () => {
                     setIsVideoLoading(true);
                   }}
                   autoplay={true}
-                  onProgress={() => {
+                  onProgress={e => {
+                    // console.log(e.currentTime, "progress")
+                    if (e.currentTime > 0) {
                     setIsVideoLoading(false);
+                    }
                   }}
                   onError={e => console.log('Error:', e)}
-                  onBuffering={() => {
+                  onBuffering={e => {
+                    console.log('buffering ...');
                     setIsVideoLoading(true);
                   }}
                   onStopped={() => {
