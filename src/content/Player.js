@@ -24,13 +24,14 @@ import Marker, {ImageFormat, Position} from 'react-native-image-marker';
 import {useIsFocused} from '@react-navigation/native';
 
 const Player = ({route, navigation}) => {
-  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} = route.params;
+  const {cam_id, tourplace_id, rtsp_url, tourplace, usertype} =
+    route.params ?? {};
 
   const [isRecording, setIsRecording] = useState(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
   const [recordingLimits, setRecordingLimits] = useState([]);
   const [loadingLimits, setLoadingLimits] = useState(true);
-  const [streamUrl, setStreamUrl] = useState(`${rtsp_url}`);
+  const [streamUrl, setStreamUrl] = useState(rtsp_url);
   const [uploadInProgress, setUploadInProgress] = useState(false);
   const [recordingStopped, setRecordingStopped] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -260,8 +261,6 @@ const Player = ({route, navigation}) => {
     setButtonStatus('Uploading');
     try {
       const formData = new FormData();
-      console.log(`file://${recordedPath}`);
-      console.log(`file://${thumbnailPath}`);
       formData.append('video_path', {
         uri: `file://${recordedPath}`,
         type: 'video/mp4',
@@ -274,14 +273,6 @@ const Player = ({route, navigation}) => {
         type: 'image/jpg',
         name: 'output_thumbnail.jpg',
       });
-      console.log(
-        {
-          uri: `file://${thumbnailPath}`,
-          type: 'image/jpg',
-          name: 'output_thumbnail.jpg',
-        },
-        'thumbnail',
-      );
       const accessToken = await AsyncStorage.getItem('access_token');
       if (!accessToken) {
         console.error('No access token found');
@@ -330,8 +321,6 @@ const Player = ({route, navigation}) => {
   };
 
   const handleRecordingPress = async () => {
-    console.log(recordingLimits, 'recording limits');
-    console.log(data?.has_unlimited_access, 'data?.has_unlimited_access');
     if (usertype === 2) {
       showToast('Only clients are allowed to do recordings', 'error');
     } else if (
@@ -383,7 +372,6 @@ const Player = ({route, navigation}) => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(data, 'data');
       await fetchRecordingLimits();
       setIsSnapshotLoading(false);
       showToast('Snapshot saved successfully !', 'success');
@@ -486,7 +474,7 @@ const Player = ({route, navigation}) => {
 
     console.log(`Starting recording for ${recordTime} seconds.`);
 
-    const command = `-re -rtsp_transport tcp -i ${streamUrl} -t ${
+    const command = `-re -rtsp_transport tcp -i ${rtsp_url} -t ${
       recordTime + 4
     } -fflags nobuffer -flags low_delay -c copy ${path}`;
 
@@ -495,7 +483,6 @@ const Player = ({route, navigation}) => {
       const output = await session.getOutput();
       console.log(returnCode.isValueSuccess, 'return code');
       if (returnCode.isValueSuccess) {
-        console.log("if", path)
         await addWatermarkToVideo(path);
         await generateThumbnail(path);
       } else {
@@ -575,21 +562,21 @@ const Player = ({route, navigation}) => {
           </View>
         </View>
       )}
+      {isVideoLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
 
       {Object.keys(recordingLimits).length > 0 && (
         <>
           <ViewShot ref={snapShotRef} style={styles.flex}>
             <View style={styles.videoContainer}>
-              {isVideoLoading && (
-                <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="large" color="#FFFFFF" />
-                </View>
-              )}
-              {streamUrl && (
+              {rtsp_url && (
                 <VLCPlayer
                   style={styles.videoPlayer}
                   source={{
-                    uri: streamUrl,
+                    uri: rtsp_url,
                   }}
                   onLoad={() => {
                     console.log('loading ...');
@@ -597,14 +584,14 @@ const Player = ({route, navigation}) => {
                   }}
                   autoplay={true}
                   onProgress={e => {
-                    // console.log(e, "e")
-                    // if (e.currentTime > 0) {
-                      setIsVideoLoading(false);
-                    // }
+                    // console.log(e.currentTime, "progress")
+                    if (e.currentTime > 0) {
+                    setIsVideoLoading(false);
+                    }
                   }}
                   onError={e => console.log('Error:', e)}
                   onBuffering={e => {
-                    // console.log('buffering ...');
+                    console.log('buffering ...');
                     setIsVideoLoading(true);
                   }}
                   onStopped={() => {

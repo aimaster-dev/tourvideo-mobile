@@ -11,7 +11,6 @@ const Card = ({item, index, thumbnail, handlePress = () => {}}) => {
   return (
     <TouchableOpacity
       onPress={() => {
-        console.log(thumbnail, "video path")
         if (item.video_path) {
           navigation.navigate('VideoPlayer', {
             streamUrl: `${domain}/${item.video_path}`,

@@ -58,7 +58,6 @@ const PaymentScreen = ({navigation, route}) => {
         },
       });
       if (response.data && response.data.status) {
-        console.log(response.data.data);
         setTransaction(response.data.data.transactions);
       }
     } catch (e) {
