@@ -3,6 +3,9 @@ PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.75.4)
+  - ffmpeg-kit-react-native (6.0.2):
+    - React-Core
+    - wmplayer-ffmpeg-kit-ios-https
   - Firebase/CoreOnly (11.11.0):
     - FirebaseCore (~> 11.11.0)
   - Firebase/Messaging (11.11.0):
@@ -1732,7 +1735,7 @@ PODS:
     - RNFBApp
   - RNFS (2.20.0):
     - React-Core
-  - RNGestureHandler (2.30.0):
+  - RNGestureHandler (2.22.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1818,6 +1821,7 @@ DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
+  - ffmpeg-kit-react-native (from `../node_modules/ffmpeg-kit-react-native`)
   - FirebaseCore
   - FirebaseCoreInternal
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -1932,6 +1936,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
+  ffmpeg-kit-react-native:
+    :path: "../node_modules/ffmpeg-kit-react-native"
   fmt:
     :podspec: "../node_modules/react-native/third-party-podspecs/fmt.podspec"
   glog:
@@ -2105,6 +2111,7 @@ SPEC CHECKSUMS:
   boost: 4cb898d0bf20404aab1850c656dcea009429d6c1
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: 430e10366de01d1e3d57374500b1b150fe482e6d
+  ffmpeg-kit-react-native: 382114f3f2abc9bfb8f688f2080070e1f5f7d116
   Firebase: 6a8f201c61eda24e98f1ce2b44b1b9c2caf525cc
   FirebaseCore: 2321536f9c423b1f857e047a82b8a42abc6d9e2c
   FirebaseCoreExtension: 3a64994969dd05f4bcb7e6896c654eded238e75b
@@ -2190,7 +2197,7 @@ SPEC CHECKSUMS:
   RNFBApp: fda4a8b08fe31bea8492808106aa638d1bb595b7
   RNFBMessaging: 099972ab397d61815f32610514b0573d1db2b1e1
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
-  RNGestureHandler: 2ce5d052b0a3c3a8cda29e0a1e746f26793d7a21
+  RNGestureHandler: 5c734ddd9b406a5cd792add1fc01f0894ed8ec28
   RNIap: f3ca6e7597afccb2c1631de97d88f2e33b10dafd
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
   RNPermissions: 2313103968fa75dee603dbeee84e0518d7c710aa
