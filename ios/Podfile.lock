@@ -1341,7 +1341,7 @@ PODS:
     - Yoga
   - react-native-image-marker (1.2.11):
     - React-Core
-  - react-native-safe-area-context (5.7.0):
+  - react-native-safe-area-context (5.8.0):
     - React-Core
   - react-native-screenguard (1.1.1):
     - DoubleConversion
@@ -1365,7 +1365,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SDWebImage (~> 5.21.0)
     - Yoga
-  - react-native-video (6.19.1):
+  - react-native-video (6.19.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1378,7 +1378,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.19.1)
+    - react-native-video/Video (= 6.19.2)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1387,7 +1387,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.19.1):
+  - react-native-video/Video (6.19.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1763,7 +1763,7 @@ PODS:
     - RNNotifee/NotifeeCore (= 9.1.8)
   - RNNotifee/NotifeeCore (9.1.8):
     - React-Core
-  - RNPermissions (5.5.1):
+  - RNPermissions (5.6.0):
     - React-Core
   - RNScreens (4.5.0):
     - DoubleConversion
@@ -1787,7 +1787,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.15.3):
+  - RNSVG (15.15.5):
     - React-Core
   - RNVectorIcons (10.3.0):
     - DoubleConversion
@@ -2157,9 +2157,9 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: fc15e6b9e8cc5a99d1cfa0f31c454c4c3de4e7ae
   react-native-cameraroll: 2e9bc2c2df03dc7fea503b9410a6c19d7a455f0a
   react-native-image-marker: 8ad6fdee9e33fb7f51e918dcaf77a2765a63f6c7
-  react-native-safe-area-context: 37b720094bcaa36abcd593e08f2ad16507a94769
+  react-native-safe-area-context: a9f88b96b54546384efbf54d92eba1ebe60444e9
   react-native-screenguard: d3a335f6826b88d0e134176d65f0adf4115e3322
-  react-native-video: e400a005a3375c8561c809eff9e0920c9216d4cd
+  react-native-video: c87dc60d5db297be4e8c92cf4b0416ec77602cd2
   react-native-view-shot: 4fc2e9c2ef1a316ca05e0c5ad2c58251298e5085
   react-native-vlc-media-player: 0f9860bded57cd6764ac55b5c0e97347069cb40a
   React-nativeconfig: 31072ab0146e643594f6959c7f970a04b6c9ddd0
@@ -2200,9 +2200,9 @@ SPEC CHECKSUMS:
   RNGestureHandler: 5c734ddd9b406a5cd792add1fc01f0894ed8ec28
   RNIap: f3ca6e7597afccb2c1631de97d88f2e33b10dafd
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
-  RNPermissions: 2313103968fa75dee603dbeee84e0518d7c710aa
+  RNPermissions: 7a916c332ebb8bf7ff9e4309a96a943b8cab703d
   RNScreens: 67c6c2d9f4c917508c0414167fba805976e634f4
-  RNSVG: 6d262cf38fab9dcd67181c1c22c5604b437ae022
+  RNSVG: e8f1a2bc711b7bf358776ce6c144d8172a6ebca7
   RNVectorIcons: a01d18455b4e435c93ae84174dfd71530a4907e6
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d

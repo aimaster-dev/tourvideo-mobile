@@ -189,7 +189,7 @@ const Player = ({route, navigation}) => {
         },
         watermarkTexts: [
           {
-            text: tourplace,
+            text: data?.data?.isp?.customer_name,
             position: {
               position: Position.center,
             },

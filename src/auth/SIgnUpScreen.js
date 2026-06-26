@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import Feather from "react-native-vector-icons/Feather"
+import Feather from 'react-native-vector-icons/Feather';
 import CheckBox from '@react-native-community/checkbox';
 import {useAPI} from '../hooks/useAPI';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -22,12 +22,12 @@ const SignUpScreen = ({navigation}) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  // const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUserNameValid, setIsUserNameValid] = useState(true);
-  // const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
+  const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(true);
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(true);
   const [isConformPasswordValid, setIsConformPasswordValid] = useState(true);
@@ -35,15 +35,15 @@ const SignUpScreen = ({navigation}) => {
   const [isTourPlaceValid, setIsTourPlaceValid] = useState(true);
   const [tourPlaces, setTourPlaces] = useState([]);
   const [isp, setIsp] = useState([]);
-    const [isIspValid, setIsIspValid] = useState(true);
+  const [isIspValid, setIsIspValid] = useState(true);
   const [selectedISP, setSelectedISP] = useState(null);
   const [isAcceptedValid, setIsAcceptedValid] = useState(true);
   const [toast, setToast] = useState({
     show: false,
     message: '',
   });
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {showToast} = useToast();
 
@@ -56,8 +56,12 @@ const SignUpScreen = ({navigation}) => {
     }
   };
 
-  const handlePlaceChange = selected => {
+  const handlePlaceChange = itemValue => {
     setIsp([]);
+
+    const selected = tourPlaces?.find(
+      place => place.id == (itemValue?.id || itemValue),
+    );
 
     if (selected?.id) {
       fetchISP(selected);
@@ -66,8 +70,9 @@ const SignUpScreen = ({navigation}) => {
       setIsIspValid(false);
     }
 
-    setSelectedPlace(selected);
-    setIsTourPlaceValid(true);
+    setSelectedPlace(selected || null);
+    setSelectedISP(null)
+    setIsTourPlaceValid(!!selected);
   };
 
   const handleUserNameChange = value => {
@@ -84,15 +89,12 @@ const SignUpScreen = ({navigation}) => {
     }
   };
 
-  const handleISPChange = (selected) => {
-  if (selected?.id) {
-    setSelectedISP(selected);
-    setIsIspValid(true);
-  } else {
-    setSelectedISP(null);
-    setIsIspValid(false);
-  }
-};
+  const handleISPChange = selected => {
+    const selectedISP = isp?.isps?.find(place => place.id == selected?.id);
+
+    setSelectedISP(selectedISP || null);
+    setIsIspValid(!!selectedISP);
+  };
 
   const handlePasswordChange = value => {
     setPassword(value);
@@ -126,12 +128,12 @@ const SignUpScreen = ({navigation}) => {
     } else {
       setIsEmailValid(true);
     }
-    // if (!phoneNumber) {
-    //   setIsPhoneNumberValid(false);
-    //   return;
-    // } else {
-    //   setIsPhoneNumberValid(true);
-    // }
+    if (!phoneNumber) {
+      setIsPhoneNumberValid(false);
+      return;
+    } else {
+      setIsPhoneNumberValid(true);
+    }
     if (!password) {
       setIsPasswordValid(false);
       return;
@@ -160,13 +162,17 @@ const SignUpScreen = ({navigation}) => {
     const requestData = {
       username: fullName,
       email: email,
-      phone_number: '1234567890',
+      phone_number: phoneNumber,
       password: password,
       usertype: 3,
       level: 0,
       venue: selectedPlace ? [selectedPlace.id] : null,
       isp: selectedISP ? selectedISP.id : null,
     };
+    console.log(
+      requestData,
+      'request data in signup'
+    );
     setIsSubmitting(true); // Set submitting state to true while making the request
 
     try {
@@ -273,7 +279,7 @@ const SignUpScreen = ({navigation}) => {
         </View>
 
         {/* Phone Number Input */}
-        {/* <View style={styles.inputContainer}>
+        <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Phone Number"
@@ -285,23 +291,30 @@ const SignUpScreen = ({navigation}) => {
           {!isPhoneNumberValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
-        </View> */}
+        </View>
 
         {/* Password Input */}
         <View style={styles.inputContainer}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#CCCCCC"
-            onChangeText={handlePasswordChange}
-            value={password}
-            secureTextEntry={!showPassword}
-          />
-           <TouchableOpacity onPress={() => setShowPassword(!showPassword
-            )}>
-              <Feather name={showPassword ? "eye-off" : "eye"} color="white" size={16} />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#CCCCCC"
+              onChangeText={handlePasswordChange}
+              value={password}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? 'eye-off' : 'eye'}
+                color="white"
+                size={16}
+              />
             </TouchableOpacity>
           </View>
           {!isPasswordValid && (
@@ -311,33 +324,42 @@ const SignUpScreen = ({navigation}) => {
 
         {/* Confirm Password Input */}
         <View style={styles.inputContainer}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="#CCCCCC"
-            onChangeText={handleConfirmPasswordChange}
-            value={confirmPassword}
-            secureTextEntry={!showConfirmPassword}
-          />
-           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword
-            )}>
-              <Feather name={showConfirmPassword ? "eye-off" : "eye"} color="white" size={16} />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor="#CCCCCC"
+              onChangeText={handleConfirmPasswordChange}
+              value={confirmPassword}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Feather
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
+                color="white"
+                size={16}
+              />
             </TouchableOpacity>
-            </View>
+          </View>
           {!isConformPasswordValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
         </View>
         <View style={styles.inputContainer}>
-           <Dropdown
-                placeholder="Select Venue"
-                data={tourPlaces}
-                labelKey="venue_name"
-                valueKey="id"
-                value={selectedPlace}
-                onChange={handlePlaceChange}
-              />
+          <Dropdown
+            placeholder="Select Venue"
+            data={tourPlaces}
+            labelKey="venue_name"
+            valueKey="id"
+            value={selectedPlace}
+            onChange={handlePlaceChange}
+          />
           {!isTourPlaceValid && (
             <Text style={styles.requiredText}>Required*</Text>
           )}
@@ -345,13 +367,13 @@ const SignUpScreen = ({navigation}) => {
         {isp?.isps?.length > 0 && (
           <View style={styles.inputContainer}>
             <Dropdown
-                placeholder="Select ISP"
-                data={isp?.isps || []}
-                labelKey="name"
-                valueKey="id"
-                value={selectedISP}
-                onChange={handleISPChange}
-              />
+              placeholder="Select ISP"
+              data={isp?.isps || []}
+              labelKey="name"
+              valueKey="id"
+              value={selectedISP}
+              onChange={handleISPChange}
+            />
             {!isIspValid && <Text style={styles.requiredText}>Required*</Text>}
           </View>
         )}
